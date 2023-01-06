@@ -1,0 +1,37 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.28.0",
+    "winston": "^3.8.2"
+  },
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.15",
+    "@types/node": "^18.11.18",
+    "eslint": "^8.31.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.20",
+    "prettier": "2.8.1",
+    "sequelize-cli": "^6.5.2",
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "dev": "nodemon --exec node --loader ts-node/esm src/main.ts",
+    "db:create": "npx sequelize db:create --config ./src/config/config.js",
+    "db:migrate": "npx sequelize db:migrate --config ./src/config/config.js --migrations-path ./src/migrations --models-path ./src/models",
+    "db:drop": "npx sequelize db:drop --config ./src/config/config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
