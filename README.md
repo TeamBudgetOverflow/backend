@@ -2,6 +2,9 @@
 express
 @types/express --save-dev
 typescript -g
+typescript ts-loader --save-dev
+
+webpack webpack-cli --save-dev
 
 nodemon -D
 @types/node --save-dev

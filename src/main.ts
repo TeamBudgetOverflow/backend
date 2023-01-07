@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
-import express,{Request, Response, NextFunction} from "express";
+import express, { Request, Response, NextFunction } from 'express';
 import cors from "cors";
-import { sequelize } from "./models";
+//import { sequelize } from "./models";
 
 dotenv.config();
 
@@ -17,17 +17,16 @@ app.use((req:Request,res:Response,next:NextFunction) => {
     next();
 })
 
-app.use('/');
+app.use('/', require("./routes/index.router"));
 
 
-app.listen(PORT,HOST,async () => {
-    console.log(`Server Listening on ${HOST}:${PORT}`);
-
-     await sequelize.authenticate()
-     .then(async () => {
-         console.log("connection success");
-     })
-     .catch((e) => {
-         console.log('TT : ', e);
-     })
+app.listen(PORT, async () => {
+    console.log(PORT, 'Server is running');
+    //  await sequelize.authenticate()
+    //  .then(async () => {
+    //      console.log("connection success");
+    //  })
+    //  .catch((e) => {
+    //      console.log('TT : ', e);
+    //  })
 })
