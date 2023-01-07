@@ -1,12 +1,13 @@
 import * as dotenv from "dotenv";
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Router } from 'express';
 import cors from "cors";
 //import { sequelize } from "./models";
+const routes: Router = require('./routes/index.router');
 
 dotenv.config();
 
 const PORT:number = parseInt(process.env.PORT as string, 10) || 3000;
-const HOST:string = process.env.HOST || 'localhost';
+//const HOST:string = process.env.HOST || 'localhost';
 const app = express();
 
 
@@ -17,7 +18,7 @@ app.use((req:Request,res:Response,next:NextFunction) => {
     next();
 })
 
-app.use('/', require("./routes/index.router"));
+app.use('/', routes);
 
 
 app.listen(PORT, async () => {
