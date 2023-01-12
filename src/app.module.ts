@@ -8,14 +8,14 @@ import { typeORMConfig } from './configs/typeorm.config';
 import { GoalModule } from './goal/goal.module';
 
 @Module({
-    imports: [
-      ConfigModule.forRoot({ isGlobal: true }),
-        UserModule,
-        GoalModule,
-        TypeOrmModule.forRoot(typeORMConfig)
-    ],
-    controllers: [AppController],
-    providers: [AppService],
-    exports: [AppService],
-  })
-  export class AppModule{}
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    UserModule,
+    GoalModule,
+    TypeOrmModule.forRoot(typeORMConfig),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+  exports: [AppService],
+})
+export class AppModule {}

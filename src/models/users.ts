@@ -23,7 +23,7 @@ export class Users extends BaseEntity {
 
   @Column({ unique: false })
   nickname: string;
-  
+
   @Column({ nullable: true })
   image: string;
 
@@ -41,5 +41,4 @@ export class Users extends BaseEntity {
 
   @OneToMany(() => Goals, (goal) => goal.user, { cascade: ['insert'] })
   goals: Goals[];
-
 }

@@ -12,7 +12,7 @@ import { UserService } from '../user/user.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, Goals]),
-    forwardRef(() => AuthModule)
+    forwardRef(() => AuthModule),
   ],
   providers: [GoalService, UserService, AuthService, JwtService],
   controllers: [GoalController],

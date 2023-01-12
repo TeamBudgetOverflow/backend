@@ -1,13 +1,13 @@
 import {
-    ExecutionContext,
-    HttpException,
-    HttpStatus,
-    Injectable,
-  } from '@nestjs/common';
-  import { JwtService } from '@nestjs/jwt';
-  import { AuthGuard } from '@nestjs/passport';
-  import { UserService } from '../../user/user.service';
-  import { AuthService } from '../auth.service';
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
+import { UserService } from '../../user/user.service';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -35,8 +35,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   async validate(token: string) {
     try {
       // 토큰 검증
-        const {userId} = await this.authService.tokenValidate(token);
-        return userId;
+      const { userId } = await this.authService.tokenValidate(token);
+      return userId;
     } catch (error) {
       switch (error.message) {
         // 토큰에 대한 오류를 판단합니다.

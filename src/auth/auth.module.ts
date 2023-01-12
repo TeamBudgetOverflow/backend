@@ -5,9 +5,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports: [
-    forwardRef(() => UserModule)
-  ],
+  imports: [forwardRef(() => UserModule)],
   //exports: [UserModule],
   providers: [AuthService, NaverStrategy, JwtService],
 })

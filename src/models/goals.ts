@@ -1,41 +1,41 @@
 import {
-    ManyToOne,
-    Column,
-    Entity,
-    PrimaryGeneratedColumn,
-    BaseEntity,
-  } from 'typeorm';
-  import { Users } from './users';
-  
-  @Entity()
-  export class Goals extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    goalId: number;
-  
-    @Column({ nullable: false })
-    amount: number;
+  ManyToOne,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+} from 'typeorm';
+import { Users } from './users';
 
-    @Column({ nullable: false })
-    startDate: Date;
+@Entity()
+export class Goals extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  goalId: number;
 
-    @Column({ nullable: false })
-    endDate: Date;
+  @Column({ nullable: false })
+  amount: number;
 
-    @Column({ nullable: false })
-    headCount: number;
+  @Column({ nullable: false })
+  startDate: Date;
 
-    // @Column({ nullable: true })
-    // isPrivate: boolean;
+  @Column({ nullable: false })
+  endDate: Date;
 
-    @Column({ nullable: false })
-    title: string;
+  @Column({ nullable: false })
+  headCount: number;
 
-    @Column({ nullable: false })
-    description: string;
+  // @Column({ nullable: true })
+  // isPrivate: boolean;
 
-    // @Column
-    // hashtag: string;
+  @Column({ nullable: false })
+  title: string;
 
-    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
-    user: Users;
-  }
+  @Column({ nullable: false })
+  description: string;
+
+  // @Column
+  // hashtag: string;
+
+  @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
+  user: Users;
+}
