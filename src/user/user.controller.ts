@@ -45,7 +45,6 @@ export class UserController {
       if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
         const createUser = await this.userService.oauthCreateUser(req.user);
-        console.log(createUser);
         const accessToken = await this.authService.createAccessToken(createUser);
         const refreshToken = await this.authService.createRefreshToken(createUser);
         return res
@@ -72,16 +71,16 @@ export class UserController {
 
   @Post(':userId/pinCode')
   @UseGuards(JwtAuthGuard)
-  async registerPinCode(@Param('userId') userId: number,
+  async registerPinCode(@Param('userId') id: number,
   @Body('pinCode') pinCode: string,@Req() req, @Res() res: Response){
     try{
-      if(userId != req.res.userId){
+      if(id != req.res.id){
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
       .update(pinCode)
       .digest('base64');
-      await this.userService.registerPinCode(userId, cryptoPinCode);
+      await this.userService.registerPinCode(id, cryptoPinCode);
       return res
         .status(201)
         .json({ message: "핀 코드 등록 완료"});

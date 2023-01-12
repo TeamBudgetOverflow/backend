@@ -1,5 +1,6 @@
 import {
   Column,
+  OneToMany,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -7,11 +8,12 @@ import {
   UpdateDateColumn,
   BaseEntity,
 } from 'typeorm';
+import { Goals } from './goals';
 
 @Entity()
 export class Users extends BaseEntity {
   @PrimaryGeneratedColumn()
-  userId: number;
+  id: number;
 
   @Column({ unique: true })
   email: string;
@@ -36,4 +38,8 @@ export class Users extends BaseEntity {
 
   @Column({ nullable: true })
   description: string;
+
+  @OneToMany(() => Goals, (goal) => goal.user)
+  goal: Goals
+
 }

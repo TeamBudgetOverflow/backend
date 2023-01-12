@@ -30,6 +30,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "@types/passport-jwt": "^3.0.8",
     "@types/sequelize": "^4.28.14",
+    "class-validator": "^0.14.0",
     "crypto-js": "^4.1.1",
     "mysql2": "^2.3.3",
     "passport": "^0.6.0",

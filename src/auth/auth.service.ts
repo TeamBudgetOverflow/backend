@@ -26,7 +26,7 @@ export class AuthService {
 
   async createAccessToken(user: Users) {
     const payload = {
-      userId: user.userId,
+      userId: user.id,
       tokenType: 'accessToken',
     };
     const accessToken: string = this.jwtService.sign(payload, {
@@ -47,11 +47,11 @@ export class AuthService {
       expiresIn: '7D',
     }).toString();
 
-    const findUser: Users = await this.userService.findUserById(user.userId);
+    const findUser: Users = await this.userService.findUserById(user.id);
     if (!findUser) {
       return null;
     }
-    this.userService.createRefreshToken(findUser.userId, refreshToken);
+    this.userService.createRefreshToken(findUser.id, refreshToken);
     return refreshToken;
   }
 }
