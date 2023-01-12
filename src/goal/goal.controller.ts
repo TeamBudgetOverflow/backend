@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Post, Param, Body } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
+import { Goals } from '../models/goals';
 dotenv.config();
 
 @Controller('api/goals')
@@ -33,10 +34,11 @@ export class GoalController {
         @Body() createGoalDTO: CreateGoalDTO,
         @Res() res: Response) {
         try{
-            const userId = req.res.userId;
-            const result = await this.goadlService.createGoal(
-                createGoalDTO, userId
-            )
+            // 계좌 연결이 안되있으면 계좌 연결 진행할 것.
+            const user = req.res.userId;
+            console.log(typeof(user));
+            const data = {user, ...createGoalDTO}
+            const result = await this.goadlService.createGoal(data);
             console.log(result);
             return res
                 .status(200)

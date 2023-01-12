@@ -39,7 +39,7 @@ export class Users extends BaseEntity {
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany(() => Goals, (goal) => goal.user)
-  goal: Goals
+  @OneToMany(() => Goals, (goal) => goal.user, { cascade: ['insert'] })
+  goals: Goals[];
 
 }

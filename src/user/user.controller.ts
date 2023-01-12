@@ -74,7 +74,7 @@ export class UserController {
   async registerPinCode(@Param('userId') id: number,
   @Body('pinCode') pinCode: string,@Req() req, @Res() res: Response){
     try{
-      if(id != req.res.id){
+      if(id != req.res.userId){
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)

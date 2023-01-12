@@ -11,10 +11,18 @@ export class GoalService {
         private goalsRepository: Repository<Goals>,
     ) {}
 
-    async createGoal(createGoalDTO: CreateGoalDTO, userId: number){
-        const result =  await this.goalsRepository.save({userId, ...createGoalDTO});
+    async createGoal(data): Promise<Goals>{
+        // let goals = new Goals;
+        // goals.amount = data.amount;
+        // goals.startDate = data.startDate;
+        // goals.endDate= data.endDate;
+        // goals.headCount = data.headCount;
+        // goals.title = data.title;
+        // goals.description = data.description;
+        // goals.user = data.userId;
+        // console.log(goals);
+        const result = await this.goalsRepository.save(data);
         console.log(result);
-        //const findUserUpdate = await this.goalsRepository.findOneBy({userId});
         return result;
     }
 }

@@ -36,6 +36,6 @@ import {
     // @Column
     // hashtag: string;
 
-    @ManyToOne(() => Users, (user) => user.goal)
+    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
     user: Users;
   }
