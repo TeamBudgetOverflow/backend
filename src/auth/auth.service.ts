@@ -18,6 +18,12 @@ export class AuthService {
     return user;
   }
 
+  async tokenValidate(token: string) {
+    return await this.jwtService.verify(token, {
+      secret: process.env.TOKEN_SECRETE_KEY,
+    });
+  }
+
   async createAccessToken(user: Users) {
     const payload = {
       userId: user.userId,

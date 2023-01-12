@@ -30,26 +30,6 @@ export class UserService {
     } 
 
     oauthCreateUser(user: Users): Promise<Users> {
-          // let value : {
-          //   email: string, 
-          //   name: string, 
-          //   nickname: string, 
-          //   image: string, 
-          //   loginCategory: string,
-          //   pinCode: string,
-          //   refreshToken: string,
-          //   description: string,
-          // } = {
-          //   email: user.email, 
-          //   name: user.name, 
-          //   nickname: user.nickname, 
-          //   image: user.image, 
-          //   loginCategory: user.loginCategory,
-          //   pinCode: null,
-          //   refreshToken: null,
-          //   description: null,
-          // }
-        console.log("create user");
         return this.usersRepository.save(user);
     }
 
@@ -59,5 +39,14 @@ export class UserService {
         findUserUpdate.refreshToken = refreshToken;
         await this.usersRepository.save(findUserUpdate);
     }
+
+    async registerPinCode(userId: number, cryptoPinCode: string){
+      const findUserUpdate = await this.usersRepository.findOneBy({userId});
+      findUserUpdate.pinCode = cryptoPinCode;
+      await this.usersRepository.save(findUserUpdate);
+    }
     
+    async findUserByPinAndRefresh(refreshToken: string, pinCode: string): Promise<Users> {
+      return await this.usersRepository.findOneBy({refreshToken, pinCode});
+    }
 }
