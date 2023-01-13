@@ -14,7 +14,7 @@ import { Goals } from './goals';
 @Entity()
 export class Users extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  userId: number;
 
   @Column({ unique: true })
   email: string;

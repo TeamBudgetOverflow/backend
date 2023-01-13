@@ -19,9 +19,9 @@ export class UserService {
         return this.usersRepository.findOne(option);
     }  
 
-    findUserById(id: number): Promise<Users> {
+    findUserById(userId: number): Promise<Users> {
         let option = {
-          where: { id },
+          where: { userId },
           offset: 0,
           limit: 1,
           raw: true,
@@ -33,15 +33,15 @@ export class UserService {
         return this.usersRepository.save(user);
     }
 
-    async createRefreshToken(id: number, refreshToken: string){
+    async createRefreshToken(userId: number, refreshToken: string){
       console.log("save refreshToken");
-        const findUserUpdate = await this.usersRepository.findOneBy({id});
+        const findUserUpdate = await this.usersRepository.findOneBy({userId});
         findUserUpdate.refreshToken = refreshToken;
         await this.usersRepository.save(findUserUpdate);
     }
 
-    async registerPinCode(id: number, cryptoPinCode: string){
-      const findUserUpdate = await this.usersRepository.findOneBy({id});
+    async registerPinCode(userId: number, cryptoPinCode: string){
+      const findUserUpdate = await this.usersRepository.findOneBy({userId});
       findUserUpdate.pinCode = cryptoPinCode;
       await this.usersRepository.save(findUserUpdate);
     }

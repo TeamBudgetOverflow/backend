@@ -71,16 +71,16 @@ export class UserController {
 
   @Post(':userId/pinCode')
   @UseGuards(JwtAuthGuard)
-  async registerPinCode(@Param('userId') id: number,
+  async registerPinCode(@Param('userId') userId: number,
   @Body('pinCode') pinCode: string,@Req() req, @Res() res: Response){
     try{
-      if(id != req.res.userId){
+      if(userId != req.res.userId){
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
       .update(pinCode)
       .digest('base64');
-      await this.userService.registerPinCode(id, cryptoPinCode);
+      await this.userService.registerPinCode(userId, cryptoPinCode);
       return res
         .status(201)
         .json({ message: "핀 코드 등록 완료"});

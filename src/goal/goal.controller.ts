@@ -34,7 +34,6 @@ export class GoalController {
         @Body() createGoalDTO: CreateGoalDTO,
         @Res() res: Response) {
         try{
-            // 계좌 연결이 안되있으면 계좌 연결 진행할 것.
             const userId = req.res.userId;
             const data = {userId, ...createGoalDTO}
             const result = await this.goadlService.createGoal(data);

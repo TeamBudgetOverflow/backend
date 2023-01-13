@@ -11,7 +11,7 @@ import {
   @Entity()
   export class Goals extends BaseEntity {
     @PrimaryGeneratedColumn()
-    id: number;
+    goalId: number;
   
     @Column({ nullable: false })
     amount: number;
