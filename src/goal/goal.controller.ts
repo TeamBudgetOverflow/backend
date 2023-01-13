@@ -35,11 +35,9 @@ export class GoalController {
         @Res() res: Response) {
         try{
             // 계좌 연결이 안되있으면 계좌 연결 진행할 것.
-            const user = req.res.userId;
-            console.log(typeof(user));
-            const data = {user, ...createGoalDTO}
+            const userId = req.res.userId;
+            const data = {userId, ...createGoalDTO}
             const result = await this.goadlService.createGoal(data);
-            console.log(result);
             return res
                 .status(200)
                 .json({ message: "목표 생성 완료"})

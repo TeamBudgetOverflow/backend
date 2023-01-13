@@ -4,13 +4,14 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     BaseEntity,
+    JoinColumn,
   } from 'typeorm';
   import { Users } from './users';
   
   @Entity()
   export class Goals extends BaseEntity {
     @PrimaryGeneratedColumn()
-    goalId: number;
+    id: number;
   
     @Column({ nullable: false })
     amount: number;
@@ -37,5 +38,6 @@ import {
     // hashtag: string;
 
     @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
-    user: Users;
+    @JoinColumn({ name: 'userId' })
+    userId: Users;
   }

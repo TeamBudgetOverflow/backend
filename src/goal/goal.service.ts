@@ -21,6 +21,7 @@ export class GoalService {
         // goals.description = data.description;
         // goals.user = data.userId;
         // console.log(goals);
+        console.log(data);
         const result = await this.goalsRepository.save(data);
         console.log(result);
         return result;
