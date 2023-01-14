@@ -14,8 +14,10 @@ import {
   
   @Entity()
   export class Goals extends BaseEntity {
+    //@Column({ nullable: false })
     @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
     @JoinColumn({ name: 'userId' })
+    //@Column({ nullable: false })
     userId: Users;
 
     @PrimaryGeneratedColumn()
@@ -29,6 +31,9 @@ import {
 
     @Column({ nullable: false })
     endDate: Date;
+
+    @Column({ nullable: false })
+    curCount: number;
 
     @Column({ nullable: false })
     headCount: number;
@@ -47,6 +52,9 @@ import {
 
     @Column({ nullable: true })
     hashTag: string;
+
+    @Column({ nullable: false })
+    createUserId: number;
 
     @CreateDateColumn({ 
       type: "timestamp",

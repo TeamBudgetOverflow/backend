@@ -2,19 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Goals } from '../models/goals';
-import { UserGoals } from '../models/usergoals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 
 @Injectable()
 export class GoalService {
   constructor(
-    @InjectRepository(Goals, /*UserGoals*/)
+    @InjectRepository(Goals)
         private goalRepository: Repository<Goals>,
-        //private userGoalRepository: Repository<UserGoals>,
     ) {}
 
-    async createGoal(data): Promise<Goals>{
+    async createGoal(data/*: CreateGoalDTO*/): Promise<Goals>{
         const result = await this.goalRepository.save(data);
+
         return result;
     }
 
@@ -31,13 +30,7 @@ export class GoalService {
         return await this.goalRepository.findOneBy({goalId});
     }
 
-    async joinUserGoal(goalId)/*: Promise<number>*/{
-        // const [list, count] = await this.userGoalRepository.findAndCount({where: {goalId}});
-        // console.log(list);
-        // return count;
-    }
-
-    async joinGoal(userId: number, goalId: number) {
-        //const result = await this.userGoalRepository.save({goalId});
+    async updateGoal(goalId: number, headCount: number) {
+        await this.goalRepository.update({goalId}, {headCount});
     }
 }

@@ -10,19 +10,7 @@ import {
     isString,
   } from 'class-validator';
 
-  export class CreateGoalDTO {
-    @IsNumber()
-    @IsNotEmpty()
-    readonly userId: number;
-
-    @IsNumber()
-    @IsNotEmpty()
-    readonly createUserId: number;
-
-    @IsNumber()
-    @IsNotEmpty()
-    readonly curCount: number;
-
+  export class InputCreateGoalDTO {
     @IsNumber()
     @IsNotEmpty()
     readonly amount: number;
