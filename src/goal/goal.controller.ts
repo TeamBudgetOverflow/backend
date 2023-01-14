@@ -21,7 +21,7 @@ import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { Goals } from '../models/goals';
 import { UserGoalService } from '../usergoal/userGoal.service';
-import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
+import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 
 dotenv.config();
 
@@ -48,8 +48,8 @@ export class GoalController {
             const result = await this.goalService.createGoal(data);
             const goalId: number = result.goalId
             // 2. 내가 만든 목표 자동 참가
-            let createUserGoalData: CreateUserGoalDTO = { userId, goalId };
-            await this.usergoalService.joinGoal(createUserGoalData);
+            let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+            await this.usergoalService.joinGoal(accessUserGoalData);
             // Transaction 적용 필요
             return res
                 .status(200)
@@ -99,10 +99,10 @@ export class GoalController {
             } else {
                 // 동시성 문제에 대한 대비책 필요
                 // transaction 적용 필요
-                let createUserGoalData: CreateUserGoalDTO = { userId, goalId };
-                await this.usergoalService.joinGoal(createUserGoalData);
+                let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+                await this.usergoalService.joinGoal(accessUserGoalData);
                 findGoal.headCount += 1;
-                await this.goalService.updateGoal(goalId, findGoal.headCount);
+                await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
             }
         }catch(error){
             console.log(error)
@@ -111,18 +111,34 @@ export class GoalController {
 
     // 목표 탈퇴
     // 목표 시작 전에만 가능함
-    // @Delete(':goalId')
-    // @UseGuards(JwtAuthGuard)
-    // async exitGoal(
-    //     @Req() req,
-    //     @Param('goalId') goalId: number,
-    //     @Res() res: Response ){
-    //     try{
-    //         const userId = req.res.userId;
-    //         // 1. 참가한 유저인지 확인
-    //         const 
-    //     }catch(error){
-    //         console.log(error);
-    //     }
-    // }
+    @Delete(':goalId')
+    @UseGuards(JwtAuthGuard)
+    async exitGoal(
+        @Req() req,
+        @Param('goalId') goalId: number,
+        @Res() res: Response ){
+        try{
+            const userId: number= req.res.userId;
+            // getGoalDetail 가져오기
+            const findGoal = await this.goalService.getGoalByGoalId(goalId);
+            if(userId === findGoal.createUserId){
+                // if 개설자 본인일 경우 에러 리턴
+            }
+            // 1. 참가한 유저인지 확인
+            let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+            const find = await this.usergoalService.findUser(accessUserGoalData);
+            if(find == null){
+                // error - 참가하지 않은 유저입니다.
+            } else {
+                // 중간 테이블 삭제
+                await this.usergoalService.exitGoal(accessUserGoalData);
+                // 참가자 숫자 변동
+                const findGoal = await this.goalService.getGoalByGoalId(goalId);
+                findGoal.headCount -= 1;
+                await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
+            }
+        }catch(error){
+            console.log(error);
+        }
+    }
 }

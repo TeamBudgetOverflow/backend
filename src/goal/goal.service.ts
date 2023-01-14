@@ -26,11 +26,16 @@ export class GoalService {
         return result;
     }
 
+    async getGoalDetail(goalId: number): Promise<Goals> {
+        return await this.goalRepository.findOne({where: {goalId}});
+    }
+
     async getGoalByGoalId(goalId: number): Promise<Goals> {
         return await this.goalRepository.findOneBy({goalId});
     }
 
-    async updateGoal(goalId: number, headCount: number) {
+    // 목표 참가자 숫자 변화
+    async updateGoalCurCount(goalId: number, headCount: number) {
         await this.goalRepository.update({goalId}, {headCount});
     }
 }
