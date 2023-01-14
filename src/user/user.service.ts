@@ -45,7 +45,7 @@ export class UserService {
       findUserUpdate.pinCode = cryptoPinCode;
       await this.userRepository.save(findUserUpdate);
     }
-    
+
     async findUserByPinAndRefresh(refreshToken: string, pinCode: string): Promise<Users> {
       return await this.userRepository.findOneBy({refreshToken, pinCode});
     }
