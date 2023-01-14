@@ -5,11 +5,19 @@ import {
     PrimaryGeneratedColumn,
     BaseEntity,
     JoinColumn,
+    CreateDateColumn,
+    UpdateDateColumn,
+    OneToMany,
   } from 'typeorm';
   import { Users } from './users';
+  import { UserGoals } from './usergoals';
   
   @Entity()
   export class Goals extends BaseEntity {
+    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
+    @JoinColumn({ name: 'userId' })
+    userId: Users;
+
     @PrimaryGeneratedColumn()
     goalId: number;
   
@@ -28,16 +36,27 @@ import {
     // @Column({ nullable: true })
     // isPrivate: boolean;
 
+    // @Column({ nullable: true })
+    // isAuto: boolean;
+
     @Column({ nullable: false })
     title: string;
 
     @Column({ nullable: false })
     description: string;
 
-    // @Column
-    // hashtag: string;
+    @Column({ nullable: true })
+    hashTag: string;
 
-    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
-    userId: Users;
+    @CreateDateColumn({ 
+      type: "timestamp",
+      update: false,
+     })
+    createdAt: Date;
+
+    @UpdateDateColumn({ type: "timestamp" })
+    updatedAt: Date;
+
+    @OneToMany(() => UserGoals, (userGoal) => userGoal.goalId, { cascade: ['insert'] })
+    userGoals: UserGoals[];
   }

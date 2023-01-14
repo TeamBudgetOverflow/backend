@@ -10,6 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Goals } from './goals';
+import { UserGoals } from './usergoals';
 
 @Entity()
 export class Users extends BaseEntity {
@@ -42,5 +43,8 @@ export class Users extends BaseEntity {
 
   @OneToMany(() => Goals, (goal) => goal.userId, { cascade: ['insert'] })
   goals: Goals[];
+
+  @OneToMany(() => UserGoals, (userGoal) => userGoal.userId, { cascade: ['insert'] })
+  userGoals: UserGoals[];
 
 }
