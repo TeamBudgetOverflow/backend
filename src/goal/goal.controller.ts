@@ -36,7 +36,8 @@ export class GoalController {
         @Res() res: Response) {
         try{
             const userId = req.res.userId;
-            const data = {userId, ...createGoalDTO}
+            const recruitMember: number = 0;
+            const data = {userId, recruitMember, ...createGoalDTO}
             // 생성이 안되도 에러 반환, 생성이 되어도 리턴값이 필요하지 않은것이 아닌지
             const result = await this.goalService.createGoal(data);
             return res
@@ -68,30 +69,31 @@ export class GoalController {
         }
     }
 
-    // 목표 참가
-    // @Post(':goalId')
-    // @UseGuards(JwtAuthGuard)
-    // async joinGoal(
-    //     @Req() req,
-    //     @Param('goalId') goalId: number,
-    //     @Res() res: Response){
-    //     try{
-    //         const userId = req.res.userId;
-    //         // 1. 목표 참가자 맥시멈 숫자 확인 - goals DB
-    //         const getGoal = await this.goalService.getGoalByGoalId(goalId);
-    //         const goalMaxUser: number = getGoal.headCount;
-    //         // 2. 현재 참가자 숫자 확인 - userGoals DB
-    //         const joinUser = await this.goalService.joinUserGoal(goalId);
-    //         // 3. 마지막 한자리 -> 모집 상태 완료로 만들어야함
-    //         // 목표인원이 모두 다 차면 프론트에서 막을 수 있지만(접근 제한)
-    //         // 백엔드도 막아야하는데 Goals Table에 추가적인 Column을 만들지
-    //         // ex) isDone
-    //         // 4. 동시성 문제에 대한 대비책 필요
-    //         const result = await this.goalService.joinGoal(userId, goalId);
-    //     }catch(error){
-    //         console.log(error)
+    //목표 참가
+    @Post(':goalId')
+    @UseGuards(JwtAuthGuard)
+    async joinGoal(
+        @Req() req,
+        @Param('goalId') goalId: number,
+        @Res() res: Response){
+        try{
+            const userId = req.res.userId;
+            // 1. 목표 참가자 맥시멈 숫자 확인 - goals DB
+            // 2. 현재 참가자 숫자 확인 - goal DB
+            const getGoal = await this.goalService.getGoalByGoalId(goalId);
+            const goalMaxUser: number = getGoal.headCount;
+            let recruitMember: number = getGoal.recruitMember;
+            if(recruitMember === goalMaxUser){
+                // 모집 마감 에러 리턴
+            } else {
+                recruitMember += 1;
+                // 3. 동시성 문제에 대한 대비책 필요
+                const result = await this.goalService.joinGoal(userId, goalId, recruitMember);
+            }
+        }catch(error){
+            console.log(error)
 
-    //     }
-    // }
+        }
+    }
 
 }

@@ -8,9 +8,8 @@ import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 @Injectable()
 export class GoalService {
   constructor(
-    @InjectRepository(Goals, /*UserGoals*/)
-        private goalRepository: Repository<Goals>,
-        //private userGoalRepository: Repository<UserGoals>,
+    @InjectRepository(Goals) private goalRepository: Repository<Goals>,
+    @InjectRepository(UserGoals) private userGoalRepository: Repository<UserGoals>,
     ) {}
 
     async createGoal(data): Promise<Goals>{
@@ -31,13 +30,8 @@ export class GoalService {
         return await this.goalRepository.findOneBy({goalId});
     }
 
-    async joinUserGoal(goalId)/*: Promise<number>*/{
-        // const [list, count] = await this.userGoalRepository.findAndCount({where: {goalId}});
-        // console.log(list);
-        // return count;
-    }
-
-    async joinGoal(userId: number, goalId: number) {
-        //const result = await this.userGoalRepository.save({goalId});
+    async joinGoal(userId: number, goalId: number, recruitMember: number) {
+        //const result = await this.userGoalRepository.save({userId, goalId});
+        const update = await this.goalRepository.update({goalId}, {recruitMember})
     }
 }

@@ -31,6 +31,9 @@ import {
     endDate: Date;
 
     @Column({ nullable: false })
+    recruitMember: number;
+
+    @Column({ nullable: false })
     headCount: number;
 
     // @Column({ nullable: true })
