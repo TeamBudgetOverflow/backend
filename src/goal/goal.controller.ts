@@ -26,7 +26,7 @@ export class GoalController {
   constructor(private readonly goadlService: GoalService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async createGoal(
     @Req() req,
     @Body() createGoalDTO: CreateGoalDTO,

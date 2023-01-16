@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { typeORMConfig } from './configs/typeorm.config';
 import { GoalModule } from './goal/goal.module';
+import { AccountsModule } from './accounts/accounts.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { GoalModule } from './goal/goal.module';
     UserModule,
     GoalModule,
     TypeOrmModule.forRoot(typeORMConfig),
+    AccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
