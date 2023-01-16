@@ -6,9 +6,11 @@ import {
   OneToOne,
   OneToMany,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Balances } from './balances';
 import { Banks } from './banks';
+import { Users } from './users';
 
 @Entity()
 export class Accounts extends BaseEntity {
@@ -32,8 +34,19 @@ export class Accounts extends BaseEntity {
   // })
   // balance: Balances;
 
-  @ManyToOne(() => Banks, (bank) => bank.account, {
+  @ManyToOne(() => Users, (user) => user.account, {
+    nullable: false,
+    eager: true,
     onUpdate: 'CASCADE',
   })
+  @JoinColumn({ name: 'userId' })
+  user: Users;
+
+  @ManyToOne(() => Banks, (bank) => bank.account, {
+    nullable: false,
+    eager: true,
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'bankId' })
   bank: Banks;
 }

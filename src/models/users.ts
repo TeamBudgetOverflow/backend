@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   BaseEntity,
 } from 'typeorm';
+import { Accounts } from './accounts';
 import { Goals } from './goals';
 
 @Entity()
@@ -38,6 +39,11 @@ export class Users extends BaseEntity {
 
   @Column({ nullable: true })
   description: string;
+
+  @OneToMany(() => Accounts, (account) => account.user, {
+    cascade: ['insert'],
+  })
+  account: Accounts[];
 
   @OneToMany(() => Goals, (goal) => goal.user, { cascade: ['insert'] })
   goals: Goals[];

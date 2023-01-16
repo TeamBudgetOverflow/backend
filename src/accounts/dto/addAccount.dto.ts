@@ -16,8 +16,4 @@ export class AddAccountDto {
   @IsString()
   @IsOptional()
   readonly acctPw: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  readonly bankId: number;
 }
