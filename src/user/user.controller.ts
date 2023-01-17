@@ -41,6 +41,7 @@ export class UserController {
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(@Req() req, @Res() res: Response): Promise<any>{
     try {
+      console.log(req.user);
       const user = await this.userService.findUserByEmail(req.user.email);
       if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인

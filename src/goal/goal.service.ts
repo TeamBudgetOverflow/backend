@@ -2,18 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Goals } from '../models/goals';
-import { UserGoals } from '../models/usergoals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 
 @Injectable()
 export class GoalService {
   constructor(
-    @InjectRepository(Goals) private goalRepository: Repository<Goals>,
-    @InjectRepository(UserGoals) private userGoalRepository: Repository<UserGoals>,
+    @InjectRepository(Goals)
+        private goalRepository: Repository<Goals>,
     ) {}
 
-    async createGoal(data): Promise<Goals>{
+    async createGoal(data/*: CreateGoalDTO*/): Promise<Goals>{
         const result = await this.goalRepository.save(data);
+
         return result;
     }
 
@@ -26,12 +26,16 @@ export class GoalService {
         return result;
     }
 
+    async getGoalDetail(goalId: number): Promise<Goals> {
+        return await this.goalRepository.findOne({where: {goalId}});
+    }
+
     async getGoalByGoalId(goalId: number): Promise<Goals> {
         return await this.goalRepository.findOneBy({goalId});
     }
 
-    async joinGoal(userId: number, goalId: number, recruitMember: number) {
-        //const result = await this.userGoalRepository.save({userId, goalId});
-        const update = await this.goalRepository.update({goalId}, {recruitMember})
+    // 목표 참가자 숫자 변화
+    async updateGoalCurCount(goalId: number, headCount: number) {
+        await this.goalRepository.update({goalId}, {headCount});
     }
 }

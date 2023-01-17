@@ -14,7 +14,10 @@ import {
   
   @Entity()
   export class Goals extends BaseEntity {
-    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
+    // @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(() => Users, (user) => user.goals, { 
+      onUpdate: 'CASCADE' , eager: true,
+    })
     @JoinColumn({ name: 'userId' })
     userId: Users;
 
@@ -31,7 +34,7 @@ import {
     endDate: Date;
 
     @Column({ nullable: false })
-    recruitMember: number;
+    curCount: number;
 
     @Column({ nullable: false })
     headCount: number;

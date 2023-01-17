@@ -34,7 +34,6 @@ export class UserService {
     }
 
     async createRefreshToken(userId: number, refreshToken: string){
-      console.log("save refreshToken");
         const findUserUpdate = await this.userRepository.findOneBy({userId});
         findUserUpdate.refreshToken = refreshToken;
         await this.userRepository.save(findUserUpdate);
