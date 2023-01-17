@@ -9,6 +9,7 @@ import {
   BaseEntity,
   JoinColumn,
 } from 'typeorm';
+import { Accounts } from './accounts';
 import { Goals } from './goals';
 import { UserGoals } from './usergoals';
 
@@ -25,7 +26,7 @@ export class Users extends BaseEntity {
 
   @Column({ unique: false })
   nickname: string;
-  
+
   @Column({ nullable: true })
   image: string;
 
@@ -41,9 +42,12 @@ export class Users extends BaseEntity {
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany(() => Goals, (goal) => goal.userId, { 
-    cascade: ['insert']
+  @OneToMany(() => Accounts, (account) => account.user, {
+    cascade: ['insert'],
   })
+  account: Accounts[];
+
+  @OneToMany(() => Goals, (goal) => goal.userId, { cascade: ['insert'] })
   goals: Goals[];
 
   @OneToMany(() => UserGoals, (userGoal) => userGoal.userId, { 
@@ -51,5 +55,4 @@ export class Users extends BaseEntity {
     lazy: true
   })
   userGoals: UserGoals[];
-
 }

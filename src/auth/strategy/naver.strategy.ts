@@ -22,8 +22,8 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
     const email = profile._json.email;
     const name = profile.displayName; //
     const nickname = profile._json.nickname;
-    const image = profile._json.profile_image;  
-    const loginCategory = profile.provider;  // "NAVER"
+    const image = profile._json.profile_image;
+    const loginCategory = profile.provider; // "NAVER"
     const payload = {
       email,
       name,
@@ -31,6 +31,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
       image,
       loginCategory,
     };
-    done(null, payload);    // 실행 결과와 payload 리턴
+    done(null, payload); // 실행 결과와 payload 리턴
   }
 }

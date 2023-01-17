@@ -28,19 +28,16 @@ import {
     amount: number;
 
     @Column({ nullable: false })
-    startDate: Date;
-
-    @Column({ nullable: false })
-    endDate: Date;
-
-    @Column({ nullable: false })
     curCount: number;
 
     @Column({ nullable: false })
     headCount: number;
 
-    // @Column({ nullable: true })
-    // isPrivate: boolean;
+    @Column({ nullable: false })
+    startDate: Date;
+
+    @Column({ nullable: false })
+    endDate: Date;
 
     // @Column({ nullable: true })
     // isAuto: boolean;
@@ -48,8 +45,8 @@ import {
     @Column({ nullable: false })
     title: string;
 
-    @Column({ nullable: false })
-    description: string;
+    // @Column({ nullable: true })
+    // isPrivate: boolean;
 
     @Column({ nullable: true })
     hashTag: string;

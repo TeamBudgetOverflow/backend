@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 import { Response } from 'express';
 import { GoalService } from './goal.service';
 import {
