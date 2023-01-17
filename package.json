@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/axios": "^1.0.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
@@ -30,6 +31,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "@types/passport-jwt": "^3.0.8",
     "@types/sequelize": "^4.28.14",
+    "axios": "^1.2.2",
     "class-validator": "^0.14.0",
     "crypto-js": "^4.1.1",
     "mysql2": "^2.3.3",

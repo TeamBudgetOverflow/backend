@@ -8,8 +8,8 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    ) {}
-  
+  ) {}
+
   async validateUser(user_email: string): Promise<any> {
     const user = await this.userService.findUserByEmail(user_email);
     if (!user) {
@@ -36,16 +36,18 @@ export class AuthService {
     return accessToken;
   }
 
-  async createRefreshToken(user: Users): Promise<string>{
+  async createRefreshToken(user: Users): Promise<string> {
     const payload = {
       userId: null,
       tokenType: 'refreshToken',
     };
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.TOKEN_SECRETE_KEY,
-      expiresIn: '7D',
-    }).toString();
+    const refreshToken = this.jwtService
+      .sign(payload, {
+        secret: process.env.TOKEN_SECRETE_KEY,
+        expiresIn: '7D',
+      })
+      .toString();
 
     const findUser: Users = await this.userService.findUserById(user.userId);
     if (!findUser) {

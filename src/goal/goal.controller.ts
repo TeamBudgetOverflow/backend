@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 import { Response } from 'express';
 import { GoalService } from './goal.service';
 import {
@@ -45,7 +45,7 @@ export class GoalController {
             const curCount: number = 1;
 
             // 1. 목표 생성
-            let data: CreateGoalDTO = {userId, curCount, ...createGoalDTO}
+            let data: CreateGoalDTO = {userId, curCount, ...createGoalDTO};
             const result = await this.goalService.createGoal(data);
             const goalId: number = result.goalId
             // 2. 내가 만든 목표 자동 참가
