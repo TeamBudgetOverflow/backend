@@ -71,6 +71,39 @@ export class GoalController {
         }
     }
 
+    //목표 참가
+    @Post('join/:goalId')
+    @UseGuards(JwtAuthGuard)
+    async joinGoal(
+        @Req() req,
+        @Body('accountId') accountId: number,
+        @Param('goalId') goalId: number,
+        @Res() res: Response){
+        try{
+            const userId = req.res.userId;
+            // 1. 목표 참가자 맥시멈 숫자 확인 - goals DB
+            const findGoal = await this.goalService.getGoalByGoalId(goalId);
+            const goalMaxUser: number = findGoal.headCount;
+            // 2. 현재 참가자 숫자 확인 - userGoals DB
+            const joinUserCount = await this.usergoalService.getJoinUser(goalId);
+            if(findGoal.headCount === goalMaxUser){
+                // 에러 반환 - 참가 유저가 가득 찼습니다
+                throw new HttpException("모집이 완료되었습니다.", HttpStatus.BAD_REQUEST);
+            } else {
+                // 동시성 문제에 대한 대비책 필요
+                // transaction 적용 필요
+                let createUserGoalData: CreateUserGoalDTO = { userId, goalId, accountId };
+                await this.usergoalService.joinGoal(createUserGoalData);
+                findGoal.headCount += 1;
+                await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
+                res.json({ message: "참가가 완료되었습니다."});
+            }
+        }catch(error){
+            console.log(error)
+            res.json({ errorMessage: "알 수 없는 에러입니다."});
+        }
+    }
+
     // 목표 전체 조회
     @Get()
     @UseGuards(JwtAuthGuard)
@@ -104,36 +137,20 @@ export class GoalController {
         }
     }
 
-    //목표 참가
-    @Post(':goalId')
+    // 목표 상세 조회
+    @Get(':goalId')
     @UseGuards(JwtAuthGuard)
-    async joinGoal(
+    async getGoalDetail(
         @Req() req,
-        @Body('accountId') accountId: number,
         @Param('goalId') goalId: number,
         @Res() res: Response){
         try{
             const userId = req.res.userId;
-            // 1. 목표 참가자 맥시멈 숫자 확인 - goals DB
-            const findGoal = await this.goalService.getGoalByGoalId(goalId);
-            const goalMaxUser: number = findGoal.headCount;
-            // 2. 현재 참가자 숫자 확인 - userGoals DB
-            const joinUserCount = await this.usergoalService.getJoinUser(goalId);
-            if(findGoal.headCount === goalMaxUser){
-                // 에러 반환 - 참가 유저가 가득 찼습니다
-                throw new HttpException("모집이 완료되었습니다.", HttpStatus.BAD_REQUEST);
-            } else {
-                // 동시성 문제에 대한 대비책 필요
-                // transaction 적용 필요
-                let createUserGoalData: CreateUserGoalDTO = { userId, goalId, accountId };
-                await this.usergoalService.joinGoal(createUserGoalData);
-                findGoal.headCount += 1;
-                await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
-                res.json({ message: "참가가 완료되었습니다."});
-            }
+            const findGoal = await this.goalService.getGoalDetail(goalId);
+            console.log(findGoal);
         }catch(error){
-            console.log(error)
-            res.json({ errorMessage: "알 수 없는 에러입니다."});
+            console.log(error);
+            res.json({ errorMessage: "알 수 없는 에러" })
         }
     }
 

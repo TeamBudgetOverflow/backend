@@ -38,12 +38,12 @@ export class AccountsController {
     @Body() accountInfo: AddAccountDto,
   ) {
     try {
-      const user = req.res.userId;
+      const userId = req.res.userId;
       // const user = 1;
       // const user = 1; - tested with the fixed user Id
       const bank = accountInfo.bankId;
       // const bank = 2; - tested with the fixed bank Id
-      const data = { user, bank, ...accountInfo };
+      const data = { userId, bank, ...accountInfo };
       await this.accountService.addAccount(data);
       return res.status(200).json({ message: 'Account Added Successfully' });
     } catch (error) {
