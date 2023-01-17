@@ -14,10 +14,11 @@ import {
   
   @Entity()
   export class Goals extends BaseEntity {
-    //@Column({ nullable: false })
-    @ManyToOne(() => Users, (user) => user.goals, { onUpdate: 'CASCADE' })
+    // @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(() => Users, (user) => user.goals, { 
+      onUpdate: 'CASCADE' , eager: true,
+    })
     @JoinColumn({ name: 'userId' })
-    //@Column({ nullable: false })
     userId: Users;
 
     @PrimaryGeneratedColumn()
@@ -52,9 +53,6 @@ import {
 
     @Column({ nullable: true })
     hashTag: string;
-
-    @Column({ nullable: false })
-    createUserId: number;
 
     @CreateDateColumn({ 
       type: "timestamp",

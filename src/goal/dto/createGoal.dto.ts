@@ -17,10 +17,6 @@ import {
 
     @IsNumber()
     @IsNotEmpty()
-    readonly createUserId: number;
-
-    @IsNumber()
-    @IsNotEmpty()
     readonly curCount: number;
 
     @IsNumber()

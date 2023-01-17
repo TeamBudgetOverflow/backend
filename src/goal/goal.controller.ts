@@ -1,8 +1,6 @@
 import * as dotenv from "dotenv";
 import { Response } from 'express';
-import { AuthService } from '../auth/auth.service';
 import { GoalService } from './goal.service';
-import { NaverAuthGuard } from '../auth/guard/naver-auth.guard';
 import {
   Controller,
   Get,
@@ -16,12 +14,12 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Post, Param, Body, Delete } from '@nestjs/common';
-import { createHash } from 'crypto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { Goals } from '../models/goals';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
+import { Connection } from 'typeorm'
 
 dotenv.config();
 
@@ -30,6 +28,7 @@ export class GoalController {
   constructor(
     private readonly goalService: GoalService,
     private readonly usergoalService: UserGoalService,
+    private readonly connection: Connection
     ) {}
 
     // 목표 생성
@@ -39,44 +38,40 @@ export class GoalController {
         @Req() req,
         @Body() createGoalDTO: InputCreateGoalDTO,
         @Res() res: Response) {
+        const queryRunner = this.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction()
         try{
             const userId: number = req.res.userId;
-            const createUserId: number = userId;
             const curCount: number = 1;
+
             // 1. 목표 생성
-            let data: CreateGoalDTO = {userId, createUserId, curCount, ...createGoalDTO}
+            let data: CreateGoalDTO = {userId, curCount, ...createGoalDTO}
             const result = await this.goalService.createGoal(data);
             const goalId: number = result.goalId
             // 2. 내가 만든 목표 자동 참가
             let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
             await this.usergoalService.joinGoal(accessUserGoalData);
             // Transaction 적용 필요
-            return res
-                .status(200)
-                .json({ message: "목표 생성 완료"})
+            res.json({ message: "목표 생성 완료"})
         }catch(error){
             console.log(error);
-            return res
-                .status(400)
-                .json({ errorMessage: "목표 생성 실패" })
+            res.json({ errorMessage: "목표 생성 실패" })
         }
     }
 
-    // 목표 전체 보기
+    // 목표 전체 조회
     @Get()
     @UseGuards(JwtAuthGuard)
     async getAllGoal(
         @Res() res: Response){
         try{
+            // 페이지네이션 고려
             const result = await this.goalService.getAllGoals();
-            return res
-                .status(200)
-                .json({ result })
+            res.json({ result })
         }catch(error){
             console.log(error);
-            return res
-                .status(400)
-                .json({ errorMessage: "알 수 없는 에러" })
+            res.json({ errorMessage: "알 수 없는 에러" })
         }
     }
 
@@ -96,6 +91,7 @@ export class GoalController {
             const joinUserCount = await this.usergoalService.getJoinUser(goalId);
             if(findGoal.headCount === goalMaxUser){
                 // 에러 반환 - 참가 유저가 가득 찼습니다
+                throw new HttpException("모집이 완료되었습니다.", HttpStatus.BAD_REQUEST);
             } else {
                 // 동시성 문제에 대한 대비책 필요
                 // transaction 적용 필요
@@ -103,9 +99,11 @@ export class GoalController {
                 await this.usergoalService.joinGoal(accessUserGoalData);
                 findGoal.headCount += 1;
                 await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
+                res.json({ message: "참가가 완료되었습니다."});
             }
         }catch(error){
             console.log(error)
+            res.json({ errorMessage: "알 수 없는 에러입니다."});
         }
     }
 
@@ -121,14 +119,16 @@ export class GoalController {
             const userId: number= req.res.userId;
             // getGoalDetail 가져오기
             const findGoal = await this.goalService.getGoalByGoalId(goalId);
-            if(userId === findGoal.createUserId){
+            if(userId === findGoal.userId.userId){  // 해당 부분 에러날 수 있음 확인할 것
                 // if 개설자 본인일 경우 에러 리턴
+                throw new HttpException('접근할 수 없는 권한입니다.', HttpStatus.BAD_REQUEST);
             }
             // 1. 참가한 유저인지 확인
             let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
             const find = await this.usergoalService.findUser(accessUserGoalData);
             if(find == null){
                 // error - 참가하지 않은 유저입니다.
+                throw new HttpException("참가하지 않았습니다.", HttpStatus.BAD_REQUEST);
             } else {
                 // 중간 테이블 삭제
                 await this.usergoalService.exitGoal(accessUserGoalData);
@@ -139,6 +139,7 @@ export class GoalController {
             }
         }catch(error){
             console.log(error);
+            res.json({ errorMessage: "알 수 없는 에러입니다." })
         }
     }
 }
