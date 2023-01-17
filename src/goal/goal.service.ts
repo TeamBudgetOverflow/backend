@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
+import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
 
 @Injectable()
 export class GoalService {
@@ -37,6 +38,10 @@ export class GoalService {
     // 목표 참가자 숫자 변화
     async updateGoalCurCount(goalId: number, headCount: number) {
         await this.goalRepository.update({goalId}, {headCount});
+    }
+
+    async updateGoal(goalId: number, updateGoal: UpdateGoalDTO){
+        await this.goalRepository.update({goalId}, updateGoal);
     }
 
     async deleteGoal(goalId: number){

@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Post, Param, Body, Patch, Delete } from '@nestjs/common';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
+import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
@@ -133,6 +134,24 @@ export class GoalController {
         }catch(error){
             console.log(error)
             res.json({ errorMessage: "알 수 없는 에러입니다."});
+        }
+    }
+
+    // 목표 수정
+    @Patch(':goalId')
+    @UseGuards(JwtAuthGuard)
+    async updateGoal(
+        @Req() req,
+        @Param('goalId') goalId: number,
+        @Body() updateGoalDTO: UpdateGoalDTO,
+        @Res() res: Response ){
+        try{
+            const userId: number= req.res.userId;
+            await this.goalService.updateGoal(goalId, updateGoalDTO);
+            res.json({ message: "목표 수정 완료" });
+        }catch(error){
+            console.log(error);
+            res.json({ errorMessage: "목표 수정 실패" });
         }
     }
 
