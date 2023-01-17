@@ -13,11 +13,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { Post, Param, Body, Delete } from '@nestjs/common';
+import { Post, Param, Body, Patch, Delete } from '@nestjs/common';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
+import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { Connection } from 'typeorm'
 
 dotenv.config();
@@ -37,19 +38,29 @@ export class GoalController {
         @Req() req,
         @Body() createGoalDTO: InputCreateGoalDTO,
         @Res() res: Response) {
-        const queryRunner = this.connection.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction()
+        // const queryRunner = this.connection.createQueryRunner();
+        // await queryRunner.connect();
+        // await queryRunner.startTransaction()
         try{
             const userId: number = req.res.userId;
             const curCount: number = 1;
 
             // 1. 목표 생성
-            let data: CreateGoalDTO = {userId, curCount, ...createGoalDTO};
+            let data: CreateGoalDTO = { 
+                userId, curCount, 
+                amount: createGoalDTO.amount, 
+                startDate: createGoalDTO.startDate,
+                endDate: createGoalDTO.endDate, 
+                headCount: createGoalDTO.headCount, 
+                title: createGoalDTO.title,
+                description: createGoalDTO.description,
+                hashTag: createGoalDTO.hashTag,
+            };
             const result = await this.goalService.createGoal(data);
             const goalId: number = result.goalId
+            const accountId: number = createGoalDTO.accountId;
             // 2. 내가 만든 목표 자동 참가
-            let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+            let accessUserGoalData: CreateUserGoalDTO = { userId, goalId, accountId };
             await this.usergoalService.joinGoal(accessUserGoalData);
             // Transaction 적용 필요
             res.json({ message: "목표 생성 완료"})
@@ -66,7 +77,25 @@ export class GoalController {
         @Res() res: Response){
         try{
             // 페이지네이션 고려
-            const result = await this.goalService.getAllGoals();
+            const sortResult = await this.goalService.getAllGoals();
+            const result = [];
+            for(let i = 0; i < result.length; i++) {
+                const { userId, nickname } = sortResult[i].userId;
+                result.push({
+                    goalId: sortResult[i].goalId,
+                    userId: userId,
+                    nickname: nickname,
+                    amount: sortResult[i].amount,
+                    curCount: sortResult[i].curCount,
+                    headCount: sortResult[i].headCount,
+                    startDate: sortResult[i].startDate,
+                    endDate: sortResult[i].endDate,
+                    title: sortResult[i].title,
+                    hashTag: sortResult[i].hashTag,
+                    createdAt: sortResult[i].createdAt,
+                    updatedAt: sortResult[i].updatedAt,
+                })
+            }
             res.json({ result })
         }catch(error){
             console.log(error);
@@ -79,6 +108,7 @@ export class GoalController {
     @UseGuards(JwtAuthGuard)
     async joinGoal(
         @Req() req,
+        @Body('accountId') accountId: number,
         @Param('goalId') goalId: number,
         @Res() res: Response){
         try{
@@ -94,8 +124,8 @@ export class GoalController {
             } else {
                 // 동시성 문제에 대한 대비책 필요
                 // transaction 적용 필요
-                let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-                await this.usergoalService.joinGoal(accessUserGoalData);
+                let createUserGoalData: CreateUserGoalDTO = { userId, goalId, accountId };
+                await this.usergoalService.joinGoal(createUserGoalData);
                 findGoal.headCount += 1;
                 await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
                 res.json({ message: "참가가 완료되었습니다."});
@@ -108,7 +138,7 @@ export class GoalController {
 
     // 목표 탈퇴
     // 목표 시작 전에만 가능함
-    @Delete(':goalId')
+    @Delete('exit/:goalId')
     @UseGuards(JwtAuthGuard)
     async exitGoal(
         @Req() req,
@@ -141,4 +171,30 @@ export class GoalController {
             res.json({ errorMessage: "알 수 없는 에러입니다." })
         }
     }
+
+    // 목표 삭제
+    @Delete(':goal')
+    @UseGuards(JwtAuthGuard)
+    async deleteGoal(
+        @Req() req,
+        @Param('goalId') goalId: number,
+        @Res() res: Response){
+        try{
+            const userId: number= req.res.userId;
+            const find = await this.goalService.getGoalDetail(goalId);
+            // 참가자가 2명이상이면 삭제 불가능
+            if(find.curCount >= 2){
+                throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400)
+            }else {
+                await this.goalService.deleteGoal(goalId);
+                let accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+                await this.usergoalService.exitGoal(accessUserGoalData);
+                res.json({ message: "목표 삭제 완료" });
+            }
+        }catch(error){
+            console.log(error);
+            res.json({ errorMessage: "목표 삭제 실패" });
+        }
+    }
+
 }

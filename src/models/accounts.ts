@@ -11,6 +11,7 @@ import {
 import { Balances } from './balances';
 import { Banks } from './banks';
 import { Users } from './users';
+import { UserGoals } from './usergoals';
 
 @Entity()
 export class Accounts extends BaseEntity {
@@ -51,4 +52,7 @@ export class Accounts extends BaseEntity {
   })
   @JoinColumn({ name: 'bankId' })
   bank: Banks;
+
+  @OneToMany(() => UserGoals, (userGoal) => userGoal.accountId, { cascade: ['insert'] })
+  userGoals: UserGoals[];
 }

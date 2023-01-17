@@ -60,7 +60,7 @@ export class AccountsService {
         accountId: true,
         acctNo: true,
         user: {
-          id: true,
+          userId: true,
         },
         bank: {
           id: true,

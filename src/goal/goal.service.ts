@@ -38,4 +38,8 @@ export class GoalService {
     async updateGoalCurCount(goalId: number, headCount: number) {
         await this.goalRepository.update({goalId}, {headCount});
     }
+
+    async deleteGoal(goalId: number){
+        await this.goalRepository.delete({goalId});
+    }
 }
