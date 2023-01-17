@@ -16,7 +16,6 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Post, Param, Body, Delete } from '@nestjs/common';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
-import { Goals } from '../models/goals';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { Connection } from 'typeorm'
