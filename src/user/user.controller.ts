@@ -48,23 +48,23 @@ export class UserController {
         const createUser = await this.userService.oauthCreateUser(req.user);
         const accessToken = await this.authService.createAccessToken(createUser);
         const refreshToken = await this.authService.createRefreshToken(createUser);
-        return res
-          .status(201)
-          .json({ accessToken: "Bearer "+ accessToken,
-                  refreshToken,
-                  message: "로그인 성공" });
+        res.cookie('accessToken', "Bearer " + accessToken);
+        res.cookie('refreshToken', refreshToken);
+        res.redirect('http://localhost:3000/naverlogin');
+        res.end();
+      } else {
+        // 유저가 있을때
+        const accessToken = await this.authService.createAccessToken(user);
+        const refreshToken = await this.authService.createRefreshToken(user);
+        res.cookie('accessToken', "Bearer " + accessToken);
+        res.cookie('refreshToken', refreshToken);
+        res.redirect('http://localhost:3000/naverlogin');
+        res.end();
       }
-      // 유저가 있을때
-      const accessToken = await this.authService.createAccessToken(user);
-      const refreshToken = await this.authService.createRefreshToken(user);
-      return res
-          .status(201)
-          .json({ accessToken: "Bearer "+ accessToken,
-                  refreshToken, 
-                  message: "로그인 성공" });
+      
     }catch(error){
       console.log(error);
-      return res
+      res
         .status(412)
         .json({ errorMessage: "로그인 실패"});
     }
