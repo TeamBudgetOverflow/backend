@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { typeORMConfig } from './configs/typeorm.config';
 import { GoalModule } from './goal/goal.module';
 import { AccountsModule } from './accounts/accounts.module';
-
+import { BanksModule } from './banks/banks.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -15,6 +15,7 @@ import { AccountsModule } from './accounts/accounts.module';
     GoalModule,
     TypeOrmModule.forRoot(typeORMConfig),
     AccountsModule,
+    BanksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

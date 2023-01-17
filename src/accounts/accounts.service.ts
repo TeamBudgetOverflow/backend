@@ -23,7 +23,7 @@ export class AccountsService {
   ) {}
   async viewAccountBalance(userInfo, headers) {
     const url = 'https://api.hyphen.im/in0087000484';
-    console.log(headers);
+    // console.log(headers);
     const hkey = headers.hkey;
     const headersRequest = {
       'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ export class AccountsService {
       'user-id': headers['user-id'],
     };
 
-    console.log(headersRequest);
+    // console.log(headersRequest);
 
     const resp = await this.httpService
       .post(url, userInfo, { headers: headersRequest })
@@ -46,15 +46,15 @@ export class AccountsService {
 
   async addAccount(data): Promise<Accounts> {
     const result = await this.accountsRepository.save(data);
-    console.log(result);
     return result;
   }
 
   // might need to use querybuilder
   async getAccounts(targetUser): Promise<Accounts[]> {
+    console.log(typeof targetUser); // 5
     const result: Accounts[] = await this.accountsRepository.find({
       where: {
-        user: targetUser,
+        userId: targetUser,
       },
       select: {
         accountId: true,

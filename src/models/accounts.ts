@@ -34,6 +34,8 @@ export class Accounts extends BaseEntity {
   // })
   // balance: Balances;
 
+  @Column({ name: 'userId' })
+  userId: number;
   @ManyToOne(() => Users, (user) => user.account, {
     nullable: false,
     eager: true,
