@@ -70,4 +70,26 @@ export class AccountsService {
 
     return result;
   }
+
+  // might need to use querybuilder
+  async getManuals(bankId): Promise<Accounts[]> {
+    const result: Accounts[] = await this.accountsRepository.find({
+      where: {
+        bank: {
+          id: bankId,
+        },
+      },
+      select: {
+        accountId: true,
+        bank: {
+          id: true,
+        },
+      },
+      order: {
+        accountId: 'ASC',
+      },
+    });
+
+    return result;
+  }
 }
