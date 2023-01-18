@@ -17,8 +17,9 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { JwtRefreshGuard } from '../auth/guard/jwt-refreshToken-auth.guard';
-import { Post, Param, Body } from '@nestjs/common';
+import { Post, Put, Param, Body } from '@nestjs/common';
 import { createHash } from 'crypto';
+import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 
 dotenv.config();
 
@@ -57,6 +58,10 @@ export class UserController {
       // 유저가 있을때
       const accessToken = await this.authService.createAccessToken(user);
       const refreshToken = await this.authService.createRefreshToken(user);
+      // res.setHeader('accessToken', "Bearer" + accessToken);
+      // res.setHeader('refreshToken', refreshToken);
+      // res.redirect('http://localhost:3000');
+      // res.end();
       return res.status(201).json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
@@ -71,23 +76,60 @@ export class UserController {
 
   @Post(':userId/pinCode')
   @UseGuards(JwtAuthGuard)
-  async registerPinCode(@Param('userId') userId: number,
-  @Body('pinCode') pinCode: string,@Req() req, @Res() res: Response){
-    try{
-      if(userId != req.res.userId){
+  async registerPinCode(
+    @Param('userId') userId: number,
+    @Body('pinCode') pinCode: string,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    try {
+      if (userId != req.res.userId) {
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-      .update(pinCode)
-      .digest('base64');
+        .update(pinCode)
+        .digest('base64');
       await this.userService.registerPinCode(userId, cryptoPinCode);
-      return res.json({ message: "핀 코드 등록 완료"});
-    }catch(error){
+      return res.json({ message: '핀 코드 등록 완료' });
+    } catch (error) {
       console.log(error);
       return res.json({ errorMessage: '핀 코드 등록 실패' });
     }
   }
-  
+
+  @Put(':userId/pinCode')
+  @UseGuards(JwtAuthGuard)
+  async updatePinCode(
+    @Param('userId') userId: number,
+    @Body() updatePinCodeDTO: UpdatePinCodeDTO,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    try {
+      if (userId != req.res.userId) {
+        throw new HttpException('허가되지 않은 접근입니다', 400);
+      }
+      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+        .update(updatePinCodeDTO.pinCode)
+        .digest('base64');
+      const findUser = await this.userService.findUserById(userId);
+
+      if (findUser.pinCode === cryptoPinCode) {
+        const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+          .update(updatePinCodeDTO.updatePinCode)
+          .digest('base64');
+        await this.userService.registerPinCode(userId, cryptoPinCode);
+        return res.status(201).json({ message: '핀 코드 수정 완료' });
+      } else {
+        return res
+          .status(400)
+          .json({ errorMessage: '입력한 pinCode가 올바르지 않습니다.' });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
   @UseGuards(JwtRefreshGuard)
   @Post('pinCode')

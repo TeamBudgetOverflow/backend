@@ -31,7 +31,7 @@ export class AccountsController {
   }
 
   @Post('/:userId')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async addAccount(
     @Req() req,
     @Res() res: Response,
@@ -54,28 +54,75 @@ export class AccountsController {
     }
   }
 
+  @Post('/:userId/manual')
+  // @UseGuards(JwtAuthGuard)
+  async addManual(
+    @Req() req,
+    @Res() res,
+    @Param('userId') targetUserId: number,
+  ) {
+    try {
+      // const user = req.res.userId;
+      const userId = 1;
+      // const user = 1; - tested with the fixed user Id
+      const bank = 3; // would be different - talk with FE
+      // const bank = 2; - tested with the fixed bank Id
+      if (Number(targetUserId) === userId) {
+        const targetUserAccounts = await this.accountService.getAccounts(
+          userId,
+        );
+        console.log(targetUserAccounts);
+        if (targetUserAccounts.length > 0) {
+          for (let i = 0; i < targetUserAccounts.length; i++) {
+            const { accountId, bank } = targetUserAccounts[i];
+            const bankId = bank.id;
+            if (bankId === 3) {
+              const trimmedManual = { accountId };
+              return res.status(200).json(trimmedManual);
+            }
+          }
+        } else {
+          const data = { userId, bank };
+          await this.accountService.addAccount(data);
+          return res
+            .status(200)
+            .json({ message: 'Manual Account Added Successfully' });
+        }
+      } else {
+        throw new Error('User Does not exist');
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({
+        errorMessage: 'Failed to add an account',
+      });
+    }
+  }
+
   @Get(':userId')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async getAccounts(
     @Req() req,
     @Res() res: Response,
     @Param('userId') targetUserId: number,
   ) {
     try {
-      const user = req.res.userId;
+      // const user = req.res.userId;
       console.log(typeof targetUserId);
-      // const user = 4;
+      const user = 1;
       if (Number(targetUserId) === user) {
         const targetUserAccounts = await this.accountService.getAccounts(user);
         const trimmedAccounts = [];
         for (let i = 0; i < targetUserAccounts.length; i++) {
           const { accountId, acctNo, bank } = targetUserAccounts[i];
           const bankId = bank.id;
-          trimmedAccounts.push({
-            accountId,
-            acctNo,
-            bankId,
-          });
+          if (bankId !== 3) {
+            trimmedAccounts.push({
+              accountId,
+              acctNo,
+              bankId,
+            });
+          }
         }
         return res.status(200).json(trimmedAccounts);
       } else {
@@ -88,4 +135,14 @@ export class AccountsController {
       });
     }
   }
+
+  // @Get(':userId/manual')
+  // // @UseGuards(JwtAuthGuard)
+  // async getManual(
+  //   @Req() req,
+  //   @Res() res,
+  //   @Param('userId') targetUserId: number,
+  // ) {
+
+  // }
 }
