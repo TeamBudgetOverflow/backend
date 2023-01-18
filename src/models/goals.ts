@@ -1,65 +1,68 @@
 import {
-    ManyToOne,
-    Column,
-    Entity,
-    PrimaryGeneratedColumn,
-    BaseEntity,
-    JoinColumn,
-    CreateDateColumn,
-    UpdateDateColumn,
-    OneToMany,
-  } from 'typeorm';
-  import { Users } from './users';
-  import { UserGoals } from './usergoals';
-  
-  @Entity()
-  export class Goals extends BaseEntity {
-    // @ManyToOne(fetch = FetchType.LAZY)
-    @ManyToOne(() => Users, (user) => user.goals, { 
-      onUpdate: 'CASCADE' , eager: true,
-    })
-    @JoinColumn({ name: 'userId' })
-    userId: Users;
+  ManyToOne,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { Users } from './users';
+import { UserGoals } from './usergoals';
 
-    @PrimaryGeneratedColumn()
-    goalId: number;
-  
-    @Column({ nullable: false })
-    amount: number;
+@Entity()
+export class Goals extends BaseEntity {
+  // @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(() => Users, (user) => user.goals, {
+    onUpdate: 'CASCADE',
+    eager: true,
+  })
+  @JoinColumn({ name: 'userId' })
+  userId: Users;
 
-    @Column({ nullable: false })
-    curCount: number;
+  @PrimaryGeneratedColumn()
+  goalId: number;
 
-    @Column({ nullable: false })
-    headCount: number;
+  @Column({ nullable: false })
+  amount: number;
 
-    @Column({ nullable: false })
-    startDate: Date;
+  @Column({ nullable: false })
+  curCount: number;
 
-    @Column({ nullable: false })
-    endDate: Date;
+  @Column({ nullable: false })
+  headCount: number;
 
-    // @Column({ nullable: true })
-    // isAuto: boolean;
+  @Column({ nullable: false })
+  startDate: Date;
 
-    @Column({ nullable: false })
-    title: string;
+  @Column({ nullable: false })
+  endDate: Date;
 
-    // @Column({ nullable: true })
-    // isPrivate: boolean;
+  // @Column({ nullable: true })
+  // isAuto: boolean;
 
-    @Column({ nullable: true })
-    hashTag: string;
+  @Column({ nullable: false })
+  title: string;
 
-    @CreateDateColumn({ 
-      type: "timestamp",
-      update: false,
-     })
-    createdAt: Date;
+  // @Column({ nullable: true })
+  // isPrivate: boolean;
 
-    @UpdateDateColumn({ type: "timestamp" })
-    updatedAt: Date;
+  @Column({ nullable: true })
+  hashTag: string;
 
-    @OneToMany(() => UserGoals, (userGoal) => userGoal.goalId, { cascade: ['insert'] })
-    userGoals: UserGoals[];
-  }
+  @CreateDateColumn({
+    type: 'timestamp',
+    update: false,
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
+
+  @OneToMany(() => UserGoals, (userGoal) => userGoal.goalId, {
+    cascade: ['insert'],
+  })
+  userGoals: UserGoals[];
+}

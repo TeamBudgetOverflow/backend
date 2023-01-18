@@ -53,6 +53,8 @@ export class Accounts extends BaseEntity {
   @JoinColumn({ name: 'bankId' })
   bank: Banks;
 
-  @OneToMany(() => UserGoals, (userGoal) => userGoal.accountId, { cascade: ['insert'] })
+  @OneToMany(() => UserGoals, (userGoal) => userGoal.accountId, {
+    cascade: ['insert'],
+  })
   userGoals: UserGoals[];
 }

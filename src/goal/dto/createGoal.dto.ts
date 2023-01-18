@@ -1,16 +1,16 @@
 import {
-    ArrayMaxSize,
-    IsNumber,
-    IsDate,
-    IsArray,
-    IsNotEmpty,
-    IsString,
-    MinLength,
-    MaxLength,
-    isString,
-  } from 'class-validator';
+  ArrayMaxSize,
+  IsNumber,
+  IsDate,
+  IsArray,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  MaxLength,
+  isString,
+} from 'class-validator';
 
-  export class CreateGoalDTO {
+export class CreateGoalDTO {
   @IsNumber()
   @IsNotEmpty()
   readonly userId: number;
@@ -54,5 +54,5 @@ import {
   @ArrayMaxSize(10)
   readonly hashTag: string;
 
-    // isAuto 와 isPrivate에 관한 사항 업데이트 시 추가 작성 필요
+  // isAuto 와 isPrivate에 관한 사항 업데이트 시 추가 작성 필요
 }

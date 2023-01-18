@@ -11,7 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, UserGoals]),
-    forwardRef(() => AuthModule)
+    forwardRef(() => AuthModule),
   ],
   providers: [UserService, AuthService, JwtService],
   controllers: [UserController],
