@@ -29,59 +29,14 @@ export class UserController {
     private readonly userService: UserService,
   ) {}
 
-  // naver login
-  // @Get('/auth/naver')
-  // @HttpCode(200)
-  // @UseGuards(NaverAuthGuard)
-  // async NaverLogin() {
-  //   return HttpStatus.OK;
-  // }
-
-  // naver callback
-  // @Get('auth/naver/callback')
-  // @UseGuards(NaverAuthGuard)
-  // async naverLoginCallback(@Req() req, @Res() res: Response): Promise<any> {
-  //   try {
-  //     console.log(req.user);
-  //     const user = await this.userService.findUserByEmail(req.user.email);
-  //     if (user === null) {
-  //       // 유저가 없을때 회원가입 -> 로그인
-  //       const createUser = await this.userService.oauthCreateUser(req.user);
-  //       const accessToken = await this.authService.createAccessToken(
-  //         createUser,
-  //       );
-  //       const refreshToken = await this.authService.createRefreshToken(
-  //         createUser,
-  //       );
-  //       return res.status(201).json({
-  //         accessToken: 'Bearer ' + accessToken,
-  //         refreshToken,
-  //         message: '로그인 성공',
-  //       });
-  //     }
-  //     // 유저가 있을때
-  //     const accessToken = await this.authService.createAccessToken(user);
-  //     const refreshToken = await this.authService.createRefreshToken(user);
-  //     return res.status(201).json({
-  //       accessToken: 'Bearer ' + accessToken,
-  //       refreshToken,
-  //       message: '로그인 성공',
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //     return res.status(412).json({ errorMessage: '로그인 실패' });
-  //   }
-  // }
-
-  @Get('auth/naver/callback')
-  @UseGuards(NaverAuthGuard)
+  @Get('auth/naver')
+  @UseGuards(NaverAuthGuard) 
   async naverLoginCallback(
-    @Req() req,
+    @Req() req, 
     @Res() res: Response,
-    @Query('code') code: string,
-  ): Promise<any> {
+    @Query('code') code: string
+    ): Promise<any> {
     try {
-      console.log(req.user);
       const user = await this.userService.findUserByEmail(req.user.email);
       if (user === null) {
         // 유저가 없을때 회원가입 -> 로그인
@@ -95,7 +50,7 @@ export class UserController {
         return res.status(201).json({
           accessToken: 'Bearer ' + accessToken,
           refreshToken,
-          message: 'Registration Complete',
+          message: '로그인 성공',
           newComer: true,
         });
       }
@@ -105,7 +60,7 @@ export class UserController {
       return res.status(201).json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
-        message: 'Login Complete',
+        message: '로그인 성공',
         newComer: false,
       });
     } catch (error) {
@@ -116,27 +71,23 @@ export class UserController {
 
   @Post(':userId/pinCode')
   @UseGuards(JwtAuthGuard)
-  async registerPinCode(
-    @Param('userId') userId: number,
-    @Body('pinCode') pinCode: string,
-    @Req() req,
-    @Res() res: Response,
-  ) {
-    try {
-      if (userId != req.res.userId) {
+  async registerPinCode(@Param('userId') userId: number,
+  @Body('pinCode') pinCode: string,@Req() req, @Res() res: Response){
+    try{
+      if(userId != req.res.userId){
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-        .update(pinCode)
-        .digest('base64');
+      .update(pinCode)
+      .digest('base64');
       await this.userService.registerPinCode(userId, cryptoPinCode);
-      return res.json({ message: '핀 코드 등록 완료' });
-    } catch (error) {
+      return res.json({ message: "핀 코드 등록 완료"});
+    }catch(error){
       console.log(error);
       return res.json({ errorMessage: '핀 코드 등록 실패' });
     }
   }
-
+  
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
   @UseGuards(JwtRefreshGuard)
   @Post('pinCode')
