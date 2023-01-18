@@ -1,14 +1,11 @@
-import {
-    IsNumber,
-    IsNotEmpty,
-  } from 'class-validator';
+import { IsNumber, IsNotEmpty } from 'class-validator';
 
-  export class AccessUserGoalDTO {
-    @IsNumber()
-    @IsNotEmpty()
-    readonly userId: number;
+export class AccessUserGoalDTO {
+  @IsNumber()
+  @IsNotEmpty()
+  readonly userId: number;
 
-    @IsNumber()
-    @IsNotEmpty()
-    readonly goalId: number;
-  }
+  @IsNumber()
+  @IsNotEmpty()
+  readonly goalId: number;
+}

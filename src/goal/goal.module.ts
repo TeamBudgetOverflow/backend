@@ -14,9 +14,15 @@ import { UserGoalService } from '../usergoal/userGoal.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, Goals, UserGoals]),
-    forwardRef(() => AuthModule)
+    forwardRef(() => AuthModule),
   ],
-  providers: [GoalService, UserService, UserGoalService, AuthService, JwtService],
+  providers: [
+    GoalService,
+    UserService,
+    UserGoalService,
+    AuthService,
+    JwtService,
+  ],
   controllers: [GoalController],
   exports: [GoalService],
 })

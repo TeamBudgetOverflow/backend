@@ -59,9 +59,6 @@ export class AccountsService {
       select: {
         accountId: true,
         acctNo: true,
-        user: {
-          id: true,
-        },
         bank: {
           id: true,
         },
