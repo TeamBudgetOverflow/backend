@@ -25,6 +25,7 @@ import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
 import { Connection } from 'typeorm';
 import { Balances } from 'src/models/balances';
+import { UserGoals } from 'src/models/usergoals';
 
 dotenv.config();
 
@@ -49,9 +50,19 @@ export class GoalController {
     // await queryRunner.connect();
     // await queryRunner.startTransaction()
     try {
-      const userId: number = req.res.userId;
+      const userId: number = 6;
       const curCount = 1;
 
+      const checkRegister: UserGoals = await this.usergoalService.findUser({ 
+        accountId : createGoalDTO.accountId
+        });
+      console.log(checkRegister);
+      if(checkRegister){
+        throw new HttpException(
+          '이미 목표에 연결된 계좌 입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       // 1. 목표 생성
       const data: CreateGoalDTO = {
         userId,
@@ -86,7 +97,7 @@ export class GoalController {
       res.json({ message: '목표 생성 완료' });
     } catch (error) {
       console.log(error);
-      res.json({ errorMessage: '목표 생성 실패' });
+      return res.status(400).json({ errorMessage: '목표 생성 실패' });
     }
   }
 
@@ -101,6 +112,14 @@ export class GoalController {
   ) {
     try {
       const userId = req.res.userId;
+      const checkRegister: UserGoals = await this.usergoalService.findUser(accountId);
+      if(checkRegister){
+        throw new HttpException(
+          '이미 목표에 연결된 계좌 입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       // 목표 참가자 맥시멈 숫자 확인 - goals DB
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       const goalMaxUser: number = findGoal.headCount;
@@ -181,7 +200,22 @@ export class GoalController {
   ) {
     try {
       const findGoal = await this.goalService.getGoalDetail(goalId);
-      
+
+      const joinUser = await this.usergoalService.getJoinUser(goalId);
+      const member = [];
+      for(let i = 0; i < joinUser.length; i++){
+        const { nickname: memberNickname } = joinUser[i].userId
+        const { current } = joinUser[i].balanceId
+        let achieveRate: number = 0;
+        if(current !== 0){
+          achieveRate = current/findGoal.amount * 100;
+        }
+        member.push({
+          nickname: memberNickname,
+          achieveRate: achieveRate
+        })
+      }
+
       const { userId, nickname } = findGoal.userId;
       const result = [];
       result.push({
@@ -197,29 +231,14 @@ export class GoalController {
         hashTag: findGoal.hashTag,
         createdAt: findGoal.createdAt,
         updatedAt: findGoal.updatedAt,
+        members: member
       });
-      //console.log(findGoal);
-      
-      const joinUser = await this.usergoalService.getJoinUser(goalId);
-      const member = [];
-      for(let i = 0; i < joinUser.length; i++){
-        const { nickname: memberNickname } = joinUser[i].userId
-        const { current } = joinUser[i].balanceId
-        let achieveRate: number = 0;
-        if(current !== 0){
-          achieveRate = current/findGoal.amount * 100;
-        }
-        member.push({
-          nickname: memberNickname,
-          achieveRate: achieveRate
-        })
-      }
-      console.log(member);
+    
       return res
-        .json({ member: member });
+        .json({ result: result });
     } catch (error) {
       console.log(error);
-      res.status(400).json({ errorMessage: '알 수 없는 에러' });
+      return res.status(400).json({ errorMessage: '알 수 없는 에러' });
     }
   }
 
