@@ -13,12 +13,21 @@ export class UserGoalService {
 
   // 목표에 참가한 유저 리스트와 숫자 리턴
   async getJoinUser(goalId) /*: Promise<number>*/ {
-    const [list, count] = await this.userGoalRepository.findAndCount({
-      where: { goalId },
-      relations: ["userId"]
-    });
-    return {list, count};
+    return await this.userGoalRepository
+      .createQueryBuilder('g')
+      .where('g.goalId = :goalId', {goalId})
+      .leftJoin('g.userId', 'users')
+      .leftJoin('g.balanceId', 'balances')
+      .select(['g','users.nickname', 'balances.current'])
+      .getMany();
   }
+
+  // return await this.goalRepository
+  //     .createQueryBuilder('g')
+  //     .where('g.goalId = :goalId', {goalId})
+  //     .leftJoin('g.userId', 'users')
+  //     .select(['g', 'users.userId', 'users.nickname'])
+  //     .getOne();
 
   // 목표 참가
   async joinGoal(data /*: AccessUserGoalDTO*/) {

@@ -27,21 +27,21 @@ export class GoalService {
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
-    return await this.goalRepository.findOne({ 
-      where: { goalId },
-      join: { 
-        alias: 'Users',
-        leftJoinAndSelect: { 
-          userId: 'Users.userId',
-        },
-      }
-    });
-    // return await this.goalRepository
-    //   .createQueryBuilder('g')
-    //   .where('g.goalId = :goalId', {goalId})
-    //   .leftJoin('g.userId', 'u')
-    //   .addSelect('u.userId', 'userId')
-    //   .getOne();
+    // return await this.goalRepository.findOne({ 
+    //   where: { goalId },
+    //   join: { 
+    //     alias: 'Users',
+    //     leftJoinAndSelect: { 
+    //       userId: 'Users.userId',
+    //     },
+    //   }
+    // });
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.goalId = :goalId', {goalId})
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .getOne();
   }
 
   async getGoalByGoalId(goalId: number): Promise<Goals> {
@@ -49,8 +49,8 @@ export class GoalService {
   }
 
   // 목표 참가자 숫자 변화
-  async updateGoalCurCount(goalId: number, headCount: number) {
-    await this.goalRepository.update({ goalId }, { headCount });
+  async updateGoalCurCount(goalId: number, curCount: number) {
+    await this.goalRepository.update({ goalId }, { curCount });
   }
 
   async updateGoal(goalId: number, updateGoal: UpdateGoalDTO) {

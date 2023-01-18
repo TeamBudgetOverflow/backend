@@ -104,7 +104,9 @@ export class GoalController {
       // 목표 참가자 맥시멈 숫자 확인 - goals DB
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       const goalMaxUser: number = findGoal.headCount;
-      if (findGoal.headCount === goalMaxUser) {
+      console.log(findGoal.curCount);
+      console.log(goalMaxUser);
+      if (findGoal.curCount === goalMaxUser) {
         // 에러 반환 - 참가 유저가 가득 찼습니다
         throw new HttpException(
           '모집이 완료되었습니다.',
@@ -113,7 +115,13 @@ export class GoalController {
       } else {
         // 동시성 문제에 대한 대비책 필요
         // transaction 적용 필요
-        const balanceId: number = 0;
+        const balanceData: InitBalanceDTO = {
+          initial: 0,
+          current: 0,
+          chkType: "Direct Input"
+        }
+        const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
+        const balanceId: number = balanceCreate.balanceId;
         const createUserGoalData: CreateUserGoalDTO = {
           userId,
           goalId,
@@ -127,7 +135,7 @@ export class GoalController {
       }
     } catch (error) {
       console.log(error);
-      res.json({ errorMessage: '알 수 없는 에러입니다.' });
+      return res.status(400).json({ errorMessage: '알 수 없는 에러입니다.' });
     }
   }
 
@@ -159,7 +167,7 @@ export class GoalController {
       res.json({ result });
     } catch (error) {
       console.log(error);
-      res.json({ errorMessage: '알 수 없는 에러' });
+      res.status(400).json({ errorMessage: '알 수 없는 에러' });
     }
   }
 
@@ -173,36 +181,45 @@ export class GoalController {
   ) {
     try {
       const findGoal = await this.goalService.getGoalDetail(goalId);
-    //   const { userId, nickname } = findGoal.userId;
-    //   const result = [];
-    //   result.push({
-    //     goalId: findGoal.goalId,
-    //     userId: userId,
-    //     nickname: nickname,
-    //     amount: findGoal.amount,
-    //     curCount: findGoal.curCount,
-    //     headCount: findGoal.headCount,
-    //     startDate: findGoal.startDate,
-    //     endDate: findGoal.endDate,
-    //     title: findGoal.title,
-    //     hashTag: findGoal.hashTag,
-    //     createdAt: findGoal.createdAt,
-    //     updatedAt: findGoal.updatedAt,
-    //   });
-      const { list, count } = await this.usergoalService.getJoinUser(goalId);
-      const member = [];
-      for(let i = 0; i < count; i++){
-        // 멤버 리스트를 가져올 때
-        // 유저 닉네임과 달성률을 가져와야한다.
-
-      }
-      console.log(findGoal);
-      //console.log(list);
-      //console.log(count);
       
+      const { userId, nickname } = findGoal.userId;
+      const result = [];
+      result.push({
+        goalId: findGoal.goalId,
+        userId: userId,
+        nickname: nickname,
+        amount: findGoal.amount,
+        curCount: findGoal.curCount,
+        headCount: findGoal.headCount,
+        startDate: findGoal.startDate,
+        endDate: findGoal.endDate,
+        title: findGoal.title,
+        hashTag: findGoal.hashTag,
+        createdAt: findGoal.createdAt,
+        updatedAt: findGoal.updatedAt,
+      });
+      //console.log(findGoal);
+      
+      const joinUser = await this.usergoalService.getJoinUser(goalId);
+      const member = [];
+      for(let i = 0; i < joinUser.length; i++){
+        const { nickname: memberNickname } = joinUser[i].userId
+        const { current } = joinUser[i].balanceId
+        let achieveRate: number = 0;
+        if(current !== 0){
+          achieveRate = current/findGoal.amount * 100;
+        }
+        member.push({
+          nickname: memberNickname,
+          achieveRate: achieveRate
+        })
+      }
+      console.log(member);
+      return res
+        .json({ member: member });
     } catch (error) {
       console.log(error);
-      res.json({ errorMessage: '알 수 없는 에러' });
+      res.status(400).json({ errorMessage: '알 수 없는 에러' });
     }
   }
 
