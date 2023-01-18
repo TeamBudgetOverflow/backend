@@ -17,7 +17,7 @@ export class Goals extends BaseEntity {
   // @ManyToOne(fetch = FetchType.LAZY)
   @ManyToOne(() => Users, (user) => user.goals, {
     onUpdate: 'CASCADE',
-    eager: true,
+    //eager: true,
   })
   @JoinColumn({ name: 'userId' })
   userId: Users;

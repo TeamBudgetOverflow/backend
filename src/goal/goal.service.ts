@@ -20,15 +20,28 @@ export class GoalService {
 
   async getAllGoals(): Promise<Goals[]> {
     const result: Goals[] = await this.goalRepository.find({
-      order: {
-        createdAt: 'DESC',
-      },
+      relations: ["userId"],
+      order: { createdAt: 'DESC' },
     });
     return result;
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
-    return await this.goalRepository.findOne({ where: { goalId } });
+    return await this.goalRepository.findOne({ 
+      where: { goalId },
+      join: { 
+        alias: 'Users',
+        leftJoinAndSelect: { 
+          userId: 'Users.userId',
+        },
+      }
+    });
+    // return await this.goalRepository
+    //   .createQueryBuilder('g')
+    //   .where('g.goalId = :goalId', {goalId})
+    //   .leftJoin('g.userId', 'u')
+    //   .addSelect('u.userId', 'userId')
+    //   .getOne();
   }
 
   async getGoalByGoalId(goalId: number): Promise<Goals> {

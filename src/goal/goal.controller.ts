@@ -88,11 +88,9 @@ export class GoalController {
   ) {
     try {
       const userId = req.res.userId;
-      // 1. 목표 참가자 맥시멈 숫자 확인 - goals DB
+      // 목표 참가자 맥시멈 숫자 확인 - goals DB
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       const goalMaxUser: number = findGoal.headCount;
-      // 2. 현재 참가자 숫자 확인 - userGoals DB
-      const joinUserCount = await this.usergoalService.getJoinUser(goalId);
       if (findGoal.headCount === goalMaxUser) {
         // 에러 반환 - 참가 유저가 가득 찼습니다
         throw new HttpException(
@@ -108,8 +106,8 @@ export class GoalController {
           accountId,
         };
         await this.usergoalService.joinGoal(createUserGoalData);
-        findGoal.headCount += 1;
-        await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
+        findGoal.curCount += 1;
+        await this.goalService.updateGoalCurCount(goalId, findGoal.curCount);
         res.json({ message: '참가가 완료되었습니다.' });
       }
     } catch (error) {
@@ -126,7 +124,7 @@ export class GoalController {
       // 페이지네이션 고려
       const sortResult = await this.goalService.getAllGoals();
       const result = [];
-      for (let i = 0; i < result.length; i++) {
+      for (let i = 0; i < sortResult.length; i++) {
         const { userId, nickname } = sortResult[i].userId;
         result.push({
           goalId: sortResult[i].goalId,
@@ -159,9 +157,34 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId = req.res.userId;
       const findGoal = await this.goalService.getGoalDetail(goalId);
+    //   const { userId, nickname } = findGoal.userId;
+    //   const result = [];
+    //   result.push({
+    //     goalId: findGoal.goalId,
+    //     userId: userId,
+    //     nickname: nickname,
+    //     amount: findGoal.amount,
+    //     curCount: findGoal.curCount,
+    //     headCount: findGoal.headCount,
+    //     startDate: findGoal.startDate,
+    //     endDate: findGoal.endDate,
+    //     title: findGoal.title,
+    //     hashTag: findGoal.hashTag,
+    //     createdAt: findGoal.createdAt,
+    //     updatedAt: findGoal.updatedAt,
+    //   });
+      const { list, count } = await this.usergoalService.getJoinUser(goalId);
+      const member = [];
+      for(let i = 0; i < count; i++){
+        // 멤버 리스트를 가져올 때
+        // 유저 닉네임과 달성률을 가져와야한다.
+
+      }
       console.log(findGoal);
+      //console.log(list);
+      //console.log(count);
+      
     } catch (error) {
       console.log(error);
       res.json({ errorMessage: '알 수 없는 에러' });

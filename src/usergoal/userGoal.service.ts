@@ -15,8 +15,9 @@ export class UserGoalService {
   async getJoinUser(goalId) /*: Promise<number>*/ {
     const [list, count] = await this.userGoalRepository.findAndCount({
       where: { goalId },
+      relations: ["userId"]
     });
-    return count;
+    return {list, count};
   }
 
   // 목표 참가
