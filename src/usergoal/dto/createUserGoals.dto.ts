@@ -12,4 +12,8 @@ export class CreateUserGoalDTO {
   @IsNumber()
   @IsNotEmpty()
   readonly accountId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  readonly balanceId: number;
 }

@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
 import { Response } from 'express';
 import { GoalService } from './goal.service';
+import { UserGoalService } from '../usergoal/userGoal.service';
+import { BalanceService } from 'src/balances/balances.service';
 import {
   Controller,
   Get,
@@ -14,13 +16,15 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Post, Param, Body, Patch, Delete } from '@nestjs/common';
-import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
-import { UserGoalService } from '../usergoal/userGoal.service';
+
+import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
+import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
 import { Connection } from 'typeorm';
+import { Balances } from 'src/models/balances';
 
 dotenv.config();
 
@@ -29,6 +33,7 @@ export class GoalController {
   constructor(
     private readonly goalService: GoalService,
     private readonly usergoalService: UserGoalService,
+    private readonly balanceService: BalanceService,
     private readonly connection: Connection,
   ) {}
 
@@ -62,13 +67,21 @@ export class GoalController {
       const result = await this.goalService.createGoal(data);
       const goalId: number = result.goalId;
       const accountId: number = createGoalDTO.accountId;
+      const balanceData: InitBalanceDTO = {
+        initial: 0,
+        current: 0,
+        chkType: "Direct Input"
+      }
+      const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
+      const balanceId: number = balanceCreate.balanceId;
       // 2. 내가 만든 목표 자동 참가
-      const accessUserGoalData: CreateUserGoalDTO = {
+      const createUserGoalData: CreateUserGoalDTO = {
         userId,
         goalId,
         accountId,
+        balanceId,
       };
-      await this.usergoalService.joinGoal(accessUserGoalData);
+      await this.usergoalService.joinGoal(createUserGoalData);
       // Transaction 적용 필요
       res.json({ message: '목표 생성 완료' });
     } catch (error) {
@@ -100,10 +113,12 @@ export class GoalController {
       } else {
         // 동시성 문제에 대한 대비책 필요
         // transaction 적용 필요
+        const balanceId: number = 0;
         const createUserGoalData: CreateUserGoalDTO = {
           userId,
           goalId,
           accountId,
+          balanceId,
         };
         await this.usergoalService.joinGoal(createUserGoalData);
         findGoal.curCount += 1;

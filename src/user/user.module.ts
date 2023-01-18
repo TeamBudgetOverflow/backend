@@ -4,16 +4,21 @@ import { UserService } from './user.service';
 import { AuthModule } from '../auth/auth.module';
 import { Users } from 'src/models/users';
 import { UserGoals } from 'src/models/usergoals';
+import { Goals } from 'src/models/goals';
+import { Accounts } from 'src/models/accounts';
+import { Balances } from 'src/models/balances';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserGoalService } from 'src/usergoal/userGoal.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users, UserGoals]),
+    TypeOrmModule.forFeature([Users, UserGoals, Goals,
+    Accounts, Balances]),
     forwardRef(() => AuthModule),
   ],
-  providers: [UserService, AuthService, JwtService],
+  providers: [UserService, AuthService, JwtService, UserGoalService],
   controllers: [UserController],
   exports: [UserService],
 })

@@ -3,9 +3,10 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   BaseEntity,
-  OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { Accounts } from './accounts';
+import { UserGoals } from './usergoals';
 
 @Entity()
 export class Balances extends BaseEntity {
@@ -21,8 +22,8 @@ export class Balances extends BaseEntity {
   @Column()
   chkType: string;
 
-  //   @OneToOne(() => Accounts, (account) => account.balance, {
-  //     cascade: ['insert'],
-  //   })
-  //   account: Accounts;
+  @OneToMany(() => UserGoals, (userGoal) => userGoal.balanceId, {
+    cascade: ['insert'],
+  })
+  userGoals: UserGoals[];
 }

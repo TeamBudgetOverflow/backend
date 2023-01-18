@@ -8,6 +8,7 @@ import {
 import { Users } from './users';
 import { Goals } from './goals';
 import { Accounts } from './accounts';
+import { Balances } from './balances';
 
 @Entity()
 export class UserGoals extends BaseEntity {
@@ -36,5 +37,11 @@ export class UserGoals extends BaseEntity {
   @JoinColumn({ name: 'accountId' })
   accountId: Accounts;
 
-  // accountId - many to one
+  @ManyToOne(() => Balances, (balance) => balance.userGoals, {
+    onUpdate: 'CASCADE',
+    nullable: false,
+    eager: true,
+  })
+  @JoinColumn({ name: 'balanceId' })
+  balanceId: Balances;
 }

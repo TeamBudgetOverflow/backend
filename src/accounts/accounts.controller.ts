@@ -8,16 +8,26 @@ import {
   UseGuards,
   Get,
   Param,
+  Put,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
 import { AddAccountDto } from './dto/addAccount.dto';
 import { Response } from 'express';
 import { BanksService } from 'src/banks/banks.service';
+import { BalanceService } from 'src/balances/balances.service';
+import { UserGoalService } from 'src/usergoal/userGoal.service';
+import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto'; 
 
 @Controller('/api/accounts')
 export class AccountsController {
-  constructor(private readonly accountService: AccountsService) {}
+  constructor(
+    private readonly accountService: AccountsService,
+    private readonly balanceService: BalanceService,
+    private readonly userGoalService: UserGoalService
+    ) {}
 
   @Post('/:userId/balance')
   async viewAccountBalance(@Body() userInfo, @Headers() headers) {
@@ -55,28 +65,28 @@ export class AccountsController {
   }
 
   @Post('/:userId/manual')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async addManual(
     @Req() req,
     @Res() res,
     @Param('userId') targetUserId: number,
   ) {
     try {
-      // const user = req.res.userId;
-      const userId = 1;
+      const userId = req.res.userId;
+      //const userId = 1;
       // const user = 1; - tested with the fixed user Id
-      const bank = 3; // would be different - talk with FE
+      const bank = 2; // would be different - talk with FE
       // const bank = 2; - tested with the fixed bank Id
       if (Number(targetUserId) === userId) {
         const targetUserAccounts = await this.accountService.getAccounts(
           userId,
         );
         console.log(targetUserAccounts);
-        if (targetUserAccounts.length > 0) {
+        if (targetUserAccounts.length > 10) {
           for (let i = 0; i < targetUserAccounts.length; i++) {
             const { accountId, bank } = targetUserAccounts[i];
             const bankId = bank.id;
-            if (bankId === 3) {
+            if (bankId === 2) {
               const trimmedManual = { accountId };
               return res.status(200).json(trimmedManual);
             }
@@ -145,4 +155,29 @@ export class AccountsController {
   // ) {
 
   // }
+
+  @Put('balance/:balanceId')
+  @UseGuards(JwtAuthGuard)
+  async updateBalance(
+    @Req() req,
+    @Param('balanceId') balanceId: number,
+    @Body('value') current: number,
+    @Res() res: Response){
+      try{
+        const userId = req.res.userId;
+        const data: AccessUserGoalDTO = {
+          userId, balanceId
+        }
+        const findBalance = await this.userGoalService.findUser(data);
+        if(findBalance.accountId.userId != userId){
+          throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
+        }else {
+          await this.balanceService.updateBalance(balanceId, current);
+          return res.json({ message: "balance 수정 완료" });
+        }
+      }catch(error){
+        console.log(error);
+        return res.json({ errorMessage: "balance 수정 실패" });
+      }
+  }
 }
