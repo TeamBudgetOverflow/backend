@@ -9,9 +9,14 @@ import {
   MaxLength,
   isString,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 
 export class UpdateGoalDTO {
+  @IsBoolean()
+  @IsOptional()
+  readonly isPrivate?: boolean;
+
   @IsString()
   @MinLength(4)
   @MaxLength(25, {
@@ -40,11 +45,13 @@ export class UpdateGoalDTO {
   readonly endDate: Date;
 
   @IsString()
-  @ArrayMaxSize(10)
   readonly hashTag: string;
-
   
   @IsString()
   @IsOptional()
   readonly emoji?: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  readonly headCount: number;
 }

@@ -2,15 +2,21 @@ import {
   ArrayMaxSize,
   IsNumber,
   IsDate,
+  IsBoolean,
   IsArray,
   IsNotEmpty,
   IsString,
   MinLength,
   MaxLength,
   isString,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateGoalDTO {
+  @IsBoolean()
+  @IsOptional()
+  readonly isPrivate?: boolean;
+
   @IsNumber()
   @IsNotEmpty()
   readonly userId: number;

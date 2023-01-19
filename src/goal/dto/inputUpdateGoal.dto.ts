@@ -1,7 +1,6 @@
 import {
   ArrayMaxSize,
   IsNumber,
-  IsBoolean,
   IsDate,
   IsArray,
   IsNotEmpty,
@@ -10,28 +9,13 @@ import {
   MaxLength,
   isString,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 
-export class InputCreateGoalDTO {
+export class InputUpdateGoalDTO {
   @IsBoolean()
   @IsOptional()
   readonly isPrivate?: boolean;
-
-  @IsNumber()
-  @IsNotEmpty()
-  readonly amount: number;
-
-  @IsDate()
-  @IsNotEmpty()
-  readonly startDate: Date;
-
-  @IsDate()
-  @IsNotEmpty()
-  readonly endDate: Date;
-
-  @IsNumber()
-  @IsNotEmpty()
-  readonly headCount: number;
 
   @IsString()
   @MinLength(4)
@@ -48,17 +32,28 @@ export class InputCreateGoalDTO {
   @IsNotEmpty()
   readonly description: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  readonly amount: number;
+
+  @IsDate()
+  @IsNotEmpty()
+  readonly startDate: Date;
+
+  @IsDate()
+  @IsNotEmpty()
+  readonly endDate: Date;
+
   @IsString()
   @IsArray()
   @ArrayMaxSize(10)
   readonly hashTag: string[];
 
-  @IsNumber()
-  @IsNotEmpty()
-  readonly accountId: number;
+  @IsString()
+  @IsOptional()
+  readonly emoji?: string;
 
   @IsNumber()
   @IsNotEmpty()
-  @IsOptional()
-  readonly emoji?: string;
+  readonly headCount: number;
 }

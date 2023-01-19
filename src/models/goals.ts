@@ -40,14 +40,11 @@ export class Goals extends BaseEntity {
   @Column({ nullable: false })
   endDate: Date;
 
-  // @Column({ nullable: true })
-  // isAuto: boolean;
-
   @Column({ nullable: false })
   title: string;
 
-  // @Column({ nullable: true })
-  // isPrivate: boolean;
+  @Column({ nullable: true })
+  isPrivate: boolean;
 
   @Column({ nullable: true })
   hashTag: string;

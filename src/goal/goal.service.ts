@@ -13,6 +13,7 @@ export class GoalService {
   ) {}
 
   async createGoal(data /*: CreateGoalDTO*/): Promise<Goals> {
+    console.log(data);
     const result = await this.goalRepository.save(data);
 
     return result;
@@ -36,7 +37,12 @@ export class GoalService {
   }
 
   async getGoalByGoalId(goalId: number): Promise<Goals> {
-    return await this.goalRepository.findOneBy({ goalId });
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.goalId = :goalId', {goalId})
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId'])
+      .getOne();
   }
 
   // 목표 참가자 숫자 변화
@@ -44,8 +50,8 @@ export class GoalService {
     await this.goalRepository.update({ goalId }, { curCount });
   }
 
-  async updateGoal(goalId: number, updateGoal: UpdateGoalDTO) {
-    await this.goalRepository.update({ goalId }, updateGoal);
+  async updateGoal(goalId: number, data: UpdateGoalDTO) {
+    await this.goalRepository.update({ goalId }, data);
   }
 
   async deleteGoal(goalId: number) {

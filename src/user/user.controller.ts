@@ -221,27 +221,35 @@ export class UserController {
   @Get(':userId/goals')
   @UseGuards(JwtAuthGuard)
   async getUserGoal(
+    @Req() req,
     @Param('userId') userId: number,
     @Res() res: Response){
     try{
+      const myUserId = req.res.userId;
       const findGoals = await this.userGoalService.getGoalByUserId(userId);
       const result = [];
-      console.log(findGoals);
       for(let i = 0; i < findGoals.length; i++){
-        result.push({
-          goalId: findGoals[i].goalId.goalId,
-          amount: findGoals[i].goalId.amount,
-          curCount: findGoals[i].goalId.curCount,
-          headCount: findGoals[i].goalId.headCount,
-          startDate: findGoals[i].goalId.startDate,
-          endDate: findGoals[i].goalId.endDate,
-          title: findGoals[i].goalId.title,
-          hashTag: findGoals[i].goalId.hashTag,
-          emoji: findGoals[i].goalId.emoji,
-          description: findGoals[i].goalId.description,
-          createdAt: findGoals[i].goalId.createdAt,
-          updatedAt: findGoals[i].goalId.updatedAt,
-        })}
+        if(myUserId != userId && (findGoals[i].goalId.isPrivate == true)){
+          continue;
+        } else {
+          const hashTag = findGoals[i].goalId.hashTag.split(",");
+          result.push({
+            isPrivate: findGoals[i].goalId.isPrivate,
+            goalId: findGoals[i].goalId.goalId,
+            amount: findGoals[i].goalId.amount,
+            curCount: findGoals[i].goalId.curCount,
+            headCount: findGoals[i].goalId.headCount,
+            startDate: findGoals[i].goalId.startDate,
+            endDate: findGoals[i].goalId.endDate,
+            title: findGoals[i].goalId.title,
+            hashTag: hashTag,
+            emoji: findGoals[i].goalId.emoji,
+            description: findGoals[i].goalId.description,
+            createdAt: findGoals[i].goalId.createdAt,
+            updatedAt: findGoals[i].goalId.updatedAt,
+            attainment: findGoals[i].balanceId.current/findGoals[i].goalId.amount * 100
+          })
+        }}
       return res.json({ result: result });
     }catch(error){
       console.log(error);

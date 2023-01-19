@@ -15,13 +15,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { Post, Param, Body, Patch, Delete } from '@nestjs/common';
+import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
-import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
-
+import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
 import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
+import { UpdateGoalDTO } from './dto/updateGoal.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
 import { Connection } from 'typeorm';
 import { Balances } from 'src/models/balances';
@@ -62,8 +62,21 @@ export class GoalController {
           HttpStatus.BAD_REQUEST,
         );
       }
+      let hashTag: string = '';
+      for(let i = 0; i < createGoalDTO.hashTag.length ; i++){
+        if(i == createGoalDTO.hashTag.length - 1){
+          hashTag += createGoalDTO.hashTag[i];
+        }else {
+          hashTag += createGoalDTO.hashTag[i] + ",";
+        }
+      }
+      let isPrivate = false;
+      if(createGoalDTO.isPrivate){
+        isPrivate = createGoalDTO.isPrivate;
+      }
       // 1. 목표 생성
       const data: CreateGoalDTO = {
+        isPrivate: isPrivate,
         userId,
         curCount,
         amount: createGoalDTO.amount,
@@ -72,7 +85,7 @@ export class GoalController {
         headCount: createGoalDTO.headCount,
         title: createGoalDTO.title,
         description: createGoalDTO.description,
-        hashTag: createGoalDTO.hashTag,
+        hashTag: hashTag,
       };
       const result = await this.goalService.createGoal(data);
       const goalId: number = result.goalId;
@@ -93,7 +106,7 @@ export class GoalController {
       };
       await this.usergoalService.joinGoal(createUserGoalData);
       // Transaction 적용 필요
-      res.json({ message: '목표 생성 완료' });
+      res.json({ goalId, message: '목표 생성 완료' });
     } catch (error) {
       console.log(error);
       return res.status(400).json({ errorMessage: '목표 생성 실패' });
@@ -110,7 +123,7 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = 9;
       const checkRegister: UserGoals = await this.usergoalService.findUser(accountId);
       if(checkRegister){
         throw new HttpException(
@@ -160,11 +173,12 @@ export class GoalController {
   @UseGuards(JwtAuthGuard)
   async getAllGoal(@Res() res: Response) {
     try {
-      // 페이지네이션 고려
+      // 무한 스크롤 고려
       const sortResult = await this.goalService.getAllGoals();
       const result = [];
       for (let i = 0; i < sortResult.length; i++) {
         const { userId, nickname } = sortResult[i].userId;
+        const hashTag = sortResult[i].hashTag.split(",");
         result.push({
           goalId: sortResult[i].goalId,
           userId: userId,
@@ -175,7 +189,7 @@ export class GoalController {
           startDate: sortResult[i].startDate,
           endDate: sortResult[i].endDate,
           title: sortResult[i].title,
-          hashTag: sortResult[i].hashTag,
+          hashTag: hashTag,
           emoji: sortResult[i].emoji,
           description: sortResult[i].description,
           createdAt: sortResult[i].createdAt,
@@ -207,19 +221,20 @@ export class GoalController {
                 nickname: memberNickname,
                 image: memberImage } = joinUser[i].userId
         const { current } = joinUser[i].balanceId
-        let achieveRate: number = 0;
+        let attainment: number = 0;
         if(current !== 0){
-          achieveRate = current/findGoal.amount * 100;
+          attainment = current/findGoal.amount * 100;
         }
         member.push({
           userId: memberUserId,
           nickname: memberNickname,
           image: memberImage,
-          achieveRate: achieveRate
+          attainment: attainment
         })
       }
 
       const { userId, nickname } = findGoal.userId;
+      const hashTag = findGoal.hashTag.split(",");
       const result = [];
       result.push({
         goalId: findGoal.goalId,
@@ -231,7 +246,7 @@ export class GoalController {
         startDate: findGoal.startDate,
         endDate: findGoal.endDate,
         title: findGoal.title,
-        hashTag: findGoal.hashTag,
+        hashTag: hashTag,
         emoji: findGoal.emoji,
         description: findGoal.description,
         createdAt: findGoal.createdAt,
@@ -248,21 +263,51 @@ export class GoalController {
   }
 
   // 목표 수정
-  @Patch(':goalId')
+  @Put(':goalId')
   @UseGuards(JwtAuthGuard)
   async updateGoal(
     @Req() req,
     @Param('goalId') goalId: number,
-    @Body() updateGoalDTO: UpdateGoalDTO,
+    @Body() inputUpdateGoalDTO: InputUpdateGoalDTO,
     @Res() res: Response,
   ) {
     try {
       const userId: number = req.res.userId;
-      await this.goalService.updateGoal(goalId, updateGoalDTO);
+      const findGoal = await this.goalService.getGoalByGoalId(goalId);
+      if(userId != findGoal.userId.userId) {
+        throw new HttpException(
+          '접근할 수 없는 권한입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      let hashTag: string = '';
+      for(let i = 0; i < inputUpdateGoalDTO.hashTag.length ; i++){
+        if(i == inputUpdateGoalDTO.hashTag.length - 1){
+          hashTag += inputUpdateGoalDTO.hashTag[i];
+        }else {
+          hashTag += inputUpdateGoalDTO.hashTag[i] + ",";
+        }
+      }
+      let isPrivate = false;
+      if(inputUpdateGoalDTO.isPrivate){
+        isPrivate = inputUpdateGoalDTO.isPrivate;
+      }
+      let data: UpdateGoalDTO = {
+        isPrivate: isPrivate,
+        title: inputUpdateGoalDTO.title,
+        description: inputUpdateGoalDTO.description,
+        amount: inputUpdateGoalDTO.amount,
+        startDate: inputUpdateGoalDTO.startDate,
+        endDate: inputUpdateGoalDTO.endDate,
+        hashTag: hashTag,
+        emoji: inputUpdateGoalDTO.emoji,
+        headCount: inputUpdateGoalDTO.headCount,
+      }
+      await this.goalService.updateGoal(goalId, data);
       res.json({ message: '목표 수정 완료' });
     } catch (error) {
       console.log(error);
-      res.json({ errorMessage: '목표 수정 실패' });
+      return res.status(400).json({ errorMessage: '목표 수정 실패' });
     }
   }
 
@@ -297,7 +342,6 @@ export class GoalController {
         // 중간 테이블 삭제
         await this.usergoalService.exitGoal(accessUserGoalData);
         // 참가자 숫자 변동
-        const findGoal = await this.goalService.getGoalByGoalId(goalId);
         findGoal.headCount -= 1;
         await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
       }
