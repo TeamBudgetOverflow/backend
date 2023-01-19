@@ -41,7 +41,7 @@ export class AccountsController {
   }
 
   @Post('/:userId')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async addAccount(
     @Req() req,
     @Res() res: Response,
