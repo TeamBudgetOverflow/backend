@@ -18,7 +18,7 @@ export class Banks extends BaseEntity {
   @Column({ unique: true })
   bankCode: string;
 
-  @Column({ unique: true })
+  @Column({ unique: false })
   bankName: string;
 
   @OneToMany(() => Accounts, (account) => account.bank, {
