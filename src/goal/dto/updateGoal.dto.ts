@@ -8,6 +8,7 @@ import {
   MinLength,
   MaxLength,
   isString,
+  IsOptional,
 } from 'class-validator';
 
 export class UpdateGoalDTO {
@@ -42,5 +43,8 @@ export class UpdateGoalDTO {
   @ArrayMaxSize(10)
   readonly hashTag: string;
 
-  // isAuto 와 isPrivate에 관한 사항 업데이트 시 추가 작성 필요
+  
+  @IsString()
+  @IsOptional()
+  readonly emoji?: string;
 }

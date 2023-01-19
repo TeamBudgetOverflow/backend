@@ -50,7 +50,7 @@ export class GoalController {
     // await queryRunner.connect();
     // await queryRunner.startTransaction()
     try {
-      const userId: number = 6;
+      const userId: number = req.res.userId;
       const curCount = 1;
 
       const checkRegister: UserGoals = await this.usergoalService.findUser({ 
