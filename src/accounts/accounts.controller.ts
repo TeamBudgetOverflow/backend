@@ -65,7 +65,7 @@ export class AccountsController {
   }
 
   @Post('/:userId/manual')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async addManual(
     @Req() req,
     @Res() res,
