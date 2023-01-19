@@ -19,15 +19,15 @@ import { Response } from 'express';
 import { BanksService } from 'src/banks/banks.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
-import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto'; 
+import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 
 @Controller('/api/accounts')
 export class AccountsController {
   constructor(
     private readonly accountService: AccountsService,
     private readonly balanceService: BalanceService,
-    private readonly userGoalService: UserGoalService
-    ) {}
+    private readonly userGoalService: UserGoalService,
+  ) {}
 
   @Post('/:userId/balance')
   async viewAccountBalance(@Body() userInfo, @Headers() headers) {
@@ -41,7 +41,7 @@ export class AccountsController {
   }
 
   @Post('/:userId')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async addAccount(
     @Req() req,
     @Res() res: Response,
@@ -73,7 +73,7 @@ export class AccountsController {
   ) {
     try {
       const userId = req.res.userId;
-      //const userId = 1;
+      // const userId = 1;
       // const user = 1; - tested with the fixed user Id
       const bank = 2; // would be different - talk with FE
       // const bank = 2; - tested with the fixed bank Id
@@ -93,10 +93,8 @@ export class AccountsController {
           }
         } else {
           const data = { userId, bank };
-          await this.accountService.addAccount(data);
-          return res
-            .status(200)
-            .json({ message: 'Manual Account Added Successfully' });
+          const result = await this.accountService.addAccount(data);
+          return res.status(200).json({ accountId: result.accountId });
         }
       } else {
         throw new Error('User Does not exist');
@@ -162,22 +160,24 @@ export class AccountsController {
     @Req() req,
     @Param('balanceId') balanceId: number,
     @Body('value') current: number,
-    @Res() res: Response){
-      try{
-        const userId = req.res.userId;
-        const data: AccessUserGoalDTO = {
-          userId, balanceId
-        }
-        const findBalance = await this.userGoalService.findUser(data);
-        if(findBalance.accountId.userId != userId){
-          throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
-        }else {
-          await this.balanceService.updateBalance(balanceId, current);
-          return res.json({ message: "balance 수정 완료" });
-        }
-      }catch(error){
-        console.log(error);
-        return res.json({ errorMessage: "balance 수정 실패" });
+    @Res() res: Response,
+  ) {
+    try {
+      const userId = req.res.userId;
+      const data: AccessUserGoalDTO = {
+        userId,
+        balanceId,
+      };
+      const findBalance = await this.userGoalService.findUser(data);
+      if (findBalance.accountId.userId != userId) {
+        throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
+      } else {
+        await this.balanceService.updateBalance(balanceId, current);
+        return res.json({ message: 'balance 수정 완료' });
       }
+    } catch (error) {
+      console.log(error);
+      return res.json({ errorMessage: 'balance 수정 실패' });
+    }
   }
 }

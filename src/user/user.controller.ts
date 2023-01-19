@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import { Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { UserService } from './user.service';
-import { UserGoalService } from '../usergoal/userGoal.service'
+import { UserGoalService } from '../usergoal/userGoal.service';
 import { NaverAuthGuard } from '../auth/guard/naver-auth.guard';
 import {
   Controller,
@@ -34,12 +34,12 @@ export class UserController {
   ) {}
 
   @Get('auth/naver')
-  @UseGuards(NaverAuthGuard) 
+  @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
-    @Req() req, 
+    @Req() req,
     @Res() res: Response,
-    @Query('code') code: string
-    ): Promise<any> {
+    @Query('code') code: string,
+  ): Promise<any> {
     try {
       const user = await this.userService.findUserByEmail(req.user.email);
       if (user === null) {
@@ -167,20 +167,24 @@ export class UserController {
   async getUserProfile(
     @Req() req,
     @Res() res: Response,
-    @Param('userId') userId: number,
+    @Param('userId') targetUserId: number,
   ) {
     try {
-      console.log(userId, typeof(userId));
-      console.log(req.res.userId, typeof(req.res.userId));
+      const userId = req.res.userId;
       // const user = 1;
       // if (Number(userId) !== user) {
-      if (userId != req.res.userId) {
-        return res.status(400).json({
-          errorMessage: 'Not a valid user',
-        });
+      if (Number(targetUserId) === userId) {
+        const targetUserProfile = await this.userService.getUserProfile(userId);
+        return res.status(200).json(targetUserProfile);
+      } else {
+        throw new Error('User Does not exist');
       }
-      const targetUserProfile = await this.userService.getUserProfile(userId);
-      return res.status(200).json(targetUserProfile);
+
+      // else {
+      //   return res.status(400).json({
+      //     errorMessage: 'Not a valid user',
+      //   });
+      // }
     } catch (err) {
       console.log(err);
       return res.status(400).json({
@@ -194,22 +198,21 @@ export class UserController {
   async modifyUserProfile(
     @Req() req,
     @Res() res: Response,
-    @Param('userId') userId: number,
+    @Param('userId') targetUserId: number,
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
     try {
+      const userId = req.res.userId;
       // const user = 1;
       // if (Number(userId) !== user) {
-      if (Number(userId) !== req.res.userId) {
-        return res.status(400).json({
-          errorMessage: 'Not a valid user',
+      if (Number(targetUserId) === userId) {
+        await this.userService.modifyUser(userId, modifyInfo);
+        return res.status(200).json({
+          message: 'Updated User Profile Succesfully',
         });
+      } else {
+        throw new Error('User Does not exist');
       }
-
-      await this.userService.modifyUser(userId, modifyInfo);
-      return res.status(200).json({
-        message: 'Updated User Profile Succesfully',
-      });
     } catch (err) {
       console.log(err);
       return res.status(400).json({
@@ -251,11 +254,11 @@ export class UserController {
           })
         }}
       return res.json({ result: result });
-    }catch(error){
+    } catch (error) {
       console.log(error);
       return res.status(400).json({
-        errorMessage: '알 수 없는 에러입니다.'
-      })
+        errorMessage: '알 수 없는 에러입니다.',
+      });
     }
   }
 }
