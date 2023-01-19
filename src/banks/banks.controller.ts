@@ -26,4 +26,26 @@ export class BanksController {
       });
     }
   }
+
+  @Get()
+  async getAllBanks(@Req() req, @Res() res: Response) {
+    try {
+      const banks = await this.bankService.getAllBanks();
+      const bankList = [];
+      for (let i = 0; i < banks.length; i++) {
+        const { id: bankId, bankCode, bankName } = banks[i];
+        bankList.push({
+          bankId,
+          bankCode,
+          bankName,
+        });
+      }
+      return res.status(200).json(bankList);
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        errorMessage: 'Failed to get the list of banks',
+      });
+    }
+  }
 }

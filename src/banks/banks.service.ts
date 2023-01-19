@@ -18,4 +18,10 @@ export class BanksService {
     }
     return { bankId, bankCode, bankName };
   }
+  async getAllBanks() {
+    const banks: Banks[] = await this.bankRepository.find({
+      order: { id: 'ASC' },
+    });
+    return banks;
+  }
 }
