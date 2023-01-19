@@ -55,6 +55,9 @@ export class Goals extends BaseEntity {
   @Column({ nullable: true })
   emoji: string;
 
+  @Column({ nullable: true })
+  description: string;
+
   @CreateDateColumn({
     type: 'timestamp',
     update: false,

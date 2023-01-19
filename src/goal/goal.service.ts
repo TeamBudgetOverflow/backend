@@ -27,15 +27,6 @@ export class GoalService {
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
-    // return await this.goalRepository.findOne({ 
-    //   where: { goalId },
-    //   join: { 
-    //     alias: 'Users',
-    //     leftJoinAndSelect: { 
-    //       userId: 'Users.userId',
-    //     },
-    //   }
-    // });
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.goalId = :goalId', {goalId})

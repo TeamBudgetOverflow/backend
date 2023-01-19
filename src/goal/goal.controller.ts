@@ -56,7 +56,6 @@ export class GoalController {
       const checkRegister: UserGoals = await this.usergoalService.findUser({ 
         accountId : createGoalDTO.accountId
         });
-      console.log(checkRegister);
       if(checkRegister){
         throw new HttpException(
           '이미 목표에 연결된 계좌 입니다.',
@@ -123,8 +122,6 @@ export class GoalController {
       // 목표 참가자 맥시멈 숫자 확인 - goals DB
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       const goalMaxUser: number = findGoal.headCount;
-      console.log(findGoal.curCount);
-      console.log(goalMaxUser);
       if (findGoal.curCount === goalMaxUser) {
         // 에러 반환 - 참가 유저가 가득 찼습니다
         throw new HttpException(
@@ -179,6 +176,8 @@ export class GoalController {
           endDate: sortResult[i].endDate,
           title: sortResult[i].title,
           hashTag: sortResult[i].hashTag,
+          emoji: sortResult[i].emoji,
+          description: sortResult[i].description,
           createdAt: sortResult[i].createdAt,
           updatedAt: sortResult[i].updatedAt,
         });
@@ -204,14 +203,18 @@ export class GoalController {
       const joinUser = await this.usergoalService.getJoinUser(goalId);
       const member = [];
       for(let i = 0; i < joinUser.length; i++){
-        const { nickname: memberNickname } = joinUser[i].userId
+        const { userId: memberUserId, 
+                nickname: memberNickname,
+                image: memberImage } = joinUser[i].userId
         const { current } = joinUser[i].balanceId
         let achieveRate: number = 0;
         if(current !== 0){
           achieveRate = current/findGoal.amount * 100;
         }
         member.push({
+          userId: memberUserId,
           nickname: memberNickname,
+          image: memberImage,
           achieveRate: achieveRate
         })
       }
@@ -229,6 +232,8 @@ export class GoalController {
         endDate: findGoal.endDate,
         title: findGoal.title,
         hashTag: findGoal.hashTag,
+        emoji: findGoal.emoji,
+        description: findGoal.description,
         createdAt: findGoal.createdAt,
         updatedAt: findGoal.updatedAt,
         members: member
