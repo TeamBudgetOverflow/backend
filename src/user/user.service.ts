@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from '../models/users';
+import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
 @Injectable()
 export class UserService {
@@ -50,5 +51,20 @@ export class UserService {
     pinCode: string,
   ): Promise<Users> {
     return await this.userRepository.findOneBy({ refreshToken, pinCode });
+  }
+
+  async getUserProfile(userId: number) {
+    const targetUserInfo = await this.userRepository.findOneBy({ userId });
+    return targetUserInfo;
+  }
+
+  async modifyUser(userId: number, modifyInfo: ModifyUserInfoDTO) {
+    const targetUserInfo = await this.userRepository.findOneBy({ userId });
+    const { nickname, image, description } = modifyInfo;
+
+    targetUserInfo.nickname = nickname;
+    targetUserInfo.image = image;
+    targetUserInfo.description = description;
+    await this.userRepository.save(targetUserInfo);
   }
 }

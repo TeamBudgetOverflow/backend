@@ -17,9 +17,10 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { JwtRefreshGuard } from '../auth/guard/jwt-refreshToken-auth.guard';
-import { Post, Put, Param, Body } from '@nestjs/common';
+import { Post, Patch, Put, Param, Body } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
+import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
 dotenv.config();
 
@@ -156,6 +157,60 @@ export class UserController {
       });
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  @Get(':userId')
+  @UseGuards(JwtAuthGuard)
+  async getUserProfile(
+    @Req() req,
+    @Res() res: Response,
+    @Param('userId') userId: number,
+  ) {
+    try {
+      // const user = 1;
+      // if (Number(userId) !== user) {
+      if (userId !== req.res.userId) {
+        return res.status(400).json({
+          errorMessage: 'Not a valid user',
+        });
+      }
+      const targetUserProfile = await this.userService.getUserProfile(userId);
+      return res.status(200).json(targetUserProfile);
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        errorMessage: 'Unable to get the user profile',
+      });
+    }
+  }
+
+  @Patch(':userId')
+  @UseGuards(JwtAuthGuard)
+  async modifyUserProfile(
+    @Req() req,
+    @Res() res: Response,
+    @Param('userId') userId: number,
+    @Body() modifyInfo: ModifyUserInfoDTO,
+  ) {
+    try {
+      // const user = 1;
+      // if (Number(userId) !== user) {
+      if (Number(userId) !== req.res.userId) {
+        return res.status(400).json({
+          errorMessage: 'Not a valid user',
+        });
+      }
+
+      await this.userService.modifyUser(userId, modifyInfo);
+      return res.status(200).json({
+        message: 'Updated User Profile Succesfully',
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        errorMessage: 'Unable to modify the user profile',
+      });
     }
   }
 }
