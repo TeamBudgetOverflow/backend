@@ -72,8 +72,8 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     try {
-      // const userId = req.res.userId;
-      const userId = 1;
+      const userId = req.res.userId;
+      // const userId = 1;
       // const user = 1; - tested with the fixed user Id
       const bank = 2; // would be different - talk with FE
       // const bank = 2; - tested with the fixed bank Id
