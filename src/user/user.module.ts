@@ -11,6 +11,7 @@ import { AuthService } from '../auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
+import { GoalService } from 'src/goal/goal.service';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { UserGoalService } from 'src/usergoal/userGoal.service';
     Accounts, Balances]),
     forwardRef(() => AuthModule),
   ],
-  providers: [UserService, AuthService, JwtService, UserGoalService],
+  providers: [UserService, AuthService, JwtService,
+    GoalService, UserGoalService],
   controllers: [UserController],
   exports: [UserService],
 })

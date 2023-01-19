@@ -23,6 +23,17 @@ export class UserGoalService {
       .getMany();
   }
 
+  async getGoalByUserId(userId: number) {
+    const result = await this.userGoalRepository
+      .createQueryBuilder('g')
+      .where('g.userId = :userId', {userId})
+      .leftJoin('g.goalId', 'goals')
+      .select(['g', 'goals'])
+      .getMany();
+
+    return result;
+  }
+
   // 목표 참가
   async joinGoal(data /*: AccessUserGoalDTO*/) {
     await this.userGoalRepository.save(data);

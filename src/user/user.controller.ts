@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { UserService } from './user.service';
+import { UserGoalService } from '../usergoal/userGoal.service'
 import { NaverAuthGuard } from '../auth/guard/naver-auth.guard';
 import {
   Controller,
@@ -29,6 +30,7 @@ export class UserController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
+    private readonly userGoalService: UserGoalService,
   ) {}
 
   @Get('auth/naver')
@@ -168,9 +170,11 @@ export class UserController {
     @Param('userId') userId: number,
   ) {
     try {
+      console.log(userId, typeof(userId));
+      console.log(req.res.userId, typeof(req.res.userId));
       // const user = 1;
       // if (Number(userId) !== user) {
-      if (userId !== req.res.userId) {
+      if (userId != req.res.userId) {
         return res.status(400).json({
           errorMessage: 'Not a valid user',
         });
@@ -211,6 +215,39 @@ export class UserController {
       return res.status(400).json({
         errorMessage: 'Unable to modify the user profile',
       });
+    }
+  }
+
+  @Get(':userId/goals')
+  @UseGuards(JwtAuthGuard)
+  async getUserGoal(
+    @Param('userId') userId: number,
+    @Res() res: Response){
+    try{
+      const findGoals = await this.userGoalService.getGoalByUserId(userId);
+      const result = [];
+      console.log(findGoals);
+      for(let i = 0; i < findGoals.length; i++){
+        result.push({
+          goalId: findGoals[i].goalId.goalId,
+          amount: findGoals[i].goalId.amount,
+          curCount: findGoals[i].goalId.curCount,
+          headCount: findGoals[i].goalId.headCount,
+          startDate: findGoals[i].goalId.startDate,
+          endDate: findGoals[i].goalId.endDate,
+          title: findGoals[i].goalId.title,
+          hashTag: findGoals[i].goalId.hashTag,
+          emoji: findGoals[i].goalId.emoji,
+          description: findGoals[i].goalId.description,
+          createdAt: findGoals[i].goalId.createdAt,
+          updatedAt: findGoals[i].goalId.updatedAt,
+        })}
+      return res.json({ result: result });
+    }catch(error){
+      console.log(error);
+      return res.status(400).json({
+        errorMessage: '알 수 없는 에러입니다.'
+      })
     }
   }
 }
