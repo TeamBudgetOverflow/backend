@@ -86,6 +86,7 @@ export class GoalController {
         title: createGoalDTO.title,
         description: createGoalDTO.description,
         hashTag: hashTag,
+        emoji: createGoalDTO.emoji
       };
       const result = await this.goalService.createGoal(data);
       const goalId: number = result.goalId;

@@ -57,8 +57,7 @@ export class InputCreateGoalDTO {
   @IsNotEmpty()
   readonly accountId: number;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsString()
   @IsOptional()
   readonly emoji?: string;
 }
