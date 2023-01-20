@@ -16,16 +16,8 @@ dotenv.config();
   imports: [
     TypeOrmModule.forFeature([Users]),
     forwardRef(() => UserModule),
-    JwtModule.register({
-      secret: process.env.ACCESS_TOKEN_KEY,
-      signOptions: { expiresIn: `${process.env.ACCESS_TOKEN_EXP}` },
-    }),
-    JwtModule.register({
-      secret: process.env.REFRESH_TOKEN_KEY,
-      signOptions: { expiresIn: `${process.env.REFRESH_TOKEN_EXP}` },
-    }),
+    JwtModule,
     ],
-  exports: [JwtModule],
   providers: [AuthService, UserService, JwtService, NaverStrategy,
   JwtStrategy, JwtRefreshStrategy],
 })

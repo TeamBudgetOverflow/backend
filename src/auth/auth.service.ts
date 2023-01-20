@@ -24,7 +24,7 @@ export class AuthService {
 
   async tokenValidate(token: string) {
     return await this.jwtService.verify(token, {
-      secret: process.env.TOKEN_SECRETE_KEY,
+      secret: process.env.ACCESS_TOKEN_KEY,
     });
   }
 

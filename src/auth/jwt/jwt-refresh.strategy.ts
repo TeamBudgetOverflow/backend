@@ -30,20 +30,21 @@ export class JwtRefreshStrategy extends PassportStrategy(
   }
 
   async validate(request: Request) {
-    const { authorization } = request.headers;
-    const refreshToken = authorization;
-    const { pinCode } = request.body;
+    try{
+      const { authorization } = request.headers;
+      const refreshToken = authorization;
+      const { pinCode } = request.body;
 
-    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-        .update(pinCode)
-        .digest('base64');
-
-    const { userId } = await this.authService.findUserByPinAndRefresh(
-      refreshToken, cryptoPinCode
-    );
-    if (userId === null) {
-        throw new HttpException('pinCode가 잘못입력되었습니다', 401);
+      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+          .update(pinCode)
+          .digest('base64');
+      const { userId } = await this.authService.findUserByPinAndRefresh(
+        refreshToken, cryptoPinCode
+      );
+      return { userId, refreshToken };
+    }catch(error){
+      console.log(error);
+      throw new HttpException('pinCode가 잘못입력되었습니다', 401);
     }
-    return { userId, refreshToken };
   }
 }

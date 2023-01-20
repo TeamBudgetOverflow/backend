@@ -12,7 +12,6 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
 import { AddAccountDto } from './dto/addAccount.dto';
 import { Response } from 'express';

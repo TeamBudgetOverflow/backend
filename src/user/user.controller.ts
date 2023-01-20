@@ -16,13 +16,10 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { JwtRefreshGuard } from '../auth/jwt/jwt-refreshToken-auth.guard';
 import { Post, Patch, Put, Param, Body } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
-import { JwtRefreshStrategy } from 'src/auth/jwt/jwt-refresh.strategy';
 import { AuthGuard } from '@nestjs/passport';
 
 dotenv.config();

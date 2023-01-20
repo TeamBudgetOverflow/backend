@@ -14,7 +14,6 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
