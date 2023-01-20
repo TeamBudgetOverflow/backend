@@ -26,6 +26,7 @@ import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
 import { Connection } from 'typeorm';
 import { Balances } from 'src/models/balances';
 import { UserGoals } from 'src/models/usergoals';
+import { AuthGuard } from '@nestjs/passport';
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ export class GoalController {
 
   // 목표 생성
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async createGoal(
     @Req() req,
     @Body() createGoalDTO: InputCreateGoalDTO,
@@ -116,7 +117,7 @@ export class GoalController {
 
   //목표 참가
   @Post('join/:goalId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async joinGoal(
     @Req() req,
     @Body('accountId') accountId: number,
@@ -171,7 +172,7 @@ export class GoalController {
 
   // 목표 전체 조회
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getAllGoal(@Res() res: Response) {
     try {
       // 무한 스크롤 고려
@@ -206,7 +207,7 @@ export class GoalController {
 
   // 목표 상세 조회
   @Get(':goalId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getGoalDetail(
     @Req() req,
     @Param('goalId') goalId: number,
@@ -265,7 +266,7 @@ export class GoalController {
 
   // 목표 수정
   @Put(':goalId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async updateGoal(
     @Req() req,
     @Param('goalId') goalId: number,
@@ -315,7 +316,7 @@ export class GoalController {
   // 목표 탈퇴
   // 목표 시작 전에만 가능함
   @Delete('exit/:goalId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async exitGoal(
     @Req() req,
     @Param('goalId') goalId: number,
@@ -354,7 +355,7 @@ export class GoalController {
 
   // 목표 삭제
   @Delete(':goal')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async deleteGoal(
     @Req() req,
     @Param('goalId') goalId: number,
@@ -367,9 +368,9 @@ export class GoalController {
       if (find.curCount >= 2) {
         throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
       } else {
-        await this.goalService.deleteGoal(goalId);
         const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
         await this.usergoalService.exitGoal(accessUserGoalData);
+        await this.goalService.deleteGoal(goalId);
         res.json({ message: '목표 삭제 완료' });
       }
     } catch (error) {

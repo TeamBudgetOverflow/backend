@@ -20,6 +20,7 @@ import { BanksService } from 'src/banks/banks.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('/api/accounts')
 export class AccountsController {
@@ -41,7 +42,7 @@ export class AccountsController {
   }
 
   @Post('/:userId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async addAccount(
     @Req() req,
     @Res() res: Response,
@@ -65,7 +66,7 @@ export class AccountsController {
   }
 
   @Post('/:userId/manual')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async addManual(
     @Req() req,
     @Res() res,
@@ -108,7 +109,7 @@ export class AccountsController {
   }
 
   @Get(':userId')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getAccounts(
     @Req() req,
     @Res() res: Response,
@@ -144,18 +145,8 @@ export class AccountsController {
     }
   }
 
-  // @Get(':userId/manual')
-  // // @UseGuards(JwtAuthGuard)
-  // async getManual(
-  //   @Req() req,
-  //   @Res() res,
-  //   @Param('userId') targetUserId: number,
-  // ) {
-
-  // }
-
   @Put('balance/:balanceId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async updateBalance(
     @Req() req,
     @Param('balanceId') balanceId: number,
