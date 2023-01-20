@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { Users } from '../models/users';
 import { JwtService } from '@nestjs/jwt';
@@ -6,6 +8,8 @@ import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(Users)
+    private userRepository: Repository<Users>,
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
@@ -27,33 +31,30 @@ export class AuthService {
   async createAccessToken(user: Users) {
     const payload = {
       userId: user.userId,
-      tokenType: 'accessToken',
     };
     const accessToken: string = this.jwtService.sign(payload, {
-      secret: process.env.TOKEN_SECRETE_KEY,
-      expiresIn: '1h',
+      secret: process.env.ACCESS_TOKEN_KEY,
+      expiresIn: `${process.env.ACCESS_TOKEN_EXP}`,
     });
     return accessToken;
   }
 
   async createRefreshToken(user: Users): Promise<string> {
-    const payload = {
-      userId: null,
-      tokenType: 'refreshToken',
-    };
+    const refreshToken: string = this.jwtService
+      .sign({}, {
+        secret: process.env.REFRESH_TOKEN_KEY,
+        expiresIn: `${process.env.REFRESH_TOKEN_EXP}`,
+      });
 
-    const refreshToken = this.jwtService
-      .sign(payload, {
-        secret: process.env.TOKEN_SECRETE_KEY,
-        expiresIn: '7D',
-      })
-      .toString();
-
-    const findUser: Users = await this.userService.findUserById(user.userId);
-    if (!findUser) {
-      return null;
-    }
-    this.userService.createRefreshToken(findUser.userId, refreshToken);
+    this.userService.createRefreshToken(user.userId, refreshToken);
     return refreshToken;
   }
+
+  async findUserByPinAndRefresh(
+    refreshToken: string,
+    pinCode: string,
+  ): Promise<Users> {
+    return await this.userRepository.findOneBy({ refreshToken, pinCode });
+  }
+
 }

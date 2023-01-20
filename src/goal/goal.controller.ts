@@ -14,7 +14,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
@@ -50,7 +50,7 @@ export class GoalController {
     // await queryRunner.connect();
     // await queryRunner.startTransaction()
     try {
-      const userId: number = req.res.userId;
+      const userId: number = req.user;
       const curCount = 1;
 
       const checkRegister: UserGoals = await this.usergoalService.findUser({ 
@@ -273,7 +273,7 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId: number = req.res.userId;
+      const userId: number = req.user;
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       if(userId != findGoal.userId.userId) {
         throw new HttpException(
@@ -322,7 +322,7 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId: number = req.res.userId;
+      const userId: number = req.user;
       // getGoalDetail 가져오기
       const findGoal = await this.goalService.getGoalByGoalId(goalId);
       if (userId === findGoal.userId.userId) {
@@ -361,7 +361,7 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId: number = req.res.userId;
+      const userId: number = req.user;
       const find = await this.goalService.getGoalDetail(goalId);
       // 참가자가 2명이상이면 삭제 불가능
       if (find.curCount >= 2) {

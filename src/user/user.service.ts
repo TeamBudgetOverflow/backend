@@ -20,7 +20,7 @@ export class UserService {
     return this.userRepository.findOne(option);
   }
 
-  findUserById(userId: number): Promise<Users> {
+  findUserByUserId(userId: number): Promise<Users> {
     const option = {
       where: { userId },
       offset: 0,
@@ -44,13 +44,6 @@ export class UserService {
     const findUserUpdate = await this.userRepository.findOneBy({ userId });
     findUserUpdate.pinCode = cryptoPinCode;
     await this.userRepository.save(findUserUpdate);
-  }
-
-  async findUserByPinAndRefresh(
-    refreshToken: string,
-    pinCode: string,
-  ): Promise<Users> {
-    return await this.userRepository.findOneBy({ refreshToken, pinCode });
   }
 
   async getUserProfile(userId: number) {

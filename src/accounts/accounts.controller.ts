@@ -12,7 +12,7 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
 import { AddAccountDto } from './dto/addAccount.dto';
 import { Response } from 'express';
@@ -48,7 +48,7 @@ export class AccountsController {
     @Body() accountInfo: AddAccountDto,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = req.user;
       // const user = 1;
       // const user = 1; - tested with the fixed user Id
       const bank = accountInfo.bankId;
@@ -72,7 +72,7 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = req.user;
       // const userId = 1;
       // const user = 1; - tested with the fixed user Id
       const bank = 2; // would be different - talk with FE
@@ -115,7 +115,7 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     try {
-      // const user = req.res.userId;
+      // const user = req.user;
       console.log(typeof targetUserId);
       const user = 1;
       if (Number(targetUserId) === user) {
@@ -163,7 +163,7 @@ export class AccountsController {
     @Res() res: Response,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = req.user;
       const data: AccessUserGoalDTO = {
         userId,
         balanceId,

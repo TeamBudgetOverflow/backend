@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { UserService } from './user.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
-import { NaverAuthGuard } from '../auth/guard/naver-auth.guard';
+import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
 import {
   Controller,
   Get,
@@ -16,12 +16,14 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { JwtRefreshGuard } from '../auth/guard/jwt-refreshToken-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { JwtRefreshGuard } from '../auth/jwt/jwt-refreshToken-auth.guard';
 import { Post, Patch, Put, Param, Body } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
+import { JwtRefreshStrategy } from 'src/auth/jwt/jwt-refresh.strategy';
+import { AuthGuard } from '@nestjs/passport';
 
 dotenv.config();
 
@@ -78,7 +80,7 @@ export class UserController {
   }
 
   @Post(':userId/pinCode')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async registerPinCode(
     @Param('userId') userId: number,
     @Body('pinCode') pinCode: string,
@@ -86,7 +88,7 @@ export class UserController {
     @Res() res: Response,
   ) {
     try {
-      if (userId != req.res.userId) {
+      if (userId != req.user) {
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
@@ -101,7 +103,7 @@ export class UserController {
   }
 
   @Put(':userId/pinCode')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async updatePinCode(
     @Param('userId') userId: number,
     @Body() updatePinCodeDTO: UpdatePinCodeDTO,
@@ -109,13 +111,13 @@ export class UserController {
     @Res() res: Response,
   ) {
     try {
-      if (userId != req.res.userId) {
+      if (userId != req.user) {
         throw new HttpException('허가되지 않은 접근입니다', 400);
       }
       const cryptoPinCode: string = createHash(process.env.ALGORITHM)
         .update(updatePinCodeDTO.pinCode)
         .digest('base64');
-      const findUser = await this.userService.findUserById(userId);
+      const findUser = await this.userService.findUserByUserId(userId);
 
       if (findUser.pinCode === cryptoPinCode) {
         const cryptoPinCode: string = createHash(process.env.ALGORITHM)
@@ -134,7 +136,7 @@ export class UserController {
   }
 
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
-  @UseGuards(JwtRefreshGuard)
+  @UseGuards(AuthGuard('jwt-refresh'))
   @Post('pinCode')
   async accessTokenReissue(
     @Body('pinCode') pinCode: string,
@@ -142,17 +144,7 @@ export class UserController {
     @Res() res: Response,
   ) {
     try {
-      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-        .update(pinCode)
-        .digest('base64');
-      const findUser = await this.userService.findUserByPinAndRefresh(
-        req.headers.refreshToken,
-        cryptoPinCode,
-      );
-      if (findUser === null) {
-        throw new HttpException('pinCode가 잘못입력되었습니다', 401);
-      }
-      const accessToken = await this.authService.createAccessToken(findUser);
+      const accessToken = await this.authService.createAccessToken(req.user);
       return res.json({
         accessToken: 'Bearer ' + accessToken,
         message: 'accessToken 재발급',
@@ -163,14 +155,14 @@ export class UserController {
   }
 
   @Get(':userId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getUserProfile(
     @Req() req,
     @Res() res: Response,
     @Param('userId') targetUserId: number,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = req.user;
       // const user = 1;
       // if (Number(userId) !== user) {
       if (Number(targetUserId) === userId) {
@@ -194,7 +186,7 @@ export class UserController {
   }
 
   @Patch(':userId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async modifyUserProfile(
     @Req() req,
     @Res() res: Response,
@@ -202,7 +194,7 @@ export class UserController {
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
     try {
-      const userId = req.res.userId;
+      const userId = req.user;
       // const user = 1;
       // if (Number(userId) !== user) {
       if (Number(targetUserId) === userId) {
@@ -222,13 +214,13 @@ export class UserController {
   }
 
   @Get(':userId/goals')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getUserGoal(
     @Req() req,
     @Param('userId') userId: number,
     @Res() res: Response){
     try{
-      const myUserId = req.res.userId;
+      const myUserId = req.user;
       const findGoals = await this.userGoalService.getGoalByUserId(userId);
       const result = [];
       for(let i = 0; i < findGoals.length; i++){
