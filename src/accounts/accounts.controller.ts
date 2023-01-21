@@ -49,13 +49,10 @@ export class AccountsController {
   ) {
     try {
       const userId = req.user;
-      // const user = 1;
-      // const user = 1; - tested with the fixed user Id
       const bank = accountInfo.bankId;
-      // const bank = 2; - tested with the fixed bank Id
       const data = { userId, bank, ...accountInfo };
-      await this.accountService.addAccount(data);
-      return res.status(200).json({ message: 'Account Added Successfully' });
+      const result = await this.accountService.addAccount(data);
+      return res.status(200).json({ accountId: result.accountId });
     } catch (error) {
       console.log(error);
       return res.status(400).json({
@@ -81,7 +78,6 @@ export class AccountsController {
         const targetUserAccounts = await this.accountService.getAccounts(
           userId,
         );
-        console.log(targetUserAccounts);
         if (targetUserAccounts.length > 10) {
           for (let i = 0; i < targetUserAccounts.length; i++) {
             const { accountId, bank } = targetUserAccounts[i];
@@ -115,9 +111,8 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     try {
-      // const user = req.user;
+      const user = req.user;
       console.log(typeof targetUserId);
-      const user = 1;
       if (Number(targetUserId) === user) {
         const targetUserAccounts = await this.accountService.getAccounts(user);
         const trimmedAccounts = [];

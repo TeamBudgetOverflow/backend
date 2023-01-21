@@ -124,7 +124,7 @@ export class GoalController {
     @Res() res: Response,
   ) {
     try {
-      const userId = 9;
+      const userId = req.user;
       const checkRegister: UserGoals = await this.usergoalService.findUser(accountId);
       if(checkRegister){
         throw new HttpException(

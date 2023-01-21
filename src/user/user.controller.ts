@@ -32,7 +32,7 @@ export class UserController {
     private readonly userGoalService: UserGoalService,
   ) {}
 
-  @Get('auth/naver')
+  @Post('auth/naver')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
     @Req() req,
@@ -60,10 +60,6 @@ export class UserController {
       // 유저가 있을때
       const accessToken = await this.authService.createAccessToken(user);
       const refreshToken = await this.authService.createRefreshToken(user);
-      // res.setHeader('accessToken', "Bearer" + accessToken);
-      // res.setHeader('refreshToken', refreshToken);
-      // res.redirect('http://localhost:3000');
-      // res.end();
       return res.status(201).json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
