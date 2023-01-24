@@ -16,7 +16,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { Post, Patch, Put, Param, Body } from '@nestjs/common';
+import { Post, Patch, Put, Param, Body, Delete } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
@@ -65,6 +65,21 @@ export class UserController {
       message: '로그인 성공',
       newComer: false,
     });
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard('jwt'))
+  async logout(
+    @Req() req,
+    @Res() res: Response){
+      try{
+        const userId: number = req.user;
+        await this.authService.deleteRefreshToken(userId);
+        return res.json({ message: "로그아웃 성공" });
+      }catch(error){
+        console.log(error);
+        return res.status(400).json({ errorMessage: "로그아웃 실패" });
+      }
   }
 
   @Post(':userId/pinCode')
