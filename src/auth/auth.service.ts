@@ -57,4 +57,8 @@ export class AuthService {
     return await this.userRepository.findOneBy({ refreshToken, pinCode });
   }
 
+  async deleteRefreshToken(userId: number){
+    const refreshToken: string = '';
+    await this.userRepository.update({userId}, {refreshToken});
+  }
 }
