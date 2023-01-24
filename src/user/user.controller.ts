@@ -39,37 +39,32 @@ export class UserController {
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-    try {
-      const user = await this.userService.findUserByEmail(req.user.email);
-      if (user === null) {
-        // 유저가 없을때 회원가입 -> 로그인
-        const createUser = await this.userService.oauthCreateUser(req.user);
-        const accessToken = await this.authService.createAccessToken(
-          createUser,
-        );
-        const refreshToken = await this.authService.createRefreshToken(
-          createUser,
-        );
-        return res.status(201).json({
-          accessToken: 'Bearer ' + accessToken,
-          refreshToken,
-          message: '로그인 성공',
-          newComer: true,
-        });
-      }
-      // 유저가 있을때
-      const accessToken = await this.authService.createAccessToken(user);
-      const refreshToken = await this.authService.createRefreshToken(user);
-      return res.status(201).json({
+    const user = await this.userService.findUserByEmail(req.user.email);
+    if (user === null) {
+      // 유저가 없을때 회원가입 -> 로그인
+      const createUser = await this.userService.oauthCreateUser(req.user);
+      const accessToken = await this.authService.createAccessToken(
+        createUser,
+      );
+      const refreshToken = await this.authService.createRefreshToken(
+        createUser,
+      );
+      res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
-        newComer: false,
+        newComer: true,
       });
-    } catch (error) {
-      console.log(error);
-      return res.status(412).json({ errorMessage: '로그인 실패' });
     }
+    // 유저가 있을때
+    const accessToken = await this.authService.createAccessToken(user);
+    const refreshToken = await this.authService.createRefreshToken(user);
+    res.json({
+      accessToken: 'Bearer ' + accessToken,
+      refreshToken,
+      message: '로그인 성공',
+      newComer: false,
+    });
   }
 
   @Post(':userId/pinCode')
@@ -80,19 +75,14 @@ export class UserController {
     @Req() req,
     @Res() res: Response,
   ) {
-    try {
-      if (userId != req.user) {
-        throw new HttpException('허가되지 않은 접근입니다', 400);
-      }
-      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-        .update(pinCode)
-        .digest('base64');
-      await this.userService.registerPinCode(userId, cryptoPinCode);
-      return res.json({ message: '핀 코드 등록 완료' });
-    } catch (error) {
-      console.log(error);
-      return res.json({ errorMessage: '핀 코드 등록 실패' });
+    if (userId != req.user) {
+      throw new HttpException('허가되지 않은 접근입니다', 400);
     }
+    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+      .update(pinCode)
+      .digest('base64');
+    await this.userService.registerPinCode(userId, cryptoPinCode);
+    res.json({ message: '핀 코드 등록 완료' });
   }
 
   @Put(':userId/pinCode')
@@ -103,28 +93,22 @@ export class UserController {
     @Req() req,
     @Res() res: Response,
   ) {
-    try {
-      if (userId != req.user) {
-        throw new HttpException('허가되지 않은 접근입니다', 400);
-      }
-      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-        .update(updatePinCodeDTO.pinCode)
-        .digest('base64');
-      const findUser = await this.userService.findUserByUserId(userId);
+    if (userId != req.user) {
+      throw new HttpException('허가되지 않은 접근입니다', 400);
+    }
+    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+      .update(updatePinCodeDTO.pinCode)
+      .digest('base64');
+    const findUser = await this.userService.findUserByUserId(userId);
 
-      if (findUser.pinCode === cryptoPinCode) {
-        const cryptoPinCode: string = createHash(process.env.ALGORITHM)
-          .update(updatePinCodeDTO.updatePinCode)
-          .digest('base64');
-        await this.userService.registerPinCode(userId, cryptoPinCode);
-        return res.status(201).json({ message: '핀 코드 수정 완료' });
-      } else {
-        return res
-          .status(400)
-          .json({ errorMessage: '입력한 pinCode가 올바르지 않습니다.' });
-      }
-    } catch (error) {
-      console.log(error);
+    if (findUser.pinCode === cryptoPinCode) {
+      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+        .update(updatePinCodeDTO.updatePinCode)
+        .digest('base64');
+      await this.userService.registerPinCode(userId, cryptoPinCode);
+      res.json({ message: '핀 코드 수정 완료' });
+    } else {
+      throw new HttpException('입력한 pinCode가 올바르지 않습니다', 400);
     }
   }
 
@@ -136,16 +120,13 @@ export class UserController {
     @Req() req,
     @Res() res: Response,
   ) {
-    try {
-      const accessToken = await this.authService.createAccessToken(req.user);
-      return res.json({
-        accessToken: 'Bearer ' + accessToken,
-        message: 'accessToken 재발급',
-      });
-    } catch (error) {
-      console.log(error);
-    }
+    const accessToken = await this.authService.createAccessToken(req.user);
+    return res.json({
+      accessToken: 'Bearer ' + accessToken,
+      message: 'accessToken 재발급',
+    });
   }
+
 
   @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
@@ -154,7 +135,6 @@ export class UserController {
     @Res() res: Response,
     @Param('userId') targetUserId: number,
   ) {
-    try {
       const userId = req.user;
       // const user = 1;
       // if (Number(userId) !== user) {
@@ -162,7 +142,7 @@ export class UserController {
         const targetUserProfile = await this.userService.getUserProfile(userId);
         return res.status(200).json(targetUserProfile);
       } else {
-        throw new Error('User Does not exist');
+        throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
       }
 
       // else {
@@ -170,12 +150,6 @@ export class UserController {
       //     errorMessage: 'Not a valid user',
       //   });
       // }
-    } catch (err) {
-      console.log(err);
-      return res.status(400).json({
-        errorMessage: 'Unable to get the user profile',
-      });
-    }
   }
 
   @Patch(':userId')
@@ -186,23 +160,16 @@ export class UserController {
     @Param('userId') targetUserId: number,
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
-    try {
-      const userId = req.user;
-      // const user = 1;
-      // if (Number(userId) !== user) {
-      if (Number(targetUserId) === userId) {
-        await this.userService.modifyUser(userId, modifyInfo);
-        return res.status(200).json({
-          message: 'Updated User Profile Succesfully',
-        });
-      } else {
-        throw new Error('User Does not exist');
-      }
-    } catch (err) {
-      console.log(err);
-      return res.status(400).json({
-        errorMessage: 'Unable to modify the user profile',
+    const userId = req.user;
+    // const user = 1;
+    // if (Number(userId) !== user) {
+    if (Number(targetUserId) === userId) {
+      await this.userService.modifyUser(userId, modifyInfo);
+      res.json({
+        message: 'Updated User Profile Succesfully',
       });
+    } else {
+      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -212,7 +179,6 @@ export class UserController {
     @Req() req,
     @Param('userId') userId: number,
     @Res() res: Response){
-    try{
       const myUserId = req.user;
       const findGoals = await this.userGoalService.getGoalByUserId(userId);
       const result = [];
@@ -238,12 +204,6 @@ export class UserController {
             attainment: findGoals[i].balanceId.current/findGoals[i].goalId.amount * 100
           })
         }}
-      return res.json({ result: result });
-    } catch (error) {
-      console.log(error);
-      return res.status(400).json({
-        errorMessage: '알 수 없는 에러입니다.',
-      });
-    }
+      res.json({ result: result });
   }
 }
