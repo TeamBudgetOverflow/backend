@@ -12,10 +12,6 @@ const dailyOptions = (level: string) => {
       filename: `%DATE%.${level}.log`,
       maxFiles: 30, //30일치 로그파일 저장
       zippedArchive: true, // 로그가 쌓이면 압축하여 관리
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        utilities.format.nestLike(process.env.NODE_ENV, { colors: false, prettyPrint: true }),
-      ),
     };
 };
 

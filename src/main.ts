@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { winstonLogger } from './utils/winston.util';
+import { winstonLogger } from './common/utils/winston.util';
 
 dotenv.config();
 

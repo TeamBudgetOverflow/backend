@@ -19,8 +19,17 @@ import {
       // 응답이 끝나는 이벤트가 발생하면 로그를 찍는다.
       res.on('finish', () => {
         const { statusCode } = res;
+        if (statusCode >= 400 && statusCode < 500) {
+          return this.logger.warn(
+            `[${method}]${originalUrl}(${statusCode}) ${ip} ${userAgent}`,
+          );
+        } else if (statusCode >= 500) {
+          return this.logger.error(
+            `[${method}]${originalUrl}(${statusCode}) ${ip} ${userAgent}`,
+          );
+        }
         this.logger.log(
-          `${method} ${originalUrl} ${statusCode} ${ip} ${userAgent}`,
+          `[${method}]${originalUrl}(${statusCode}) ${ip} ${userAgent}`,
         );
       });
   

@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, Logger } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -8,7 +8,7 @@ import { typeORMConfig } from './configs/typeorm.config';
 import { GoalModule } from './goal/goal.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { BanksModule } from './banks/banks.module';
-import { LoggerMiddleware } from './middleware/logger.middleware';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
     BanksModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Logger],
   exports: [AppService],
 })
 export class AppModule implements NestModule {
