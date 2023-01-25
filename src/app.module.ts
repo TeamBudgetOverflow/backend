@@ -9,6 +9,7 @@ import { GoalModule } from './goal/goal.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { BanksModule } from './banks/banks.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { ChannelModule } from './channel/channel.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     TypeOrmModule.forRoot(typeORMConfig),
     AccountsModule,
     BanksModule,
+    ChannelModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
