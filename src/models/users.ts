@@ -1,6 +1,7 @@
 import {
   Column,
   OneToMany,
+  ManyToMany,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -8,10 +9,13 @@ import {
   UpdateDateColumn,
   BaseEntity,
   JoinColumn,
+  JoinTable,
 } from 'typeorm';
 import { Accounts } from './accounts';
 import { Goals } from './goals';
 import { UserGoals } from './usergoals';
+import { Channels } from './channels';
+import { ChannelChats } from './channelChats';
 
 @Entity()
 export class Users extends BaseEntity {
@@ -55,4 +59,14 @@ export class Users extends BaseEntity {
     lazy: true,
   })
   userGoals: UserGoals[];
+
+  @OneToMany(() => ChannelChats, (channelchats) => channelchats.User, {
+    cascade: ['insert']
+  })
+  ChannelChat: ChannelChats[];
+
+  @OneToMany(() => Channels, (channel) => channel.userId, {
+    cascade: ['insert'],
+  })
+  channelId: Channels[];
 }

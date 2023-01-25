@@ -6,6 +6,8 @@ import { UserGoals } from '../models/usergoals';
 import { Accounts } from 'src/models/accounts';
 import { Banks } from 'src/models/banks';
 import { Balances } from 'src/models/balances';
+import { Channels } from 'src/models/channels';
+import { ChannelChats } from 'src/models/channelChats';
 
 dotenv.config();
 
@@ -16,10 +18,11 @@ export const typeORMConfig: TypeOrmModuleOptions = {
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_TESTDBNAME,
-  entities: [Users, Goals, UserGoals, Accounts, Banks, Balances],
+  entities: [Users, Goals, UserGoals, Accounts, Banks, Balances,
+  Channels, ChannelChats],
   //migrations: [__dirname + '/migrations/*.ts'],
   // 처음 db를 생성할 때만 synchronize:true로 생성하고, 이 후에는 false로 바꿔야 함
-  synchronize: false,
+  synchronize: true,
   logging: true,
   keepConnectionAlive: true,
   timezone: '-09:00',

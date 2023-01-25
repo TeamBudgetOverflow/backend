@@ -320,15 +320,18 @@ export class GoalController {
   }
 
   // 목표 삭제
-  @Delete(':goal')
+  @Delete(':goalId')
   @UseGuards(AuthGuard('jwt'))
   async deleteGoal(
     @Req() req,
     @Param('goalId') goalId: number,
     @Res() res: Response,
   ) {
-    const userId: number = req.user;
+    const userId: number = req.user; 
     const find = await this.goalService.getGoalDetail(goalId);
+    if (userId != find.userId.userId){
+      throw new HttpException('삭제 권한이 없습니다.', 400);
+    }
     // 참가자가 2명이상이면 삭제 불가능
     if (find.curCount >= 2) {
       throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
