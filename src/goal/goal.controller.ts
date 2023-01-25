@@ -206,6 +206,7 @@ export class GoalController {
               nickname: memberNickname,
               image: memberImage } = joinUser[i].userId
       const { current } = joinUser[i].balanceId
+      const { accountId } = joinUser[i].accountId
       let attainment: number = 0;
       if(current !== 0){
         attainment = current/findGoal.amount * 100;
@@ -214,7 +215,8 @@ export class GoalController {
         userId: memberUserId,
         nickname: memberNickname,
         image: memberImage,
-        attainment: attainment
+        attainment: attainment,
+        accountId: accountId
       })
     }
 

@@ -18,8 +18,9 @@ export class UserGoalService {
       .where('g.goalId = :goalId', {goalId})
       .leftJoin('g.userId', 'users')
       .leftJoin('g.balanceId', 'balances')
+      .leftJoin('g.accountId', 'accounts')
       .select(['g','users.userId', 'users.nickname',
-      'users.image', 'balances.current'])
+      'users.image', 'balances.current', 'accounts.accountId'])
       .getMany();
   }
 
