@@ -116,7 +116,10 @@ export class GoalController {
     @Res() res: Response,
   ) {
     const userId = req.user;
-    const checkRegister: UserGoals = await this.usergoalService.findUser(accountId);
+    const data = {
+      accountId: accountId
+    };
+    const checkRegister: UserGoals = await this.usergoalService.findUser(data);
     if(checkRegister){
       throw new HttpException(
         '이미 목표에 연결된 계좌 입니다.',
