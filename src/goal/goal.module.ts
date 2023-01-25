@@ -12,11 +12,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from '../user/user.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
+import { AccountsService } from 'src/accounts/accounts.service';
+import { Accounts } from 'src/models/accounts';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users, Goals, UserGoals, Balances]),
+    TypeOrmModule.forFeature([Users, Goals, UserGoals, Balances, Accounts]),
     forwardRef(() => AuthModule),
+    HttpModule,
   ],
   providers: [
     GoalService,
@@ -25,6 +29,7 @@ import { BalanceService } from 'src/balances/balances.service';
     AuthService,
     JwtService,
     BalanceService,
+    AccountsService,
   ],
   controllers: [GoalController],
   exports: [GoalService],

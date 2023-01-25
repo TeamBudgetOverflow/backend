@@ -10,6 +10,8 @@ import {
   Observable,
 } from 'rxjs';
 import { Accounts } from 'src/models/accounts';
+import { Balances } from 'src/models/balances';
+import { UserGoals } from 'src/models/usergoals';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
@@ -20,6 +22,10 @@ export class AccountsService {
     @InjectRepository(Accounts)
     private accountsRepository: Repository<Accounts>,
     @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(Balances)
+    private balancesRepository: Repository<Balances>,
+    @InjectRepository(UserGoals)
+    private userGoalsRepository: Repository<UserGoals>,
   ) {}
   async viewAccountBalance(userInfo, headers) {
     const url = 'https://api.hyphen.im/in0087000484';
@@ -46,6 +52,18 @@ export class AccountsService {
 
   async addAccount(data): Promise<Accounts> {
     const result = await this.accountsRepository.save(data);
+    return result;
+  }
+
+  async updateAccountAssignment(accountId): Promise<Accounts> {
+    const result = await this.accountsRepository.findOne({
+      where: {
+        accountId,
+      },
+    });
+
+    result.assigned = true;
+    await this.accountsRepository.save(result);
     return result;
   }
 
@@ -91,5 +109,15 @@ export class AccountsService {
     });
 
     return result;
+  }
+
+  async getManualBalance(accountId: number) {
+    return await this.userGoalsRepository
+      .createQueryBuilder('ug')
+      .where('ug.accountId = :accountId', { accountId })
+      .select(['ug'])
+      // .leftJoin('ug.balanceId', 'balance')
+      // .select(['ug', 'balance'])
+      .getOne();
   }
 }

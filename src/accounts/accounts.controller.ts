@@ -36,6 +36,14 @@ export class AccountsController {
     return result;
   }
 
+  @Post('/:userId/manual/balance')
+  @UseGuards(AuthGuard('jwt'))
+  async viewManualBalance(@Req() req, @Res() res, @Body() accountId: number) {
+    const userId = req.user;
+    const result = this.accountService.getManualBalance(accountId);
+    return result;
+  }
+
   @Post('/:userId')
   @UseGuards(AuthGuard('jwt'))
   async addAccount(

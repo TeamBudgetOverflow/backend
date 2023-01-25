@@ -26,6 +26,7 @@ import { Connection } from 'typeorm';
 import { Balances } from 'src/models/balances';
 import { UserGoals } from 'src/models/usergoals';
 import { AuthGuard } from '@nestjs/passport';
+import { AccountsService } from 'src/accounts/accounts.service';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ export class GoalController {
     private readonly goalService: GoalService,
     private readonly usergoalService: UserGoalService,
     private readonly balanceService: BalanceService,
+    private readonly accountService: AccountsService,
     private readonly connection: Connection,
   ) {}
 
@@ -87,6 +89,8 @@ export class GoalController {
     const result = await this.goalService.createGoal(data);
     const goalId: number = result.goalId;
     const accountId: number = createGoalDTO.accountId;
+    // update account field 'assigned' to true
+    await this.accountService.updateAccountAssignment(accountId);
     const balanceData: InitBalanceDTO = {
       initial: 0,
       current: 0,
@@ -136,6 +140,8 @@ export class GoalController {
     } else {
       // 동시성 문제에 대한 대비책 필요
       // transaction 적용 필요
+      // update account field 'assigned' to true
+      await this.accountService.updateAccountAssignment(accountId);
       const balanceData: InitBalanceDTO = {
         initial: 0,
         current: 0,
