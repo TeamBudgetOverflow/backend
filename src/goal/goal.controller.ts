@@ -52,7 +52,8 @@ export class GoalController {
     const curCount = 1;
 
     const checkRegister: UserGoals = await this.usergoalService.findUser({ 
-      accountId : createGoalDTO.accountId
+      accountId : createGoalDTO.accountId,
+      userId,
       });
     if(checkRegister){
       throw new HttpException(
@@ -121,7 +122,8 @@ export class GoalController {
   ) {
     const userId = req.user;
     const data = {
-      accountId: accountId
+      accountId: accountId,
+      userId
     };
     const checkRegister: UserGoals = await this.usergoalService.findUser(data);
     if(checkRegister){
