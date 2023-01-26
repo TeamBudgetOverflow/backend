@@ -120,27 +120,27 @@ export class AccountsService {
     return result;
   }
 
-  // might need to use querybuilder
-  async getManuals(bankId): Promise<Accounts[]> {
-    const result: Accounts[] = await this.accountsRepository.find({
-      where: {
-        bank: {
-          id: bankId,
-        },
-      },
-      select: {
-        accountId: true,
-        bank: {
-          id: true,
-        },
-      },
-      order: {
-        accountId: 'ASC',
-      },
-    });
+  // // might need to use querybuilder
+  // async getManuals(bankId): Promise<Accounts[]> {
+  //   const result: Accounts[] = await this.accountsRepository.find({
+  //     where: {
+  //       bank: {
+  //         id: bankId,
+  //       },
+  //     },
+  //     select: {
+  //       accountId: true,
+  //       bank: {
+  //         id: true,
+  //       },
+  //     },
+  //     order: {
+  //       accountId: 'ASC',
+  //     },
+  //   });
 
-    return result;
-  }
+  //   return result;
+  // }
 
   async getAccountBalance(accountId: number) {
     const result: UserGoals[] = await this.userGoalsRepository.find({});
@@ -177,5 +177,21 @@ export class AccountsService {
     // .leftJoin('ug.balanceId', 'balance')
     // .select(['ug', 'balance'])
     // .getOne();
+  }
+
+  async getConnectedAccounts(targetUserId: number) {
+    console.log(targetUserId);
+    const result: UserGoals[] = await this.userGoalsRepository.find({});
+    const targetAccounts = [];
+    for (let i = 0; i < result.length; i++) {
+      // console.log(userId)
+      const { accountId: account } = result[i];
+      const { userId } = account.user;
+      if (userId === targetUserId) {
+        targetAccounts.push(account.accountId);
+      }
+    }
+
+    return targetAccounts;
   }
 }
