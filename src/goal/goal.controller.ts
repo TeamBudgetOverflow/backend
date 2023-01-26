@@ -205,27 +205,37 @@ export class GoalController {
     @Param('goalId') goalId: number,
     @Res() res: Response,
   ) {
+    const myUserId = req.user;
     const findGoal = await this.goalService.getGoalDetail(goalId);
-
     const joinUser = await this.usergoalService.getJoinUser(goalId);
     const member = [];
     for(let i = 0; i < joinUser.length; i++){
       const { userId: memberUserId, 
               nickname: memberNickname,
               image: memberImage } = joinUser[i].userId
-      const { current } = joinUser[i].balanceId
+      const { balanceId, current } = joinUser[i].balanceId
       const { accountId } = joinUser[i].accountId
       let attainment: number = 0;
       if(current !== 0){
         attainment = current/findGoal.amount * 100;
       }
-      member.push({
-        userId: memberUserId,
-        nickname: memberNickname,
-        image: memberImage,
-        attainment: attainment,
-        accountId: accountId
-      })
+      if(myUserId === memberUserId){
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+          accountId,
+          balanceId,
+        })
+      }else {
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+        })
+      }
     }
 
     const { userId, nickname } = findGoal.userId;
@@ -310,7 +320,6 @@ export class GoalController {
     // getGoalDetail 가져오기
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
     if (userId === findGoal.userId.userId) {
-      // 해당 부분 에러날 수 있음 확인할 것
       // if 개설자 본인일 경우 에러 리턴
       throw new HttpException(
         '접근할 수 없는 권한입니다.',
