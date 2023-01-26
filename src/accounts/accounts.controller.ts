@@ -30,18 +30,18 @@ export class AccountsController {
     private readonly userGoalService: UserGoalService,
   ) {}
 
-  @Post('/:userId/balance')
+  @Post('/:userId/balance/external')
   async viewAccountBalance(@Body() userInfo, @Headers() headers) {
     const result = this.accountService.viewAccountBalance(userInfo, headers);
     return result;
   }
 
-  @Post('/:userId/manual/balance')
+  // DB search
+  @Post('/:userId/balance')
   @UseGuards(AuthGuard('jwt'))
-  async viewManualBalance(@Req() req, @Res() res, @Body() accountId: number) {
-    const userId = req.user;
-    const result = this.accountService.getManualBalance(accountId);
-    return result;
+  async getAccountBalance(@Req() req, @Res() res, @Body() accountId: number) {
+    const result = await this.accountService.getAccountBalance(accountId);
+    res.json(result);
   }
 
   @Post('/:userId')
@@ -71,9 +71,7 @@ export class AccountsController {
     const bank = 2; // would be different - talk with FE
     // const bank = 2; - tested with the fixed bank Id
     if (Number(targetUserId) === userId) {
-      const targetUserAccounts = await this.accountService.getAccounts(
-        userId,
-      );
+      const targetUserAccounts = await this.accountService.getAccounts(userId);
       if (targetUserAccounts.length > 10) {
         for (let i = 0; i < targetUserAccounts.length; i++) {
           const { accountId, bank } = targetUserAccounts[i];

@@ -111,13 +111,40 @@ export class AccountsService {
     return result;
   }
 
-  async getManualBalance(accountId: number) {
-    return await this.userGoalsRepository
-      .createQueryBuilder('ug')
-      .where('ug.accountId = :accountId', { accountId })
-      .select(['ug'])
-      // .leftJoin('ug.balanceId', 'balance')
-      // .select(['ug', 'balance'])
-      .getOne();
+  async getAccountBalance(accountId: number) {
+    const result: UserGoals[] = await this.userGoalsRepository.find({});
+    const targetBalance = [];
+    for (let i = 0; i < result.length; i++) {
+      const { accountId: account, balanceId: balance } = result[i];
+      const { current } = balance;
+      if (account.accountId === accountId['accountId']) {
+        targetBalance.push({ balance: current });
+        break;
+      }
+    }
+    return targetBalance[0];
+
+    // return await this.dataSource
+      // .getRepository(UserGoals)
+      // .createQueryBuilder('userGoal')
+      // .leftJoin('userGoal.accountId', 'account')
+      // .leftJoin('userGoal.balanceId', 'balance')
+      // .where('userGoal.userGoalId = :userGoalId', { accountId })
+      // .getMany();
+      // .select([
+      //   'userGoal.userGoalsId',
+      //   'userId',
+      //   'userGoal.goalId',
+      //   'userGoal.accountId',
+      //   'userGoal.balanceId',
+      // ])
+      // .getOne();
+    // .where('userGoal.accountId = :accountId', { accountId: accountId })
+    // .getOne();
+    // .where('ug.accountId = :accountId', { accountId })
+    // .getMany();
+    // .leftJoin('ug.balanceId', 'balance')
+    // .select(['ug', 'balance'])
+    // .getOne();
   }
 }
