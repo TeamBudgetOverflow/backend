@@ -38,11 +38,21 @@ export class AccountsController {
   }
 
   // DB search
-  @Post('/:userId/balance')
+  @Get('/:userId/balance')
   @UseGuards(AuthGuard('jwt'))
-  async getAccountBalance(@Req() req, @Res() res, @Body() accountId: number) {
-    const result = await this.accountService.getAccountBalance(accountId);
-    res.json(result);
+  async getAccountBalance(
+    @Req() req,
+    @Res() res,
+    @Param('userId') targetUserId: number,
+    @Body() accountId: number,
+  ) {
+    const userId = req.user;
+    if (Number(targetUserId) === userId) {
+      const result = await this.accountService.getAccountBalance(accountId);
+      res.json(result);
+    } else {
+      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('/:userId')
@@ -119,22 +129,27 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     const user = req.user;
-    console.log(typeof targetUserId);
     if (Number(targetUserId) === user) {
       const targetUserAccounts = await this.accountService.getAccounts(user);
+      const connectedAccounts = await this.accountService.getConnectedAccounts(
+        user,
+      );
       const trimmedAccounts = [];
       for (let i = 0; i < targetUserAccounts.length; i++) {
         const { accountId, acctNo, bank } = targetUserAccounts[i];
         const bankId = bank.id;
-        if (bankId !== 3) {
-          trimmedAccounts.push({
-            accountId,
-            acctNo,
-            bankId,
-          });
+        let connected = false;
+        if (connectedAccounts.includes(accountId)) {
+          connected = true;
         }
+        trimmedAccounts.push({
+          accountId,
+          acctNo,
+          bankId,
+          connected,
+        });
       }
-      return res.status(200).json(trimmedAccounts);
+      return res.json({ data: trimmedAccounts });
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
