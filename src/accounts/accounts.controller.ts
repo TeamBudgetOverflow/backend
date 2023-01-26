@@ -21,6 +21,7 @@ import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { HttpStatusCode } from 'axios';
+import { ModifyUserInfoDTO } from 'src/user/dto/modifyUser.dto';
 
 @Controller('/api/accounts')
 export class AccountsController {
@@ -72,6 +73,8 @@ export class AccountsController {
     // const bank = 2; - tested with the fixed bank Id
     if (Number(targetUserId) === userId) {
       const targetUserAccounts = await this.accountService.getAccounts(userId);
+      // filtering logic - if account is connected to the goal
+
       if (targetUserAccounts.length > 10) {
         for (let i = 0; i < targetUserAccounts.length; i++) {
           const { accountId, bank } = targetUserAccounts[i];
@@ -86,6 +89,23 @@ export class AccountsController {
         const result = await this.accountService.addAccount(data);
         return res.status(200).json({ accountId: result.accountId });
       }
+    } else {
+      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get(':userId/:accountId')
+  @UseGuards(AuthGuard('jwt'))
+  async getAccountDetail(
+    @Req() req,
+    @Res() res,
+    @Param('userId') targetUserId: number,
+    @Param('accountId') accountId: number,
+  ) {
+    const userId = req.user;
+    if (Number(targetUserId) === userId) {
+      const targetAccount = this.accountService.getIndivAccount(accountId);
+      return res.json(targetAccount);
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
