@@ -14,7 +14,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
+import { Post, Param, Query, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
@@ -165,6 +165,37 @@ export class GoalController {
       await this.goalService.updateGoalCurCount(goalId, findGoal.curCount);
       res.json({ message: '참가가 완료되었습니다.' });
     }
+  }
+
+  // 목표 검색
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchGoal(
+    @Query('keyword') keyword: string,
+    @Res() res: Response){
+      const searchResult = await this.goalService.searchGoal(keyword);
+      const result = [];
+      for (let i = 0; i < searchResult.length; i++) {
+        const { userId, nickname } = searchResult[i].userId;
+        const hashTag = searchResult[i].hashTag.split(",");
+        result.push({
+          goalId: searchResult[i].goalId,
+          userId: userId,
+          nickname: nickname,
+          amount: searchResult[i].amount,
+          curCount: searchResult[i].curCount,
+          headCount: searchResult[i].headCount,
+          startDate: searchResult[i].startDate,
+          endDate: searchResult[i].endDate,
+          title: searchResult[i].title,
+          hashTag: hashTag,
+          emoji: searchResult[i].emoji,
+          description: searchResult[i].description,
+          createdAt: searchResult[i].createdAt,
+          updatedAt: searchResult[i].updatedAt,
+        });
+      }
+      res.json({ result: result });
   }
 
   // 목표 전체 조회

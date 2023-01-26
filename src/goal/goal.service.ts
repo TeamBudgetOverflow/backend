@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
@@ -25,6 +25,16 @@ export class GoalService {
       order: { createdAt: 'DESC' },
     });
     return result;
+  }
+
+  async searchGoal(keyword: string): Promise<Goals[]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.title like :keyword', { keyword: `%${keyword}%` })
+      .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .getMany();
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
