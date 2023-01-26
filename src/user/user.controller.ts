@@ -68,13 +68,15 @@ export class UserController {
     });
   }
 
-  @Post('auth/kakao')
   @UseGuards(KakaoAuthGuard)
+  @Post('auth/kakao')
+  
   async kakaoLoginCallback(
     @Req() req,
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
+   
     const user = await this.userService.findUserByEmail(req.user.email);
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인

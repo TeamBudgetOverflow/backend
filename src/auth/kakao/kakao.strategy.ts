@@ -23,20 +23,24 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     profile: any,
     done: any,
    ): Promise<any> {
-    const user_email = profile._json.email;
-    const user_name = profile.displayName;
-    const user_nickname = profile._json.nickname;
-    const user_image = profile._json.profile_image;
-    const user_loginCategory = profile.provider;
-    const user_profile = {
-      user_email,
-      user_name,
-      user_nickname,
-      user_image,
-      user_loginCategory,
+    
+    //const user_email = emails[0].value,
+    const email = profile._json.kakao_account.email; // account_email
+    const name = profile.displayName; 
+    const nickname = profile._json.properties.nickname;
+    const image = profile._json.properties.profile_image;
+    const loginCategory = profile.provider; 
+    const payload = {
+      email,
+      name,
+      nickname,
+      image,
+      loginCategory,
     };
 
-    done(null, user_profile); 
+  
+
+    done(null, payload); 
   
 
   }
