@@ -38,17 +38,19 @@ export class AccountsController {
   }
 
   // DB search
-  @Get('/:userId/balance')
+  @Get('/:accountId/users/:userId/balance')
   @UseGuards(AuthGuard('jwt'))
   async getAccountBalance(
     @Req() req,
     @Res() res,
     @Param('userId') targetUserId: number,
-    @Body() accountId: number,
+    @Param('accountId') accountId: number,
   ) {
     const userId = req.user;
     if (Number(targetUserId) === userId) {
-      const result = await this.accountService.getAccountBalance(accountId);
+      const result = await this.accountService.getAccountBalance(
+        Number(accountId),
+      );
       res.json(result);
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
