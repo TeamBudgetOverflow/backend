@@ -225,6 +225,7 @@ export class GoalController {
     const result = [];
     result.push({
       goalId: findGoal.goalId,
+      isPrivate: findGoal.isPrivate,
       userId: userId,
       nickname: nickname,
       amount: findGoal.amount,
