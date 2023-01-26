@@ -173,20 +173,13 @@ export class UserController {
     @Param('userId') targetUserId: number,
   ) {
       const userId = req.user;
-      // const user = 1;
-      // if (Number(userId) !== user) {
       if (Number(targetUserId) === userId) {
         const targetUserProfile = await this.userService.getUserProfile(userId);
+        console.log(targetUserProfile);
         return res.status(200).json(targetUserProfile);
       } else {
         throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
       }
-
-      // else {
-      //   return res.status(400).json({
-      //     errorMessage: 'Not a valid user',
-      //   });
-      // }
   }
 
   @Patch(':userId')
