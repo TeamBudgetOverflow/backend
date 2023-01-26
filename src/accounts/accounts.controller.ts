@@ -47,10 +47,7 @@ export class AccountsController {
     @Param('accountId') accountId: number,
   ) {
     const userId = req.user;
-    console.log(accountId);
-    console.log(typeof Number(accountId));
     if (Number(targetUserId) === userId) {
-      console.log('yay')
       const result = await this.accountService.getAccountBalance(
         Number(accountId),
       );
