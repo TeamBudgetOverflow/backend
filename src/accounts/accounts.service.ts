@@ -148,7 +148,7 @@ export class AccountsService {
     for (let i = 0; i < result.length; i++) {
       const { accountId: account, balanceId: balance } = result[i];
       const { current } = balance;
-      if (account.accountId === accountId['accountId']) {
+      if (account.accountId === accountId) {
         targetBalance.push({ balance: current });
         break;
       }
