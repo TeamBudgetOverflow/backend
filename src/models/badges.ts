@@ -11,15 +11,18 @@ import { UserBadges } from './userbadges';
   
   @Entity()
   export class Badges extends BaseEntity {
-    @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
+    @PrimaryGeneratedColumn({ type: 'int' })
     @JoinColumn()
-    id: number;
+    badgeId: number;
   
     @Column({ unique: true })
     title: string;
   
     @Column()
     description: string;
+
+    @Column()
+    image: string;
   
     @OneToMany(() => UserBadges, (userBadges) => userBadges.Badges, {
         cascade: ['insert'],

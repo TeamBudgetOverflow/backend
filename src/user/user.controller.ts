@@ -21,6 +21,8 @@ import { createHash } from 'crypto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { BadgeService } from 'src/badges/badge.service';
+import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 
 dotenv.config();
 
@@ -30,6 +32,7 @@ export class UserController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly userGoalService: UserGoalService,
+    private readonly badgeService: BadgeService,
   ) {}
 
   @Post('auth/naver')
@@ -137,6 +140,30 @@ export class UserController {
     });
   }
 
+  @Get('badges')
+  @UseGuards(AuthGuard('jwt'))
+  async getAllBadges(
+    @Req() req,
+    @Res() res: Response) {
+      const getALLBadges = await this.badgeService.getALLBadges();
+      res.json({ result : getALLBadges });
+  }  
+  
+  @Get('badges/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async getMyBadges(
+    @Req() req,
+    @Param('userId') userId: number,
+    @Res() res: Response) {
+      const findUserBadges = await this.badgeService.getUserBadges(userId);
+      const result = [];
+      for(let i=0; i<findUserBadges.length; i++) {
+        result.push({
+          Badges : findUserBadges[i].Badges
+        })
+      }
+      res.json({ result : result });
+  }
 
   @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
@@ -216,4 +243,7 @@ export class UserController {
         }}
       res.json({ result: result });
   }
+
+  
+
 }

@@ -12,15 +12,18 @@ import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { GoalService } from 'src/goal/goal.service';
+import { BadgeService } from 'src/badges/badge.service';
+import { Badges } from 'src/models/badges';
+import { UserBadges } from 'src/models/userbadges';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, UserGoals, Goals,
-    Accounts, Balances]),
+    Accounts, Balances, Badges, UserBadges]),
     forwardRef(() => AuthModule),
   ],
   providers: [UserService, AuthService, JwtService,
-    GoalService, UserGoalService],
+    GoalService, UserGoalService, BadgeService],
   controllers: [UserController],
   exports: [UserService],
 })

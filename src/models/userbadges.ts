@@ -14,19 +14,13 @@ import { Users } from './users';
   export class UserBadges extends BaseEntity {
     @PrimaryGeneratedColumn()
     @JoinColumn()
-    id: number;
-  
-    @Column({ unique: true })
-    title: string;
-  
-    @Column({ unique: false })
-    description: string;
+    userBadgeId: number;
 
     @ManyToOne(() => Badges, {
         onUpdate: 'CASCADE',
         nullable: false,
     })
-    @JoinColumn([{ name: 'badgeId', referencedColumnName: 'id' }])
+    @JoinColumn([{ name: 'badgeId' }])
     Badges: Badges;
 
     @ManyToOne(() => Users, {
