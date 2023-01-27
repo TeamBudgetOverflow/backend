@@ -30,6 +30,9 @@ export class Accounts extends BaseEntity {
   @Column({ unique: false, nullable: true })
   acctPw: string;
 
+  @Column({ unique: false, default: false })
+  assigned: boolean;
+
   // @OneToOne(() => Balances, (balance) => balance.account, {
   //   cascade: ['insert'],
   // })

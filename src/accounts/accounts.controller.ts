@@ -11,6 +11,7 @@ import {
   Put,
   HttpStatus,
   HttpException,
+  Delete,
 } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { AddAccountDto } from './dto/addAccount.dto';
@@ -21,6 +22,7 @@ import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { HttpStatusCode } from 'axios';
+import { ModifyUserInfoDTO } from 'src/user/dto/modifyUser.dto';
 
 @Controller('/api/accounts')
 export class AccountsController {
@@ -30,10 +32,30 @@ export class AccountsController {
     private readonly userGoalService: UserGoalService,
   ) {}
 
-  @Post('/:userId/balance')
+  @Post('/:userId/balance/external')
   async viewAccountBalance(@Body() userInfo, @Headers() headers) {
     const result = this.accountService.viewAccountBalance(userInfo, headers);
     return result;
+  }
+
+  // DB search
+  @Get('/:accountId/users/:userId/balance')
+  @UseGuards(AuthGuard('jwt'))
+  async getAccountBalance(
+    @Req() req,
+    @Res() res,
+    @Param('userId') targetUserId: number,
+    @Param('accountId') accountId: number,
+  ) {
+    const userId = req.user;
+    if (Number(targetUserId) === userId) {
+      const result = await this.accountService.getAccountBalance(
+        Number(accountId),
+      );
+      res.json(result);
+    } else {
+      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('/:userId')
@@ -41,13 +63,45 @@ export class AccountsController {
   async addAccount(
     @Req() req,
     @Res() res: Response,
+    @Param('userId') targetUserId: number,
     @Body() accountInfo: AddAccountDto,
   ) {
     const userId = req.user;
     const bank = accountInfo.bankId;
-    const data = { userId, bank, ...accountInfo };
-    const result = await this.accountService.addAccount(data);
-    res.json({ accountId: result.accountId });
+    if (Number(targetUserId) === userId) {
+      const targetUserAccounts = await this.accountService.getAccounts(userId);
+      const connectedAccounts = await this.accountService.getConnectedAccounts(
+        userId,
+      );
+
+      if (targetUserAccounts.length > 0) {
+        const { accountId, bank } = targetUserAccounts[0];
+        const bankId = bank.id;
+        if (connectedAccounts.includes(accountId)) {
+          throw new HttpException(
+            'No Account is available to connect',
+            HttpStatus.BAD_REQUEST,
+          );
+        } else {
+          if (bankId !== 2) {
+            const data = { userId, bank, ...accountInfo };
+            const result = await this.accountService.addAccount(data);
+            res.json({ accountId: result.accountId });
+          } else {
+            throw new HttpException(
+              'Please Provide a Real Account (Not Manual)',
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+        }
+      } else {
+        const data = { userId, bank };
+        const result = await this.accountService.addAccount(data);
+        res.json({ accountId: result.accountId });
+      }
+    } else {
+      throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('/:userId/manual')
@@ -60,28 +114,93 @@ export class AccountsController {
     const userId = req.user;
     // const userId = 1;
     // const user = 1; - tested with the fixed user Id
-    const bank = 2; // would be different - talk with FE
-    // const bank = 2; - tested with the fixed bank Id
+    // const bank = 3; // would be different - talk with FE
+    const bank = 2;
     if (Number(targetUserId) === userId) {
-      const targetUserAccounts = await this.accountService.getAccounts(
+      const targetUserAccounts = await this.accountService.getManualAccounts(
         userId,
       );
-      if (targetUserAccounts.length > 10) {
+      const connectedAccounts = await this.accountService.getConnectedAccounts(
+        userId,
+      );
+      const trimmedAccounts = [];
+      // filtering logic - if account is connected to the goal
+      if (targetUserAccounts.length >= 10) {
         for (let i = 0; i < targetUserAccounts.length; i++) {
           const { accountId, bank } = targetUserAccounts[i];
+          console.log(bank.id);
           const bankId = bank.id;
-          if (bankId === 2) {
-            const trimmedManual = { accountId };
-            return res.status(200).json(trimmedManual);
+          console.log(connectedAccounts.includes(accountId));
+          if (connectedAccounts.includes(accountId)) {
+            continue;
+          } else {
+            if (bankId === 2) {
+              trimmedAccounts.push(accountId);
+              break;
+            }
           }
         }
+        res.json({ accountId: trimmedAccounts[0] });
       } else {
         const data = { userId, bank };
         const result = await this.accountService.addAccount(data);
-        return res.status(200).json({ accountId: result.accountId });
+        res.json({ accountId: result.accountId });
       }
     } else {
-      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('/:accountId/users/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async getAccountDetail(
+    @Req() req,
+    @Res() res,
+    @Param('userId') targetUserId: number,
+    @Param('accountId') accountId: number,
+  ) {
+    const userId = req.user;
+    if (Number(targetUserId) === userId) {
+      const targetAccount = this.accountService.getIndivAccount(accountId);
+      res.json(targetAccount);
+    } else {
+      throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Delete('/:accountId/users/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async deleteAccount(
+    @Req() req,
+    @Res() res: Response,
+    @Param('userId') targetUserId: number,
+    @Param('accountId') targetAccountId: number,
+  ) {
+    const userId = req.user;
+    if (Number(targetUserId) === userId) {
+      const connectedAccounts = await this.accountService.getConnectedAccounts(
+        userId,
+      );
+      if (connectedAccounts.includes(Number(targetAccountId))) {
+        throw new HttpException(
+          'Cannot Delete the connected account',
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        const targ = await this.accountService.getIndivAccount(targetAccountId);
+        if (!targ) {
+          throw new HttpException(
+            'Such Account Does Not Exist',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        await this.accountService.deleteAccount(targetAccountId);
+        res.json({
+          message: `AccountId ${targetAccountId} is successfully deleted`,
+        });
+      }
+    } else {
+      throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -93,24 +212,29 @@ export class AccountsController {
     @Param('userId') targetUserId: number,
   ) {
     const user = req.user;
-    console.log(typeof targetUserId);
     if (Number(targetUserId) === user) {
       const targetUserAccounts = await this.accountService.getAccounts(user);
+      const connectedAccounts = await this.accountService.getConnectedAccounts(
+        user,
+      );
       const trimmedAccounts = [];
       for (let i = 0; i < targetUserAccounts.length; i++) {
         const { accountId, acctNo, bank } = targetUserAccounts[i];
         const bankId = bank.id;
-        if (bankId !== 3) {
-          trimmedAccounts.push({
-            accountId,
-            acctNo,
-            bankId,
-          });
+        let connected = false;
+        if (connectedAccounts.includes(accountId)) {
+          connected = true;
         }
+        trimmedAccounts.push({
+          accountId,
+          acctNo,
+          bankId,
+          connected,
+        });
       }
-      return res.status(200).json(trimmedAccounts);
+      res.json({ data: trimmedAccounts });
     } else {
-      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
     }
   }
 
