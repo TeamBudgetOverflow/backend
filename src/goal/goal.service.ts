@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, Brackets } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
@@ -34,8 +34,10 @@ export class GoalService {
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
       .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
-      .andWhere('g.title like :keyword', { keyword: `%${keyword}%` })
-      .andWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
       .orderBy(`${sortOby}`, `${orderby}`)
@@ -48,8 +50,10 @@ export class GoalService {
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
-      .andWhere('g.title like :keyword', { keyword: `%${keyword}%` })
-      .andWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
       .orderBy(`${sortOby}`, `${orderby}`)
