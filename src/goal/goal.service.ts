@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Brackets } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
@@ -13,7 +13,6 @@ export class GoalService {
   ) {}
 
   async createGoal(data /*: CreateGoalDTO*/): Promise<Goals> {
-    console.log(data);
     const result = await this.goalRepository.save(data);
 
     return result;
@@ -25,6 +24,40 @@ export class GoalService {
       order: { createdAt: 'DESC' },
     });
     return result;
+  }
+
+  async searchGoal(
+    keyword: string, sortOby: string, statuses: string[],
+    min: number|Date, max: number|Date, orderby: 'ASC'|'DESC'
+    ): Promise<Goals[]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, `${orderby}`)
+      .getMany();
+  }
+
+  async searchGoalNotValue(
+    keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC'
+    ): Promise<Goals[]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, `${orderby}`)
+      .getMany();
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {

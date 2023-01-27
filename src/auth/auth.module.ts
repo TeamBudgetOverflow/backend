@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { NaverStrategy } from './naver/naver.strategy';
+import { KakaoStrategy } from './kakao/kakao.strategy';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
@@ -18,7 +19,7 @@ dotenv.config();
     forwardRef(() => UserModule),
     JwtModule,
     ],
-  providers: [AuthService, UserService, JwtService, NaverStrategy,
+  providers: [AuthService, UserService, JwtService, NaverStrategy, KakaoStrategy,
   JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}

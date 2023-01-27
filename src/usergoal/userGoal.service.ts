@@ -17,10 +17,11 @@ export class UserGoalService {
       .createQueryBuilder('g')
       .where('g.goalId = :goalId', {goalId})
       .leftJoin('g.userId', 'users')
-      .leftJoin('g.balanceId', 'balances')
+      .leftJoin('g.balanceId', 'balance')
       .leftJoin('g.accountId', 'accounts')
-      .select(['g','users.userId', 'users.nickname',
-      'users.image', 'balances.current', 'accounts.accountId'])
+      .select(['g','users.userId', 'users.nickname', 'users.image', 
+      'balance.balanceId' , 'balance.current', 
+      'accounts.accountId'])
       .getMany();
   }
 

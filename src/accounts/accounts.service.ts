@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Body, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { AxiosError, AxiosResponse } from 'axios';
+import { Not } from 'typeorm';
 import {
   catchError,
   firstValueFrom,
@@ -94,6 +95,34 @@ export class AccountsService {
     const result: Accounts[] = await this.accountsRepository.find({
       where: {
         userId: targetUser,
+        bank: {
+          id: Not(2),
+        },
+      },
+      select: {
+        accountId: true,
+        acctNo: true,
+        bank: {
+          id: true,
+        },
+      },
+      order: {
+        accountId: 'ASC',
+      },
+    });
+
+    return result;
+  }
+
+  // might need to use querybuilder
+  async getManualAccounts(targetUser): Promise<Accounts[]> {
+    console.log(typeof targetUser); // 5
+    const result: Accounts[] = await this.accountsRepository.find({
+      where: {
+        userId: targetUser,
+        bank: {
+          id: 2,
+        },
       },
       select: {
         accountId: true,
@@ -120,27 +149,27 @@ export class AccountsService {
     return result;
   }
 
-  // might need to use querybuilder
-  async getManuals(bankId): Promise<Accounts[]> {
-    const result: Accounts[] = await this.accountsRepository.find({
-      where: {
-        bank: {
-          id: bankId,
-        },
-      },
-      select: {
-        accountId: true,
-        bank: {
-          id: true,
-        },
-      },
-      order: {
-        accountId: 'ASC',
-      },
-    });
+  // // might need to use querybuilder
+  // async getManuals(bankId): Promise<Accounts[]> {
+  //   const result: Accounts[] = await this.accountsRepository.find({
+  //     where: {
+  //       bank: {
+  //         id: bankId,
+  //       },
+  //     },
+  //     select: {
+  //       accountId: true,
+  //       bank: {
+  //         id: true,
+  //       },
+  //     },
+  //     order: {
+  //       accountId: 'ASC',
+  //     },
+  //   });
 
-    return result;
-  }
+  //   return result;
+  // }
 
   async getAccountBalance(accountId: number) {
     const result: UserGoals[] = await this.userGoalsRepository.find({});
@@ -148,7 +177,7 @@ export class AccountsService {
     for (let i = 0; i < result.length; i++) {
       const { accountId: account, balanceId: balance } = result[i];
       const { current } = balance;
-      if (account.accountId === accountId['accountId']) {
+      if (account.accountId === accountId) {
         targetBalance.push({ balance: current });
         break;
       }
@@ -177,5 +206,27 @@ export class AccountsService {
     // .leftJoin('ug.balanceId', 'balance')
     // .select(['ug', 'balance'])
     // .getOne();
+  }
+
+  async getConnectedAccounts(targetUserId: number) {
+    console.log(targetUserId);
+    const result: UserGoals[] = await this.userGoalsRepository.find({});
+    const targetAccounts = [];
+    for (let i = 0; i < result.length; i++) {
+      // console.log(userId)
+      const { accountId: account } = result[i];
+      const { userId } = account.user;
+      if (userId === targetUserId) {
+        targetAccounts.push(account.accountId);
+      }
+    }
+
+    return targetAccounts;
+  }
+
+  async deleteAccount(targetAccountId: number) {
+    await this.accountsRepository.delete({
+      accountId: targetAccountId,
+    });
   }
 }

@@ -40,6 +40,12 @@ export class Goals extends BaseEntity {
   @Column({ nullable: false })
   endDate: Date;
 
+  @Column({ nullable : false })
+  period: number;
+
+  @Column({ nullable: false })
+  status: string;
+
   @Column({ nullable: false })
   title: string;
 

@@ -14,7 +14,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
+import { Post, Param, Query, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
@@ -52,7 +52,8 @@ export class GoalController {
     const curCount = 1;
 
     const checkRegister: UserGoals = await this.usergoalService.findUser({ 
-      accountId : createGoalDTO.accountId
+      accountId : createGoalDTO.accountId,
+      userId,
       });
     if(checkRegister){
       throw new HttpException(
@@ -60,6 +61,8 @@ export class GoalController {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    // hashTag : Array -> String 변환
     let hashTag: string = '';
     for(let i = 0; i < createGoalDTO.hashTag.length ; i++){
       if(i == createGoalDTO.hashTag.length - 1){
@@ -68,24 +71,43 @@ export class GoalController {
         hashTag += createGoalDTO.hashTag[i] + ",";
       }
     }
+
+    // isPrivate default Value = false
     let isPrivate = false;
     if(createGoalDTO.isPrivate){
       isPrivate = createGoalDTO.isPrivate;
     }
-    // 1. 목표 생성
+
+    // 개인 목표 - status: 진행중proceeding
+    // 팀 목표 - status: 모집중recruit
+    let status: string;
+    if(createGoalDTO.headCount === 1){
+      status = "proceeding";
+    }else {
+      status = "recruit";
+    }
+
+    const end: Date = new Date(createGoalDTO.endDate);
+    const start: Date = new Date(createGoalDTO.startDate);
+    const period: number = (end.getTime() - start.getTime()) / (1000 * 60 *60 *24);
+
+    // 목표 생성 데이터
     const data: CreateGoalDTO = {
       isPrivate: isPrivate,
       userId,
       curCount,
       amount: createGoalDTO.amount,
-      startDate: createGoalDTO.startDate,
-      endDate: createGoalDTO.endDate,
+      startDate: start,
+      endDate: end,
+      period: period,
+      status: status,
       headCount: createGoalDTO.headCount,
       title: createGoalDTO.title,
       description: createGoalDTO.description,
       hashTag: hashTag,
       emoji: createGoalDTO.emoji
     };
+
     const result = await this.goalService.createGoal(data);
     const goalId: number = result.goalId;
     const accountId: number = createGoalDTO.accountId;
@@ -98,7 +120,7 @@ export class GoalController {
     }
     const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
     const balanceId: number = balanceCreate.balanceId;
-    // 2. 내가 만든 목표 자동 참가
+    // 내가 만든 목표 자동 참가
     const createUserGoalData: CreateUserGoalDTO = {
       userId,
       goalId,
@@ -121,7 +143,8 @@ export class GoalController {
   ) {
     const userId = req.user;
     const data = {
-      accountId: accountId
+      accountId: accountId,
+      userId
     };
     const checkRegister: UserGoals = await this.usergoalService.findUser(data);
     if(checkRegister){
@@ -165,6 +188,90 @@ export class GoalController {
     }
   }
 
+  // 목표 검색
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchGoal(
+    @Query() paginationQuery,
+    @Res() res: Response){
+      let { keyword, sortby, orderby, status, min, max } = paginationQuery;
+      let sortOby = '';
+      //sortBy가 비어있으면 생성 시간순으로 분류
+      if(!sortby) sortOby = "g.createdAt"
+      else {
+        switch (sortby) {
+          // 정렬방식은 status - 진행중/모집중 - default: total
+          // sortBy - 목표금액amount / 모집인원member / 목표기간period
+          // orderBy - ASC(오름), DESC(내림)
+          case "amount":
+            sortOby = "g.amount"
+            if(!max) max = 70000;
+            break;
+          case "member":
+            sortOby = "g.headCount"
+            if(!max) max = 10;
+            break;
+          case "period":
+            sortOby = "g.period"
+            if(!max) max = 7;
+            break;
+          default:
+            sortOby = "g.createdAt"
+            break;
+        }
+      }
+      if(!min) min = 0;
+      if(!orderby) orderby = "DESC";
+
+      let statuses: string[];
+      if(status === "recruit") statuses = ["recruit"]
+      else if(status === "proceeding") statuses = ["proceeding"]
+      else statuses = ["recruit", "proceeding"]
+
+      let searchResult;
+      if(orderby === "ASC" && !(sortOby === "g.createdAt")) {
+        searchResult = await this.goalService.searchGoal(
+          keyword, sortOby, statuses, min, max, orderby
+          );
+      }else if(orderby === "DESC" && !(sortOby === "g.createdAt")){
+        // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
+        searchResult = await this.goalService.searchGoal(
+          keyword, sortOby, statuses, min, max, orderby
+          );
+      }else {
+        // sortby와 max 가 둘 다 없는 경우
+        // sortby : createdAt / max : undefined
+        searchResult = await this.goalService.searchGoalNotValue(
+          keyword, sortOby, statuses, orderby
+          );
+      }
+
+      const result = [];
+      for (let i = 0; i < searchResult.length; i++) {
+        const { userId, nickname } = searchResult[i].userId;
+        const hashTag = searchResult[i].hashTag.split(",");
+        result.push({
+          goalId: searchResult[i].goalId,
+          userId: userId,
+          nickname: nickname,
+          amount: searchResult[i].amount,
+          curCount: searchResult[i].curCount,
+          headCount: searchResult[i].headCount,
+          startDate: searchResult[i].startDate,
+          endDate: searchResult[i].endDate,
+          period: searchResult[i].period,
+          status: searchResult[i].status,
+          title: searchResult[i].title,
+          hashTag: hashTag,
+          emoji: searchResult[i].emoji,
+          description: searchResult[i].description,
+          createdAt: searchResult[i].createdAt,
+          updatedAt: searchResult[i].updatedAt,
+        });
+      }
+      res.json({ result: result });
+  }
+
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -184,6 +291,8 @@ export class GoalController {
         headCount: sortResult[i].headCount,
         startDate: sortResult[i].startDate,
         endDate: sortResult[i].endDate,
+        period: sortResult[i].period,
+        status: sortResult[i].status,
         title: sortResult[i].title,
         hashTag: hashTag,
         emoji: sortResult[i].emoji,
@@ -203,27 +312,37 @@ export class GoalController {
     @Param('goalId') goalId: number,
     @Res() res: Response,
   ) {
+    const myUserId = req.user;
     const findGoal = await this.goalService.getGoalDetail(goalId);
-
     const joinUser = await this.usergoalService.getJoinUser(goalId);
     const member = [];
     for(let i = 0; i < joinUser.length; i++){
       const { userId: memberUserId, 
               nickname: memberNickname,
               image: memberImage } = joinUser[i].userId
-      const { current } = joinUser[i].balanceId
+      const { balanceId, current } = joinUser[i].balanceId
       const { accountId } = joinUser[i].accountId
       let attainment: number = 0;
       if(current !== 0){
         attainment = current/findGoal.amount * 100;
       }
-      member.push({
-        userId: memberUserId,
-        nickname: memberNickname,
-        image: memberImage,
-        attainment: attainment,
-        accountId: accountId
-      })
+      if(myUserId === memberUserId){
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+          accountId,
+          balanceId,
+        })
+      }else {
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+        })
+      }
     }
 
     const { userId, nickname } = findGoal.userId;
@@ -239,6 +358,8 @@ export class GoalController {
       headCount: findGoal.headCount,
       startDate: findGoal.startDate,
       endDate: findGoal.endDate,
+      period: findGoal.period,
+      status: findGoal.status,
       title: findGoal.title,
       hashTag: hashTag,
       emoji: findGoal.emoji,
@@ -308,7 +429,6 @@ export class GoalController {
     // getGoalDetail 가져오기
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
     if (userId === findGoal.userId.userId) {
-      // 해당 부분 에러날 수 있음 확인할 것
       // if 개설자 본인일 경우 에러 리턴
       throw new HttpException(
         '접근할 수 없는 권한입니다.',
@@ -349,7 +469,7 @@ export class GoalController {
       throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
     } else {
       const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-      //await this.usergoalService.exitGoal(accessUserGoalData);
+      await this.usergoalService.exitGoal(accessUserGoalData);
       await this.goalService.deleteGoal(goalId);
       res.json({ message: '목표 삭제 완료' });
     }
