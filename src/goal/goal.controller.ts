@@ -229,11 +229,11 @@ export class GoalController {
       else statuses = ["recruit", "proceeding"]
 
       let searchResult;
-      if(orderby === "ASC" && max) {
+      if(orderby === "ASC" && !(sortOby === "g.createdAt")) {
         searchResult = await this.goalService.searchGoal(
           keyword, sortOby, statuses, min, max, orderby
           );
-      }else if(orderby === "DESC" && max){
+      }else if(orderby === "DESC" && !(sortOby === "g.createdAt")){
         // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
         searchResult = await this.goalService.searchGoal(
           keyword, sortOby, statuses, min, max, orderby
