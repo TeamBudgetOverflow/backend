@@ -27,13 +27,25 @@ export class GoalService {
     return result;
   }
 
-  async searchGoal(keyword: string): Promise<Goals[]>{
+  async searchGoalByASC(keyword: string, sortOby: string): Promise<Goals[]>{
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.title like :keyword', { keyword: `%${keyword}%` })
       .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, "ASC")
+      .getMany();
+  }
+
+  async searchGoalByDESC(keyword: string, sortOby: string): Promise<Goals[]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.title like :keyword', { keyword: `%${keyword}%` })
+      .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, "DESC")
       .getMany();
   }
 

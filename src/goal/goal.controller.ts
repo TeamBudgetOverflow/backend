@@ -171,9 +171,44 @@ export class GoalController {
   @Get('search')
   @UseGuards(AuthGuard('jwt'))
   async searchGoal(
-    @Query('keyword') keyword: string,
+    @Query() paginationQuery,
     @Res() res: Response){
-      const searchResult = await this.goalService.searchGoal(keyword);
+      const { keyword, sortBy, orderBy } = paginationQuery;
+      let sortOby = '';
+      if(!sortBy){
+        //sortBy가 비어있으면 생성 시간순으로 분류
+        sortOby = "g.createdAt"
+      }else {
+        switch (sortBy) {
+          // 정렬방식은 status - 진행중/모집중
+          // sortBy - 목표금액amount / 모집인원member / 목표기간period
+          // orderBy - ASC(오름), DESC(내림)
+          case "amount":
+            sortOby = "g.amount"
+            break;
+          case "member":
+            sortOby = "g.headCount"
+            break;
+          case "period":
+            // 컬럼 추가 되지 않았으므로 추구 작업
+            sortOby = ""
+            break;
+          default:
+            sortOby = "g.createdAt"
+            break;
+        }
+      }
+      console.log("start");
+      console.log("keyword = ", keyword," sortOby = ", sortOby," orderBy = ", orderBy);
+      let searchResult;
+      if(orderBy === "ASC") {
+        console.log("ASC");
+        searchResult = await this.goalService.searchGoalByASC(keyword,sortOby);
+      }else {
+        // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
+        console.log("DESC");
+        searchResult = await this.goalService.searchGoalByDESC(keyword,sortOby);
+      }
       const result = [];
       for (let i = 0; i < searchResult.length; i++) {
         const { userId, nickname } = searchResult[i].userId;
@@ -391,7 +426,7 @@ export class GoalController {
       throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
     } else {
       const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-      //await this.usergoalService.exitGoal(accessUserGoalData);
+      await this.usergoalService.exitGoal(accessUserGoalData);
       await this.goalService.deleteGoal(goalId);
       res.json({ message: '목표 삭제 완료' });
     }
