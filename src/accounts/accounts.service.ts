@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Body, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { AxiosError, AxiosResponse } from 'axios';
+import { Not } from 'typeorm';
 import {
   catchError,
   firstValueFrom,
@@ -94,6 +95,34 @@ export class AccountsService {
     const result: Accounts[] = await this.accountsRepository.find({
       where: {
         userId: targetUser,
+        bank: {
+          id: Not(2),
+        },
+      },
+      select: {
+        accountId: true,
+        acctNo: true,
+        bank: {
+          id: true,
+        },
+      },
+      order: {
+        accountId: 'ASC',
+      },
+    });
+
+    return result;
+  }
+
+  // might need to use querybuilder
+  async getManualAccounts(targetUser): Promise<Accounts[]> {
+    console.log(typeof targetUser); // 5
+    const result: Accounts[] = await this.accountsRepository.find({
+      where: {
+        userId: targetUser,
+        bank: {
+          id: 2,
+        },
       },
       select: {
         accountId: true,
@@ -193,5 +222,11 @@ export class AccountsService {
     }
 
     return targetAccounts;
+  }
+
+  async deleteAccount(targetAccountId: number) {
+    await this.accountsRepository.delete({
+      accountId: targetAccountId,
+    });
   }
 }

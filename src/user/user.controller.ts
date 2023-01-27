@@ -47,9 +47,7 @@ export class UserController {
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);
-      const accessToken = await this.authService.createAccessToken(
-        createUser,
-      );
+      const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
@@ -110,12 +108,10 @@ export class UserController {
 
   @Delete()
   @UseGuards(AuthGuard('jwt'))
-  async logout(
-    @Req() req,
-    @Res() res: Response){
-        const userId: number = req.user;
-        await this.authService.deleteRefreshToken(userId);
-        res.json({ message: "로그아웃 성공" });
+  async logout(@Req() req, @Res() res: Response) {
+    const userId: number = req.user;
+    await this.authService.deleteRefreshToken(userId);
+    res.json({ message: '로그아웃 성공' });
   }
 
   @Post(':userId/pinCode')
@@ -204,27 +200,19 @@ export class UserController {
   }
 
   @Get(':userId')
-  @UseGuards(AuthGuard('jwt'))
   async getUserProfile(
     @Req() req,
     @Res() res: Response,
     @Param('userId') targetUserId: number,
   ) {
-      const userId = req.user;
-      // const user = 1;
-      // if (Number(userId) !== user) {
-      if (Number(targetUserId) === userId) {
-        const targetUserProfile = await this.userService.getUserProfile(userId);
-        return res.status(200).json(targetUserProfile);
-      } else {
-        throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
-      }
-
-      // else {
-      //   return res.status(400).json({
-      //     errorMessage: 'Not a valid user',
-      //   });
-      // }
+    const targetUserProfile = await this.userService.getUserProfile(
+      Number(targetUserId),
+    );
+    if (targetUserProfile) {
+      return res.json(targetUserProfile);
+    } else {
+      throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Patch(':userId')
@@ -253,33 +241,36 @@ export class UserController {
   async getUserGoal(
     @Req() req,
     @Param('userId') userId: number,
-    @Res() res: Response){
-      const myUserId = req.user;
-      const findGoals = await this.userGoalService.getGoalByUserId(userId);
-      const result = [];
-      for(let i = 0; i < findGoals.length; i++){
-        if(myUserId != userId && (findGoals[i].goalId.isPrivate == true)){
-          continue;
-        } else {
-          const hashTag = findGoals[i].goalId.hashTag.split(",");
-          result.push({
-            isPrivate: findGoals[i].goalId.isPrivate,
-            goalId: findGoals[i].goalId.goalId,
-            amount: findGoals[i].goalId.amount,
-            curCount: findGoals[i].goalId.curCount,
-            headCount: findGoals[i].goalId.headCount,
-            startDate: findGoals[i].goalId.startDate,
-            endDate: findGoals[i].goalId.endDate,
-            title: findGoals[i].goalId.title,
-            hashTag: hashTag,
-            emoji: findGoals[i].goalId.emoji,
-            description: findGoals[i].goalId.description,
-            createdAt: findGoals[i].goalId.createdAt,
-            updatedAt: findGoals[i].goalId.updatedAt,
-            attainment: findGoals[i].balanceId.current/findGoals[i].goalId.amount * 100
-          })
-        }}
-      res.json({ result: result });
+    @Res() res: Response,
+  ) {
+    const myUserId = req.user;
+    const findGoals = await this.userGoalService.getGoalByUserId(userId);
+    const result = [];
+    for (let i = 0; i < findGoals.length; i++) {
+      if (myUserId != userId && findGoals[i].goalId.isPrivate == true) {
+        continue;
+      } else {
+        const hashTag = findGoals[i].goalId.hashTag.split(',');
+        result.push({
+          isPrivate: findGoals[i].goalId.isPrivate,
+          goalId: findGoals[i].goalId.goalId,
+          amount: findGoals[i].goalId.amount,
+          curCount: findGoals[i].goalId.curCount,
+          headCount: findGoals[i].goalId.headCount,
+          startDate: findGoals[i].goalId.startDate,
+          endDate: findGoals[i].goalId.endDate,
+          title: findGoals[i].goalId.title,
+          hashTag: hashTag,
+          emoji: findGoals[i].goalId.emoji,
+          description: findGoals[i].goalId.description,
+          createdAt: findGoals[i].goalId.createdAt,
+          updatedAt: findGoals[i].goalId.updatedAt,
+          attainment:
+            (findGoals[i].balanceId.current / findGoals[i].goalId.amount) * 100,
+        });
+      }
+    }
+    res.json({ result: result });
   }
 
   
