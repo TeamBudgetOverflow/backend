@@ -259,6 +259,8 @@ export class UserController {
           headCount: findGoals[i].goalId.headCount,
           startDate: findGoals[i].goalId.startDate,
           endDate: findGoals[i].goalId.endDate,
+          period: findGoals[i].goalId.period,
+          status: findGoals[i].goalId.status,
           title: findGoals[i].goalId.title,
           hashTag: hashTag,
           emoji: findGoals[i].goalId.emoji,

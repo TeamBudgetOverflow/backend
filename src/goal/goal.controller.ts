@@ -61,6 +61,8 @@ export class GoalController {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    // hashTag : Array -> String 변환
     let hashTag: string = '';
     for(let i = 0; i < createGoalDTO.hashTag.length ; i++){
       if(i == createGoalDTO.hashTag.length - 1){
@@ -69,24 +71,43 @@ export class GoalController {
         hashTag += createGoalDTO.hashTag[i] + ",";
       }
     }
+
+    // isPrivate default Value = false
     let isPrivate = false;
     if(createGoalDTO.isPrivate){
       isPrivate = createGoalDTO.isPrivate;
     }
-    // 1. 목표 생성
+
+    // 개인 목표 - status: 진행중proceeding
+    // 팀 목표 - status: 모집중recruit
+    let status: string;
+    if(createGoalDTO.headCount === 1){
+      status = "proceeding";
+    }else {
+      status = "recruit";
+    }
+
+    const end: Date = new Date(createGoalDTO.endDate);
+    const start: Date = new Date(createGoalDTO.startDate);
+    const period: number = (end.getTime() - start.getTime()) / (1000 * 60 *60 *24);
+
+    // 목표 생성 데이터
     const data: CreateGoalDTO = {
       isPrivate: isPrivate,
       userId,
       curCount,
       amount: createGoalDTO.amount,
-      startDate: createGoalDTO.startDate,
-      endDate: createGoalDTO.endDate,
+      startDate: start,
+      endDate: end,
+      period: period,
+      status: status,
       headCount: createGoalDTO.headCount,
       title: createGoalDTO.title,
       description: createGoalDTO.description,
       hashTag: hashTag,
       emoji: createGoalDTO.emoji
     };
+
     const result = await this.goalService.createGoal(data);
     const goalId: number = result.goalId;
     const accountId: number = createGoalDTO.accountId;
@@ -99,7 +120,7 @@ export class GoalController {
     }
     const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
     const balanceId: number = balanceCreate.balanceId;
-    // 2. 내가 만든 목표 자동 참가
+    // 내가 만든 목표 자동 참가
     const createUserGoalData: CreateUserGoalDTO = {
       userId,
       goalId,
@@ -222,6 +243,8 @@ export class GoalController {
           headCount: searchResult[i].headCount,
           startDate: searchResult[i].startDate,
           endDate: searchResult[i].endDate,
+          period: searchResult[i].period,
+          status: searchResult[i].status,
           title: searchResult[i].title,
           hashTag: hashTag,
           emoji: searchResult[i].emoji,
@@ -252,6 +275,8 @@ export class GoalController {
         headCount: sortResult[i].headCount,
         startDate: sortResult[i].startDate,
         endDate: sortResult[i].endDate,
+        period: sortResult[i].period,
+        status: sortResult[i].status,
         title: sortResult[i].title,
         hashTag: hashTag,
         emoji: sortResult[i].emoji,
@@ -317,6 +342,8 @@ export class GoalController {
       headCount: findGoal.headCount,
       startDate: findGoal.startDate,
       endDate: findGoal.endDate,
+      period: findGoal.period,
+      status: findGoal.status,
       title: findGoal.title,
       hashTag: hashTag,
       emoji: findGoal.emoji,

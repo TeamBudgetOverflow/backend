@@ -39,6 +39,14 @@ export class CreateGoalDTO {
 
   @IsNumber()
   @IsNotEmpty()
+  readonly period: number;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly status: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   readonly headCount: number;
 
   @IsString()
