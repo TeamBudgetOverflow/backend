@@ -194,42 +194,58 @@ export class GoalController {
   async searchGoal(
     @Query() paginationQuery,
     @Res() res: Response){
-      const { keyword, sortBy, orderBy } = paginationQuery;
+      let { keyword, sortby, orderby, status, min, max } = paginationQuery;
       let sortOby = '';
-      if(!sortBy){
-        //sortBy가 비어있으면 생성 시간순으로 분류
-        sortOby = "g.createdAt"
-      }else {
-        switch (sortBy) {
-          // 정렬방식은 status - 진행중/모집중
+      //sortBy가 비어있으면 생성 시간순으로 분류
+      if(!sortby) sortOby = "g.createdAt"
+      else {
+        switch (sortby) {
+          // 정렬방식은 status - 진행중/모집중 - default: total
           // sortBy - 목표금액amount / 모집인원member / 목표기간period
           // orderBy - ASC(오름), DESC(내림)
           case "amount":
             sortOby = "g.amount"
+            if(!max) max = 70000;
             break;
           case "member":
             sortOby = "g.headCount"
+            if(!max) max = 10;
             break;
           case "period":
-            // 컬럼 추가 되지 않았으므로 추구 작업
-            sortOby = ""
+            sortOby = "g.period"
+            if(!max) max = 7;
             break;
           default:
             sortOby = "g.createdAt"
             break;
         }
       }
-      console.log("start");
-      console.log("keyword = ", keyword," sortOby = ", sortOby," orderBy = ", orderBy);
+      if(!min) min = 0;
+      if(!orderby) orderby = "DESC";
+
+      let statuses: string[];
+      if(status === "recruit") statuses = ["recruit"]
+      else if(status === "proceeding") statuses = ["proceeding"]
+      else statuses = ["recruit", "proceeding"]
+
       let searchResult;
-      if(orderBy === "ASC") {
-        console.log("ASC");
-        searchResult = await this.goalService.searchGoalByASC(keyword,sortOby);
-      }else {
+      if(orderby === "ASC" && max) {
+        searchResult = await this.goalService.searchGoal(
+          keyword, sortOby, statuses, min, max, orderby
+          );
+      }else if(orderby === "DESC" && max){
         // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
-        console.log("DESC");
-        searchResult = await this.goalService.searchGoalByDESC(keyword,sortOby);
+        searchResult = await this.goalService.searchGoal(
+          keyword, sortOby, statuses, min, max, orderby
+          );
+      }else {
+        // sortby와 max 가 둘 다 없는 경우
+        // sortby : createdAt / max : undefined
+        searchResult = await this.goalService.searchGoalNotValue(
+          keyword, sortOby, statuses, orderby
+          );
       }
+
       const result = [];
       for (let i = 0; i < searchResult.length; i++) {
         const { userId, nickname } = searchResult[i].userId;

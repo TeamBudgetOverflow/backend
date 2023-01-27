@@ -13,7 +13,6 @@ export class GoalService {
   ) {}
 
   async createGoal(data /*: CreateGoalDTO*/): Promise<Goals> {
-    console.log(data);
     const result = await this.goalRepository.save(data);
 
     return result;
@@ -27,25 +26,33 @@ export class GoalService {
     return result;
   }
 
-  async searchGoalByASC(keyword: string, sortOby: string): Promise<Goals[]>{
+  async searchGoal(
+    keyword: string, sortOby: string, statuses: string[],
+    min: number|Date, max: number|Date, orderby: 'ASC'|'DESC'
+    ): Promise<Goals[]>{
     return await this.goalRepository
       .createQueryBuilder('g')
-      .where('g.title like :keyword', { keyword: `%${keyword}%` })
-      .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
+      .andWhere('g.title like :keyword', { keyword: `%${keyword}%` })
+      .andWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
-      .orderBy(`${sortOby}`, "ASC")
+      .orderBy(`${sortOby}`, `${orderby}`)
       .getMany();
   }
 
-  async searchGoalByDESC(keyword: string, sortOby: string): Promise<Goals[]>{
+  async searchGoalNotValue(
+    keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC'
+    ): Promise<Goals[]>{
     return await this.goalRepository
       .createQueryBuilder('g')
-      .where('g.title like :keyword', { keyword: `%${keyword}%` })
-      .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere('g.title like :keyword', { keyword: `%${keyword}%` })
+      .andWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
-      .orderBy(`${sortOby}`, "DESC")
+      .orderBy(`${sortOby}`, `${orderby}`)
       .getMany();
   }
 
