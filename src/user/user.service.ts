@@ -47,7 +47,12 @@ export class UserService {
   }
 
   async getUserProfile(userId: number) {
-    const targetUserInfo = await this.userRepository.findOneBy({ userId });
+    const targetUserInfo = await this.userRepository
+      .createQueryBuilder('u')
+      .where('u.userId = :userId', {userId})
+      .select(['u.email', 'u.name', 'u.nickname',
+      'u.image', 'u.loginCategory', 'u.description'])
+      .getOne();
     return targetUserInfo;
   }
 
