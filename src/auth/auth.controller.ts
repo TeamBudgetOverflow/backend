@@ -1,5 +1,6 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+//import { KakaoAuthGuard } from './kakao/kakao-auth.guard';
 
 @Controller('model')
 export class AuthController {

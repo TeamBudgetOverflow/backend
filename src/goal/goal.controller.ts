@@ -14,7 +14,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { Post, Param, Body, Put, Patch, Delete } from '@nestjs/common';
+import { Post, Param, Query, Body, Put, Patch, Delete } from '@nestjs/common';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
@@ -52,7 +52,8 @@ export class GoalController {
     const curCount = 1;
 
     const checkRegister: UserGoals = await this.usergoalService.findUser({ 
-      accountId : createGoalDTO.accountId
+      accountId : createGoalDTO.accountId,
+      userId,
       });
     if(checkRegister){
       throw new HttpException(
@@ -120,7 +121,11 @@ export class GoalController {
     @Res() res: Response,
   ) {
     const userId = req.user;
-    const checkRegister: UserGoals = await this.usergoalService.findUser(accountId);
+    const data = {
+      accountId: accountId,
+      userId
+    };
+    const checkRegister: UserGoals = await this.usergoalService.findUser(data);
     if(checkRegister){
       throw new HttpException(
         '이미 목표에 연결된 계좌 입니다.',
@@ -162,6 +167,72 @@ export class GoalController {
     }
   }
 
+  // 목표 검색
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchGoal(
+    @Query() paginationQuery,
+    @Res() res: Response){
+      const { keyword, sortBy, orderBy } = paginationQuery;
+      let sortOby = '';
+      if(!sortBy){
+        //sortBy가 비어있으면 생성 시간순으로 분류
+        sortOby = "g.createdAt"
+      }else {
+        switch (sortBy) {
+          // 정렬방식은 status - 진행중/모집중
+          // sortBy - 목표금액amount / 모집인원member / 목표기간period
+          // orderBy - ASC(오름), DESC(내림)
+          case "amount":
+            sortOby = "g.amount"
+            break;
+          case "member":
+            sortOby = "g.headCount"
+            break;
+          case "period":
+            // 컬럼 추가 되지 않았으므로 추구 작업
+            sortOby = ""
+            break;
+          default:
+            sortOby = "g.createdAt"
+            break;
+        }
+      }
+      console.log("start");
+      console.log("keyword = ", keyword," sortOby = ", sortOby," orderBy = ", orderBy);
+      let searchResult;
+      if(orderBy === "ASC") {
+        console.log("ASC");
+        searchResult = await this.goalService.searchGoalByASC(keyword,sortOby);
+      }else {
+        // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
+        console.log("DESC");
+        searchResult = await this.goalService.searchGoalByDESC(keyword,sortOby);
+      }
+      const result = [];
+      for (let i = 0; i < searchResult.length; i++) {
+        const { userId, nickname } = searchResult[i].userId;
+        const hashTag = searchResult[i].hashTag.split(",");
+        result.push({
+          goalId: searchResult[i].goalId,
+          userId: userId,
+          nickname: nickname,
+          amount: searchResult[i].amount,
+          curCount: searchResult[i].curCount,
+          headCount: searchResult[i].headCount,
+          startDate: searchResult[i].startDate,
+          endDate: searchResult[i].endDate,
+          title: searchResult[i].title,
+          hashTag: hashTag,
+          emoji: searchResult[i].emoji,
+          description: searchResult[i].description,
+          createdAt: searchResult[i].createdAt,
+          updatedAt: searchResult[i].updatedAt,
+        });
+      }
+      res.json({ result: result });
+  }
+
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -200,25 +271,37 @@ export class GoalController {
     @Param('goalId') goalId: number,
     @Res() res: Response,
   ) {
+    const myUserId = req.user;
     const findGoal = await this.goalService.getGoalDetail(goalId);
-
     const joinUser = await this.usergoalService.getJoinUser(goalId);
     const member = [];
     for(let i = 0; i < joinUser.length; i++){
       const { userId: memberUserId, 
               nickname: memberNickname,
               image: memberImage } = joinUser[i].userId
-      const { current } = joinUser[i].balanceId
+      const { balanceId, current } = joinUser[i].balanceId
+      const { accountId } = joinUser[i].accountId
       let attainment: number = 0;
       if(current !== 0){
         attainment = current/findGoal.amount * 100;
       }
-      member.push({
-        userId: memberUserId,
-        nickname: memberNickname,
-        image: memberImage,
-        attainment: attainment
-      })
+      if(myUserId === memberUserId){
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+          accountId,
+          balanceId,
+        })
+      }else {
+        member.push({
+          userId: memberUserId,
+          nickname: memberNickname,
+          image: memberImage,
+          attainment,
+        })
+      }
     }
 
     const { userId, nickname } = findGoal.userId;
@@ -226,6 +309,7 @@ export class GoalController {
     const result = [];
     result.push({
       goalId: findGoal.goalId,
+      isPrivate: findGoal.isPrivate,
       userId: userId,
       nickname: nickname,
       amount: findGoal.amount,
@@ -302,7 +386,6 @@ export class GoalController {
     // getGoalDetail 가져오기
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
     if (userId === findGoal.userId.userId) {
-      // 해당 부분 에러날 수 있음 확인할 것
       // if 개설자 본인일 경우 에러 리턴
       throw new HttpException(
         '접근할 수 없는 권한입니다.',
@@ -326,15 +409,18 @@ export class GoalController {
   }
 
   // 목표 삭제
-  @Delete(':goal')
+  @Delete(':goalId')
   @UseGuards(AuthGuard('jwt'))
   async deleteGoal(
     @Req() req,
     @Param('goalId') goalId: number,
     @Res() res: Response,
   ) {
-    const userId: number = req.user;
+    const userId: number = req.user; 
     const find = await this.goalService.getGoalDetail(goalId);
+    if (userId != find.userId.userId){
+      throw new HttpException('삭제 권한이 없습니다.', 400);
+    }
     // 참가자가 2명이상이면 삭제 불가능
     if (find.curCount >= 2) {
       throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
