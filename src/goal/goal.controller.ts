@@ -228,7 +228,8 @@ export class GoalController {
       else if(status === "proceeding") statuses = ["proceeding"]
       else statuses = ["recruit", "proceeding"]
 
-      const take: number = 10;
+      const take: number = 5;
+      if(!page) page = 1;
 
       let searchResult;
       if(orderby === "ASC" && !(sortOby === "g.createdAt")) {
@@ -281,8 +282,8 @@ export class GoalController {
     @Query('page') page: number,
     @Res() res: Response) {
     // 무한 스크롤 고려
-    const take: number = 10;
-    console.log(page);
+    const take: number = 5;
+    if(!page) page = 1;
     const sortResult = await this.goalService.getAllGoals(take, page);
     const result = [];
     for (let i = 0; i < sortResult.length; i++) {
