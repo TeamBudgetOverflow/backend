@@ -18,17 +18,22 @@ export class GoalService {
     return result;
   }
 
-  async getAllGoals(): Promise<Goals[]> {
-    const result: Goals[] = await this.goalRepository.find({
-      relations: ["userId"],
-      order: { createdAt: 'DESC' },
-    });
-    return result;
+  async getAllGoals(take: number, page: number): Promise<Goals[]> {
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', { statuses: ["recruit", "proceeding"] })
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy('g.createdAt', 'DESC')
+      .take(take)
+      .skip(take * ( page - 1 ))
+      .getMany();
   }
 
   async searchGoal(
     keyword: string, sortOby: string, statuses: string[],
-    min: number|Date, max: number|Date, orderby: 'ASC'|'DESC'
+    min: number, max: number, orderby: 'ASC'|'DESC',
+    take: number, page: number
     ): Promise<Goals[]>{
     return await this.goalRepository
       .createQueryBuilder('g')
@@ -41,11 +46,14 @@ export class GoalService {
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
       .orderBy(`${sortOby}`, `${orderby}`)
+      .take(take)
+      .skip(take * ( page - 1 ))
       .getMany();
   }
 
   async searchGoalNotValue(
-    keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC'
+    keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC',
+    take: number, page: number
     ): Promise<Goals[]>{
     return await this.goalRepository
       .createQueryBuilder('g')
@@ -57,6 +65,8 @@ export class GoalService {
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
       .orderBy(`${sortOby}`, `${orderby}`)
+      .take(take)
+      .skip(take * ( page - 1 ))
       .getMany();
   }
 

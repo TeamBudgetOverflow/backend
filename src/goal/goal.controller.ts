@@ -194,7 +194,7 @@ export class GoalController {
   async searchGoal(
     @Query() paginationQuery,
     @Res() res: Response){
-      let { keyword, sortby, orderby, status, min, max } = paginationQuery;
+      let { keyword, sortby, orderby, status, min, max, page } = paginationQuery;
       let sortOby = '';
       //sortBy가 비어있으면 생성 시간순으로 분류
       if(!sortby) sortOby = "g.createdAt"
@@ -228,21 +228,23 @@ export class GoalController {
       else if(status === "proceeding") statuses = ["proceeding"]
       else statuses = ["recruit", "proceeding"]
 
+      const take: number = 10;
+
       let searchResult;
       if(orderby === "ASC" && !(sortOby === "g.createdAt")) {
         searchResult = await this.goalService.searchGoal(
-          keyword, sortOby, statuses, min, max, orderby
+          keyword, sortOby, statuses, min, max, orderby, take, page
           );
       }else if(orderby === "DESC" && !(sortOby === "g.createdAt")){
         // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
         searchResult = await this.goalService.searchGoal(
-          keyword, sortOby, statuses, min, max, orderby
+          keyword, sortOby, statuses, min, max, orderby, take, page
           );
       }else {
         // sortby와 max 가 둘 다 없는 경우
         // sortby : createdAt / max : undefined
         searchResult = await this.goalService.searchGoalNotValue(
-          keyword, sortOby, statuses, orderby
+          keyword, sortOby, statuses, orderby, take, page
           );
       }
 
@@ -275,9 +277,13 @@ export class GoalController {
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async getAllGoal(@Res() res: Response) {
+  async getAllGoal(
+    @Query('page') page: number,
+    @Res() res: Response) {
     // 무한 스크롤 고려
-    const sortResult = await this.goalService.getAllGoals();
+    const take: number = 10;
+    console.log(page);
+    const sortResult = await this.goalService.getAllGoals(take, page);
     const result = [];
     for (let i = 0; i < sortResult.length; i++) {
       const { userId, nickname } = sortResult[i].userId;
