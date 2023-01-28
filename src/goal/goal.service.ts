@@ -97,6 +97,11 @@ export class GoalService {
     await this.goalRepository.update({ goalId }, data);
   }
 
+  // 목표 시작, 완료 시 호출
+  async goalUpdateStatus(goalId: number, status: string) {
+    await this.goalRepository.update({ goalId }, { status });
+  }
+
   async deleteGoal(goalId: number) {
     await this.goalRepository.delete({ goalId });
   }

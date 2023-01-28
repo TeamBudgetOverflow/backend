@@ -19,7 +19,9 @@ dotenv.config();
     forwardRef(() => UserModule),
     JwtModule,
     ],
-  providers: [AuthService, UserService, JwtService, NaverStrategy, KakaoStrategy,
+  providers: [AuthService, JwtService, NaverStrategy, KakaoStrategy,
   JwtStrategy, JwtRefreshStrategy],
+  exports: [AuthService, JwtService, NaverStrategy, KakaoStrategy,
+    JwtStrategy, JwtRefreshStrategy]
 })
 export class AuthModule {}

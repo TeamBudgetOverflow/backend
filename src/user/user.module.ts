@@ -22,8 +22,7 @@ import { UserBadges } from 'src/models/userbadges';
     Accounts, Balances, Badges, UserBadges]),
     forwardRef(() => AuthModule),
   ],
-  providers: [UserService, AuthService, JwtService,
-    GoalService, UserGoalService, BadgeService],
+  providers: [UserService, GoalService, UserGoalService, BadgeService],
   controllers: [UserController],
   exports: [UserService],
 })

@@ -27,6 +27,7 @@ import { Balances } from 'src/models/balances';
 import { UserGoals } from 'src/models/usergoals';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { CronService } from 'src/cron/cron.service';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ export class GoalController {
     private readonly usergoalService: UserGoalService,
     private readonly balanceService: BalanceService,
     private readonly accountService: AccountsService,
+    private readonly cronService: CronService,
     private readonly connection: Connection,
   ) {}
 
@@ -128,6 +130,14 @@ export class GoalController {
       balanceId,
     };
     await this.usergoalService.joinGoal(createUserGoalData);
+    // 스케쥴러 작성
+    const name: string = createGoalDTO.title + "_Schedule";
+    const type: string = "start";
+    console.log(name, start, result.goalId, type);
+    const schedule = await this.cronService.addCronJob(
+      name, start, end, result.goalId, type
+    )
+    console.log(schedule);
     // Transaction 적용 필요
     res.json({ goalId, message: '목표 생성 완료' });
   }
