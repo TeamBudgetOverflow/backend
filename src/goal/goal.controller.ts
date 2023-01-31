@@ -277,7 +277,7 @@ export class GoalController {
       let isLastPage: boolean;
       if(page == countPage) isLastPage = true;
       else isLastPage = false;
-      res.json({ result: result });
+      res.json({ result: result, isLastPage });
   }
 
   // 목표 전체 조회
