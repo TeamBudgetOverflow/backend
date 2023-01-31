@@ -25,7 +25,7 @@ export class BadgeService {
       .createQueryBuilder('ub')
       .where('ub.User = :userId', {userId})
       .leftJoin('ub.Badges', 'badge')
-      .select(['ub', 'badge'])
+      .select(['ub', 'badge.badgeId'])
       .getMany();
     return result;
   }
