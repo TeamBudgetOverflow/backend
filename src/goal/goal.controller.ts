@@ -234,19 +234,20 @@ export class GoalController {
       if(!page) page = 1;
 
       let searchResult;
+      let count: number;
       if(orderby === "ASC" && !(sortOby === "g.createdAt")) {
-        searchResult = await this.goalService.searchGoal(
+        [searchResult, count] = await this.goalService.searchGoal(
           keyword, sortOby, statuses, min, max, orderby, take, page
           );
       }else if(orderby === "DESC" && !(sortOby === "g.createdAt")){
         // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
-        searchResult = await this.goalService.searchGoal(
+        [searchResult, count] = await this.goalService.searchGoal(
           keyword, sortOby, statuses, min, max, orderby, take, page
           );
       }else {
         // sortby와 max 가 둘 다 없는 경우
         // sortby : createdAt / max : undefined
-        searchResult = await this.goalService.searchGoalNotValue(
+        [searchResult, count] = await this.goalService.searchGoalNotValue(
           keyword, sortOby, statuses, orderby, take, page
           );
       }
@@ -274,7 +275,11 @@ export class GoalController {
           updatedAt: searchResult[i].updatedAt,
         });
       }
-      res.json({ result: result });
+      let countPage: number = Math.ceil(count/take);
+      let isLastPage: boolean;
+      if(page == countPage) isLastPage = true;
+      else isLastPage = false;
+      res.json({ result: result, isLastPage });
   }
 
   // 목표 전체 조회
@@ -286,7 +291,7 @@ export class GoalController {
     // 무한 스크롤 고려
     const take: number = 5;
     if(!page) page = 1;
-    const sortResult = await this.goalService.getAllGoals(take, page);
+    let [sortResult, count] = await this.goalService.getAllGoals(take, page);
     const result = [];
     for (let i = 0; i < sortResult.length; i++) {
       const { userId, nickname } = sortResult[i].userId;
@@ -310,7 +315,46 @@ export class GoalController {
         updatedAt: sortResult[i].updatedAt,
       });
     }
-    res.json({ result });
+    let countPage: number = Math.ceil(count/take);
+    let isLastPage: boolean;
+    if(page == countPage) isLastPage = true;
+    else isLastPage = false;
+    res.json({ result, isLastPage });
+  }
+
+  // 임박 목표 불러오기
+  @Get('imminent')
+  @UseGuards(AuthGuard('jwt'))
+  async getImminentGoal(
+    @Req() req,
+    @Res() res: Response){
+      const take: number = 10;
+      const status = "recruit";
+      let sortResult = await this.goalService.getImminentGoal(take, status);
+      const result = [];
+      for (let i = 0; i < sortResult.length; i++) {
+        const { userId, nickname } = sortResult[i].userId;
+        const hashTag = sortResult[i].hashTag.split(",");
+        result.push({
+          goalId: sortResult[i].goalId,
+          userId: userId,
+          nickname: nickname,
+          amount: sortResult[i].amount,
+          curCount: sortResult[i].curCount,
+          headCount: sortResult[i].headCount,
+          startDate: sortResult[i].startDate,
+          endDate: sortResult[i].endDate,
+          period: sortResult[i].period,
+          status: sortResult[i].status,
+          title: sortResult[i].title,
+          hashTag: hashTag,
+          emoji: sortResult[i].emoji,
+          description: sortResult[i].description,
+          createdAt: sortResult[i].createdAt,
+          updatedAt: sortResult[i].updatedAt,
+        });
+      }
+      res.json({ result });
   }
 
   // 목표 상세 조회

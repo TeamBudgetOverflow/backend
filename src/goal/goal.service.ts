@@ -19,7 +19,7 @@ export class GoalService {
     return result;
   }
 
-  async getAllGoals(take: number, page: number): Promise<Goals[]> {
+  async getAllGoals(take: number, page: number): Promise<[Goals[], number]> {
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', { statuses: ["recruit", "proceeding"] })
@@ -28,14 +28,14 @@ export class GoalService {
       .orderBy('g.createdAt', 'DESC')
       .take(take)
       .skip(take * ( page - 1 ))
-      .getMany();
+      .getManyAndCount();
   }
 
   async searchGoal(
     keyword: string, sortOby: string, statuses: string[],
     min: number, max: number, orderby: 'ASC'|'DESC',
     take: number, page: number
-    ): Promise<Goals[]>{
+    ): Promise<[Goals[], number]>{
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
@@ -49,13 +49,13 @@ export class GoalService {
       .orderBy(`${sortOby}`, `${orderby}`)
       .take(take)
       .skip(take * ( page - 1 ))
-      .getMany();
+      .getManyAndCount();
   }
 
   async searchGoalNotValue(
     keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC',
     take: number, page: number
-    ): Promise<Goals[]>{
+    ): Promise<[Goals[], number]>{
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
@@ -68,6 +68,18 @@ export class GoalService {
       .orderBy(`${sortOby}`, `${orderby}`)
       .take(take)
       .skip(take * ( page - 1 ))
+      .getManyAndCount();
+  }
+
+  async getImminentGoal(take: number, status: string) : Promise<Goals[]> {
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status = :status', {status})
+      .andWhere('g.curcount != g.headcount')
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy('g.startDate', 'ASC')
+      .take(take)
       .getMany();
   }
 
