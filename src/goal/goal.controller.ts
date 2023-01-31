@@ -320,6 +320,41 @@ export class GoalController {
     res.json({ result, isLastPage });
   }
 
+  // 임박 목표 불러오기
+  @Get('imminent')
+  @UseGuards(AuthGuard('jwt'))
+  async getImminentGoal(
+    @Req() req,
+    @Res() res: Response){
+      const take: number = 10;
+      const status = "recruit";
+      let sortResult = await this.goalService.getImminentGoal(take, status);
+      const result = [];
+      for (let i = 0; i < sortResult.length; i++) {
+        const { userId, nickname } = sortResult[i].userId;
+        const hashTag = sortResult[i].hashTag.split(",");
+        result.push({
+          goalId: sortResult[i].goalId,
+          userId: userId,
+          nickname: nickname,
+          amount: sortResult[i].amount,
+          curCount: sortResult[i].curCount,
+          headCount: sortResult[i].headCount,
+          startDate: sortResult[i].startDate,
+          endDate: sortResult[i].endDate,
+          period: sortResult[i].period,
+          status: sortResult[i].status,
+          title: sortResult[i].title,
+          hashTag: hashTag,
+          emoji: sortResult[i].emoji,
+          description: sortResult[i].description,
+          createdAt: sortResult[i].createdAt,
+          updatedAt: sortResult[i].updatedAt,
+        });
+      }
+      res.json({ result });
+  }
+
   // 목표 상세 조회
   @Get(':goalId')
   @UseGuards(AuthGuard('jwt'))

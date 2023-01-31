@@ -70,6 +70,18 @@ export class GoalService {
       .getManyAndCount();
   }
 
+  async getImminentGoal(take: number, status: string) : Promise<Goals[]> {
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status = :status', {status})
+      .andWhere('g.curcount != g.headcount')
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy('g.startDate', 'ASC')
+      .take(take)
+      .getMany();
+  }
+
   async getGoalDetail(goalId: number): Promise<Goals> {
     return await this.goalRepository
       .createQueryBuilder('g')
