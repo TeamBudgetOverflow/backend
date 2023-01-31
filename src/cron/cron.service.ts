@@ -16,11 +16,10 @@ export class CronService {
     private readonly logger = new Logger(CronService.name)
 
     // 매일 자정 검사
-    @Cron('0 40 16 * * *')
+    @Cron('0 0 0 * * *')
     async startGoal() {
         let status: string = "recruit";
         let {aDate,bDate} = this.getKstTime(new Date());
-        console.log(aDate,bDate);
         const getStartGoal: Goals[] = await this.goalService.getStartGoalByStatus(
             status, aDate, bDate);
         console.log(getStartGoal);
@@ -32,14 +31,12 @@ export class CronService {
             // 2. UserGoal 상태 변화
             // 3. 멤버 가져와서 채팅방 개설
         }
-
     }
-
+   
     @Cron('0 0 0 * * *')
     async endGoal() {
         let status: string = "proceeding";
         let {aDate,bDate} = this.getKstTime(new Date());
-        console.log(aDate,bDate);
         const getEndGoal = await this.goalService.getEndGoalByStatus(
             status, aDate, bDate);
         console.log(getEndGoal);
@@ -51,7 +48,6 @@ export class CronService {
             // 2. UserGoal 상태 변화
             // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
         }
-
     }
 
     // 이전 로직 남은 자료
@@ -132,18 +128,15 @@ export class CronService {
         const utc = input.getTime();
         const KR_TIME_DIFF = 9 * 60 * 60 * 1000;
         const kstTime: Date = new Date(utc + (KR_TIME_DIFF));
-        console.log(kstTime);
-        const aYear = kstTime.getFullYear();
-        const aMonth = kstTime.getMonth()+1;
-        const aDay = kstTime.getDate();
-        const tomorrow = new Date(input.getTime() + 35 * 60 * 60 * 1000);
+        const aYear = input.getFullYear();
+        const aMonth = input.getMonth()+1;
+        const aDay = input.getDate();
+        const tomorrow = new Date(input.getTime() + 24 * 60 * 60 * 1000);
         const bYear = tomorrow.getFullYear();
         const bMonth = tomorrow.getMonth()+1;
         const bDay = tomorrow.getDate();
         const aDate = `${aYear}, ${aMonth}, ${aDay}`;
         const bDate = `${bYear}, ${bMonth}, ${bDay}`;
-        console.log(new Date(aDate));
-        console.log(new Date(bDate));
         return {aDate, bDate};
     }
 }
