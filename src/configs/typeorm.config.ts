@@ -25,6 +25,6 @@ export const typeORMConfig: TypeOrmModuleOptions = {
   synchronize: false,
   logging: true,
   keepConnectionAlive: true,
-  timezone: '-09:00',
+  timezone: '+09:00',
   charset: 'utf8mb4_general_ci',
 };

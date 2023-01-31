@@ -13,7 +13,7 @@ export class CronController {
   async getAllCron(
     @Res() res: Response,
   ) {
-    await this.cronService.getCrons();
+    await this.cronService.startGoal();
     res.json();
   }
 
@@ -24,17 +24,6 @@ export class CronController {
   ) {
     const result = await this.cronService.getOneCron(name);
     console.log(result);
-    res.json();
-  }
-
-  @Get("test")
-  testMethod(
-    @Body("input") input,
-    @Res() res: Response,
-  ) {
-    const inputs = new Date(input);
-    console.log(inputs.getDate());
-    this.cronService.transCronTime(inputs);
     res.json();
   }
 }

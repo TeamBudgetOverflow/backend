@@ -27,9 +27,9 @@ export class SchedulerRegistry {
   }
 
   getCronJob(name: string) {
-    console.log(name);
+    //console.log(name);
     const ref = this.cronJobs.get(name);
-    console.log(ref);
+    //console.log(ref);
     if (!ref) {
       throw new Error(NO_SCHEDULER_FOUND('Cron Job', name));
     }
@@ -55,11 +55,13 @@ export class SchedulerRegistry {
   addCronJob(name: string, job: CronJob) {
     // 이름 중복 검색이 필요한가?
     const ref = this.cronJobs.get(name);
-    console.log(ref);
+    //console.log(ref);
     if (ref) {
       throw new Error(DUPLICATE_SCHEDULER('Cron Job', name));
     }
-    this.cronJobs.set(name, job);
+    const result = this.cronJobs.set(name, job);
+    //console.log("in map: ", result);
+    //console.log("cron jobs: ", this.cronJobs);
   }
 
   addInterval<T = any>(name: string, intervalId: T) {
@@ -79,6 +81,7 @@ export class SchedulerRegistry {
   }
 
   getCronJobs(): Map<string, CronJob> {
+    //console.log("get cron jobs : ", this.cronJobs);
     return this.cronJobs;
   }
 

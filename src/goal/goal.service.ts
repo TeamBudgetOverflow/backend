@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Brackets } from 'typeorm';
+import { Repository, Like, Brackets, Between } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
+import { getAttributes } from 'sequelize-typescript';
 
 @Injectable()
 export class GoalService {
@@ -86,6 +87,18 @@ export class GoalService {
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId'])
       .getOne();
+  }
+
+  async getStartGoalByStatus(status: string, aDate: string, bDate: string): Promise<Goals[]>{
+    return await this.goalRepository.find({
+      where: { status, startDate: Between(new Date(aDate), new Date(bDate)) }
+    })
+  }
+
+  async getEndGoalByStatus(status: string, aDate: string, bDate: string): Promise<Goals[]>{
+    return await this.goalRepository.find({
+      where: { status, endDate: Between(new Date(aDate), new Date(bDate)) }
+    })
   }
 
   // 목표 참가자 숫자 변화
