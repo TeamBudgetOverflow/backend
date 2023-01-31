@@ -9,6 +9,8 @@ import { GoalModule } from './goal/goal.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { BanksModule } from './banks/banks.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronModule } from './cron/cron.module';
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     TypeOrmModule.forRoot(typeORMConfig),
     AccountsModule,
     BanksModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

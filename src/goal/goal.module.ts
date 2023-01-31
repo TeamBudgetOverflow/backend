@@ -15,6 +15,9 @@ import { BalanceService } from 'src/balances/balances.service';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { Accounts } from 'src/models/accounts';
 import { HttpModule } from '@nestjs/axios';
+import { CronModule } from 'src/cron/cron.module';
+import { CronService } from 'src/cron/cron.service';
+import { SchedulerRegistry } from 'src/cron/schedule.registry';
 
 @Module({
   imports: [
@@ -30,8 +33,10 @@ import { HttpModule } from '@nestjs/axios';
     JwtService,
     BalanceService,
     AccountsService,
+    CronService,
+    SchedulerRegistry,
   ],
   controllers: [GoalController],
-  exports: [GoalService],
+  exports: [GoalService, UserGoalService],
 })
 export class GoalModule {}

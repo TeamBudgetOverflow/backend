@@ -27,6 +27,7 @@ import { Balances } from 'src/models/balances';
 import { UserGoals } from 'src/models/usergoals';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { CronService } from 'src/cron/cron.service';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ export class GoalController {
     private readonly usergoalService: UserGoalService,
     private readonly balanceService: BalanceService,
     private readonly accountService: AccountsService,
+    private readonly cronService: CronService,
     private readonly connection: Connection,
   ) {}
 
