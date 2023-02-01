@@ -19,7 +19,7 @@ export class ExitUserDTO {
 
   @IsString()
   @IsNotEmpty()
-  readonly loginCateGory: string;
+  readonly loginCategory: string;
 
   @IsString()
   @IsNotEmpty()
