@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { NaverStrategy } from './naver/naver.strategy';
 import { GoogleOauthStrategy } from './google/google.strategy';
-// import { KakaoStrategy } from './kakao/kakao.strategy';
+import { KakaoStrategy } from './kakao/kakao.strategy';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
@@ -23,6 +23,7 @@ dotenv.config();
     AuthService,
     JwtService,
     NaverStrategy,
+    KakaoStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
     GoogleOauthStrategy,
@@ -31,6 +32,7 @@ dotenv.config();
     AuthService,
     JwtService,
     NaverStrategy,
+    KakaoStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
     GoogleOauthStrategy,
