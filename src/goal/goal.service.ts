@@ -23,6 +23,7 @@ export class GoalService {
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', { statuses: ["recruit", "proceeding"] })
+      .andWhere('g.headCount != 1')
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
       .orderBy('g.createdAt', 'DESC')
@@ -40,6 +41,7 @@ export class GoalService {
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
       .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
+      .andWhere('g.headCount != 1')
       .andWhere(new Brackets((qb) => {
         qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
           .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
@@ -59,6 +61,7 @@ export class GoalService {
     return await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {statuses})
+      .andWhere('g.headCount != 1')
       .andWhere(new Brackets((qb) => {
         qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
           .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
