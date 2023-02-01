@@ -1,5 +1,5 @@
 INSERT INTO banks (id, bankCode, bankName)
-VALUES (1, "001", "한국은행");
+VALUES (1, "001", "test");
 INSERT INTO banks (id, bankCode, bankName)
 VALUES (2, "002", "Manual");
 INSERT INTO banks (id, bankCode, bankName)

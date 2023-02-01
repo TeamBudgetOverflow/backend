@@ -61,7 +61,7 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
@@ -97,7 +97,7 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
@@ -133,7 +133,7 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
