@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Accounts } from './accounts';
 import { Goals } from './goals';
+import { UserBadges } from './userbadges';
 import { UserGoals } from './usergoals';
 
 @Entity()
@@ -18,7 +19,7 @@ export class Users extends BaseEntity {
   @PrimaryGeneratedColumn()
   userId: number;
 
-  @Column({ unique: true })
+  @Column({ unique: false })
   email: string;
 
   @Column({ unique: false })
@@ -55,4 +56,9 @@ export class Users extends BaseEntity {
     lazy: true,
   })
   userGoals: UserGoals[];
+
+  @OneToMany(() => UserBadges, (userBadge) => userBadge.User, {
+    cascade: ['insert'],
+  })
+  UserBadge: UserBadges[];
 }

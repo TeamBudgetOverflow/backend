@@ -17,22 +17,30 @@ export class UserGoalService {
       .createQueryBuilder('g')
       .where('g.goalId = :goalId', {goalId})
       .leftJoin('g.userId', 'users')
-      .leftJoin('g.balanceId', 'balances')
-      .select(['g','users.userId', 'users.nickname',
-      'users.image', 'balances.current'])
+      .leftJoin('g.balanceId', 'balance')
+      .leftJoin('g.accountId', 'accounts')
+      .select(['g','users.userId', 'users.nickname', 'users.image', 
+      'balance.balanceId' , 'balance.current', 
+      'accounts.accountId'])
       .getMany();
   }
 
   async getGoalByUserId(userId: number) {
-    const result = await this.userGoalRepository
+    return await this.userGoalRepository
       .createQueryBuilder('g')
       .where('g.userId = :userId', {userId})
       .leftJoin('g.goalId', 'goals')
       .leftJoin('g.balanceId', 'balance')
       .select(['g', 'goals', 'balance'])
       .getMany();
+  }
 
-    return result;
+  async getGoalByGoalId(goalId: number) {
+    return await this.userGoalRepository
+      .createQueryBuilder('g')
+      .where('g.goalId = :goalId', {goalId})
+      .select(['g'])
+      .getMany();
   }
 
   // 목표 참가
@@ -49,5 +57,10 @@ export class UserGoalService {
   // 해당 목표에 참가한 유저인지 반환
   async findUser(data /*: AccessUserGoalDTO*/): Promise<UserGoals> {
     return await this.userGoalRepository.findOneBy(data);
+  }
+
+  // 목표 시작 혹은 종료 시 status 변화
+  async updateStauts(userGoalsId: number, status: string) {
+    await this.userGoalRepository.update(userGoalsId, {status})
   }
 }

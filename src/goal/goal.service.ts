@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Brackets, Between } from 'typeorm';
 import { Goals } from '../models/goals';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
+import { getAttributes } from 'sequelize-typescript';
 
 @Injectable()
 export class GoalService {
@@ -13,18 +14,73 @@ export class GoalService {
   ) {}
 
   async createGoal(data /*: CreateGoalDTO*/): Promise<Goals> {
-    console.log(data);
     const result = await this.goalRepository.save(data);
 
     return result;
   }
 
-  async getAllGoals(): Promise<Goals[]> {
-    const result: Goals[] = await this.goalRepository.find({
-      relations: ["userId"],
-      order: { createdAt: 'DESC' },
-    });
-    return result;
+  async getAllGoals(take: number, page: number): Promise<[Goals[], number]> {
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', { statuses: ["recruit", "proceeding"] })
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy('g.createdAt', 'DESC')
+      .take(take)
+      .skip(take * ( page - 1 ))
+      .getManyAndCount();
+  }
+
+  async searchGoal(
+    keyword: string, sortOby: string, statuses: string[],
+    min: number, max: number, orderby: 'ASC'|'DESC',
+    take: number, page: number
+    ): Promise<[Goals[], number]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, `${orderby}`)
+      .take(take)
+      .skip(take * ( page - 1 ))
+      .getManyAndCount();
+  }
+
+  async searchGoalNotValue(
+    keyword: string, sortOby: string, statuses: string[], orderby: 'ASC'|'DESC',
+    take: number, page: number
+    ): Promise<[Goals[], number]>{
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status IN (:...statuses)', {statuses})
+      .andWhere(new Brackets((qb) => {
+        qb.where('g.title like :keyword', { keyword: `%${keyword}%` })
+          .orWhere('g.hashTag like :keyword', { keyword: `%${keyword}%` })
+      }))
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy(`${sortOby}`, `${orderby}`)
+      .take(take)
+      .skip(take * ( page - 1 ))
+      .getManyAndCount();
+  }
+
+  async getImminentGoal(take: number, status: string) : Promise<Goals[]> {
+    return await this.goalRepository
+      .createQueryBuilder('g')
+      .where('g.status = :status', {status})
+      .andWhere('g.curcount != g.headcount')
+      .leftJoin('g.userId', 'users')
+      .select(['g', 'users.userId', 'users.nickname'])
+      .orderBy('g.startDate', 'ASC')
+      .take(take)
+      .getMany();
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
@@ -45,6 +101,18 @@ export class GoalService {
       .getOne();
   }
 
+  async getStartGoalByStatus(status: string, aDate: string, bDate: string): Promise<Goals[]>{
+    return await this.goalRepository.find({
+      where: { status, startDate: Between(new Date(aDate), new Date(bDate)) }
+    })
+  }
+
+  async getEndGoalByStatus(status: string, aDate: string, bDate: string): Promise<Goals[]>{
+    return await this.goalRepository.find({
+      where: { status, endDate: Between(new Date(aDate), new Date(bDate)) }
+    })
+  }
+
   // 목표 참가자 숫자 변화
   async updateGoalCurCount(goalId: number, curCount: number) {
     await this.goalRepository.update({ goalId }, { curCount });
@@ -52,6 +120,11 @@ export class GoalService {
 
   async updateGoal(goalId: number, data: UpdateGoalDTO) {
     await this.goalRepository.update({ goalId }, data);
+  }
+
+  // 목표 시작, 완료 시 호출
+  async goalUpdateStatus(goalId: number, status: string) {
+    await this.goalRepository.update({ goalId }, { status });
   }
 
   async deleteGoal(goalId: number) {
