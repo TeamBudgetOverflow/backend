@@ -37,12 +37,6 @@ export class UserController {
     private readonly badgeService: BadgeService,
   ) {}
 
-  @Get()
-  @UseGuards(GoogleOauthGuard)
-  async googleAuth(@Req() req) {
-    // Guard redirects
-  }
-
   @Get('auth/google')
   @UseGuards(GoogleOauthGuard)
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
@@ -51,10 +45,8 @@ export class UserController {
       req.user.email,
       req.user.loginCategory,
     );
-    console.log(user);
     if (user === null) {
       const createUser = await this.userService.oauthCreateUser(req.user);
-      console.log(createUser);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
@@ -62,7 +54,7 @@ export class UserController {
       res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
-        message: '로그인 성공',
+        message: 'Google OAuth Completed - Incoming User',
         newComer: true,
       });
     }
@@ -72,7 +64,7 @@ export class UserController {
     res.json({
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
-      message: '로그인 성공',
+      message: 'Google OAuth Completed - Returning User',
       newComer: false,
     });
   }
