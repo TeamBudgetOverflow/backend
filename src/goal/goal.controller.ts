@@ -511,8 +511,8 @@ export class GoalController {
       // 중간 테이블 삭제
       await this.usergoalService.exitGoal(accessUserGoalData);
       // 참가자 숫자 변동
-      findGoal.headCount -= 1;
-      await this.goalService.updateGoalCurCount(goalId, findGoal.headCount);
+      findGoal.curCount -= 1;
+      await this.goalService.updateGoalCurCount(goalId, findGoal.curCount);
       res.json({ message: "목표 탈퇴 완료" });
     }
   }
