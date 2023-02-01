@@ -21,13 +21,13 @@ export class GoogleOauthStrategy extends PassportStrategy(Strategy, 'google') {
     done: any,
   ) {
     // console.log(profile)
-    const { id, emails, photos } = profile;
+    const { emails, photos } = profile;
     const loginCategory = 'google';
     const payload = {
       loginCategory,
       image: photos[0].value,
       name: emails[0].value,
-      nickname: id,
+      nickname: emails[0].value,
       username: emails[0].value,
       email: emails[0].value,
     };
