@@ -37,9 +37,13 @@ export class UserController {
     private readonly badgeService: BadgeService,
   ) {}
 
-  @Get('auth/google')
+  @Post('auth/google')
   @UseGuards(GoogleOauthGuard)
-  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+  async googleAuthRedirect(
+    @Req() req,
+    @Res() res: Response,
+    @Query('code') code: string,
+  ): Promise<any> {
     console.log(req.user);
     const user = await this.userService.findUserByEmailAndCategory(
       req.user.email,
