@@ -242,7 +242,10 @@ export class AccountsService {
       // console.log(userId)
       const { accountId: account, status } = result[i];
       const { userId } = account.user;
-      if (userId === targetUserId && status === 'in progress') {
+      if (
+        userId === targetUserId &&
+        (status === 'in progress' || status === 'pending')
+      ) {
         targetAccounts.push(account.accountId);
       }
     }
