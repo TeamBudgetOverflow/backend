@@ -21,7 +21,13 @@ import { UserGoalService } from 'src/usergoal/userGoal.service';
     forwardRef(() => AuthModule),
   ],
   controllers: [AccountsController],
-  providers: [AccountsService, UserService, AuthService,
-    JwtService, BalanceService, UserGoalService],
+  providers: [
+    AccountsService,
+    UserService,
+    AuthService,
+    JwtService,
+    BalanceService,
+    UserGoalService,
+  ],
 })
 export class AccountsModule {}

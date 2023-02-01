@@ -39,13 +39,15 @@ export class UserGoalService {
 
   // 목표 참가
   async joinGoal(data /*: AccessUserGoalDTO*/) {
-    await this.userGoalRepository.save(data);
+    await this.userGoalRepository.save({ ...data, status: 'in progress' });
   }
 
   // 목표 탈퇴
   async exitGoal(data /*: AccessUserGoalDTO*/) {
     const findId = await this.userGoalRepository.findOneBy(data);
-    await this.userGoalRepository.delete(findId.userGoalsId);
+    findId.status = 'exit';
+    await this.userGoalRepository.save({ ...data, status: 'in progress' });
+    // await this.userGoalRepository.delete(findId.userGoalsId);
   }
 
   // 해당 목표에 참가한 유저인지 반환

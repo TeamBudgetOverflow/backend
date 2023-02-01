@@ -5,6 +5,7 @@ import { UserService } from './user.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
 import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
+import { GoogleOauthGuard } from '../auth/google/google-oauth.guard';
 import {
   Controller,
   Get,
@@ -35,6 +36,46 @@ export class UserController {
     private readonly userGoalService: UserGoalService,
     private readonly badgeService: BadgeService,
   ) {}
+
+  @Get()
+  @UseGuards(GoogleOauthGuard)
+  async googleAuth(@Req() req) {
+    // Guard redirects
+  }
+
+  @Get('auth/google')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    console.log(req.user);
+    const user = await this.userService.findUserByEmailAndCategory(
+      req.user.email,
+      req.user.loginCategory,
+    );
+    console.log(user);
+    if (user === null) {
+      const createUser = await this.userService.oauthCreateUser(req.user);
+      console.log(createUser);
+      const accessToken = await this.authService.createAccessToken(createUser);
+      const refreshToken = await this.authService.createRefreshToken(
+        createUser,
+      );
+      res.json({
+        accessToken: 'Bearer ' + accessToken,
+        refreshToken,
+        message: '로그인 성공',
+        newComer: true,
+      });
+    }
+    // 유저가 있을때
+    const accessToken = await this.authService.createAccessToken(user);
+    const refreshToken = await this.authService.createRefreshToken(user);
+    res.json({
+      accessToken: 'Bearer ' + accessToken,
+      refreshToken,
+      message: '로그인 성공',
+      newComer: false,
+    });
+  }
 
   @Post('auth/naver')
   @UseGuards(NaverAuthGuard)
@@ -71,20 +112,16 @@ export class UserController {
 
   @UseGuards(KakaoAuthGuard)
   @Post('auth/kakao')
-  
   async kakaoLoginCallback(
     @Req() req,
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-   
     const user = await this.userService.findUserByEmail(req.user.email);
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);
-      const accessToken = await this.authService.createAccessToken(
-        createUser,
-      );
+      const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
@@ -176,27 +213,26 @@ export class UserController {
 
   @Get('badges')
   @UseGuards(AuthGuard('jwt'))
-  async getAllBadges(
-    @Req() req,
-    @Res() res: Response) {
-      const getALLBadges = await this.badgeService.getALLBadges();
-      res.json({ result : getALLBadges });
-  }  
-  
+  async getAllBadges(@Req() req, @Res() res: Response) {
+    const getALLBadges = await this.badgeService.getALLBadges();
+    res.json({ result: getALLBadges });
+  }
+
   @Get('badges/:userId')
   @UseGuards(AuthGuard('jwt'))
   async getMyBadges(
     @Req() req,
     @Param('userId') userId: number,
-    @Res() res: Response) {
-      const findUserBadges = await this.badgeService.getUserBadges(userId);
-      const result = [];
-      for(let i=0; i<findUserBadges.length; i++) {
-        result.push({
-          Badges : findUserBadges[i].Badges.badgeId
-        })
-      }
-      res.json({ result : result });
+    @Res() res: Response,
+  ) {
+    const findUserBadges = await this.badgeService.getUserBadges(userId);
+    const result = [];
+    for (let i = 0; i < findUserBadges.length; i++) {
+      result.push({
+        Badges: findUserBadges[i].Badges.badgeId,
+      });
+    }
+    res.json({ result: result });
   }
 
   @Get(':userId')
@@ -274,7 +310,4 @@ export class UserController {
     }
     res.json({ result: result });
   }
-
-  
-
 }

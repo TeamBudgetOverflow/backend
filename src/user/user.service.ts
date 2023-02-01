@@ -20,6 +20,19 @@ export class UserService {
     return this.userRepository.findOne(option);
   }
 
+  findUserByEmailAndCategory(
+    email: string,
+    loginCategory: string,
+  ): Promise<Users> {
+    const option = {
+      where: { email, loginCategory },
+      offset: 0,
+      limit: 1,
+      raw: true, //조회한 결과 객체로만 표기 옵션
+    };
+    return this.userRepository.findOne(option);
+  }
+
   findUserByUserId(userId: number): Promise<Users> {
     const option = {
       where: { userId },

@@ -81,6 +81,7 @@ export class AccountsService {
     const result = await this.accountsRepository.findOne({
       where: {
         accountId,
+        active: true,
       },
     });
 
@@ -98,6 +99,29 @@ export class AccountsService {
         bank: {
           id: Not(2),
         },
+        active: true,
+      },
+      select: {
+        accountId: true,
+        acctNo: true,
+        bank: {
+          id: true,
+        },
+      },
+      order: {
+        accountId: 'ASC',
+      },
+    });
+
+    return result;
+  }
+
+  // might need to use querybuilder
+  async getAllAccounts(targetUser): Promise<Accounts[]> {
+    const result: Accounts[] = await this.accountsRepository.find({
+      where: {
+        userId: targetUser,
+        active: true,
       },
       select: {
         accountId: true,
@@ -123,6 +147,7 @@ export class AccountsService {
         bank: {
           id: 2,
         },
+        active: true,
       },
       select: {
         accountId: true,
@@ -143,6 +168,7 @@ export class AccountsService {
     const result: Accounts = await this.accountsRepository.findOne({
       where: {
         accountId,
+        active: true,
       },
     });
 
@@ -214,9 +240,9 @@ export class AccountsService {
     const targetAccounts = [];
     for (let i = 0; i < result.length; i++) {
       // console.log(userId)
-      const { accountId: account } = result[i];
+      const { accountId: account, status } = result[i];
       const { userId } = account.user;
-      if (userId === targetUserId) {
+      if (userId === targetUserId && status === 'in progress') {
         targetAccounts.push(account.accountId);
       }
     }
@@ -225,8 +251,22 @@ export class AccountsService {
   }
 
   async deleteAccount(targetAccountId: number) {
-    await this.accountsRepository.delete({
-      accountId: targetAccountId,
+    // await this.accountsRepository.delete({
+    //   accountId: targetAccountId,
+    // });
+
+    const result = await this.accountsRepository.findOne({
+      where: {
+        accountId: targetAccountId,
+      },
     });
+
+    result.active = false; // delete/deactivate
+    result.bankUserId = null;
+    result.bankUserPw = null;
+    result.acctNo = null;
+    result.acctPw = null;
+    await this.accountsRepository.save(result);
+    return result;
   }
 }
