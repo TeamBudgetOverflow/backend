@@ -60,4 +60,7 @@ export class Accounts extends BaseEntity {
     cascade: ['insert'],
   })
   userGoals: UserGoals[];
+
+  @Column({ unique: false, nullable: true, default: true })
+  active: boolean;
 }

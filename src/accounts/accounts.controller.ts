@@ -128,9 +128,9 @@ export class AccountsController {
       if (targetUserAccounts.length >= 10) {
         for (let i = 0; i < targetUserAccounts.length; i++) {
           const { accountId, bank } = targetUserAccounts[i];
-          console.log(bank.id);
+          // console.log(bank.id);
           const bankId = bank.id;
-          console.log(connectedAccounts.includes(accountId));
+          // console.log(connectedAccounts.includes(accountId));
           if (connectedAccounts.includes(accountId)) {
             continue;
           } else {
@@ -213,7 +213,7 @@ export class AccountsController {
   ) {
     const user = req.user;
     if (Number(targetUserId) === user) {
-      const targetUserAccounts = await this.accountService.getAccounts(user);
+      const targetUserAccounts = await this.accountService.getAllAccounts(user);
       const connectedAccounts = await this.accountService.getConnectedAccounts(
         user,
       );

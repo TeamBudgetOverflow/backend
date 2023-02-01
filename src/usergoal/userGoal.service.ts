@@ -39,7 +39,7 @@ export class UserGoalService {
 
   // 목표 참가
   async joinGoal(data /*: AccessUserGoalDTO*/) {
-    await this.userGoalRepository.save(data);
+    await this.userGoalRepository.save({ ...data, status: 'in progress' });
   }
 
   // 목표 탈퇴

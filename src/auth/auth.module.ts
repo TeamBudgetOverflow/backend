@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { NaverStrategy } from './naver/naver.strategy';
+import { GoogleOauthStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao.strategy';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -13,15 +14,28 @@ import { Users } from 'src/models/users';
 
 dotenv.config();
 @Module({
-  
   imports: [
     TypeOrmModule.forFeature([Users]),
     forwardRef(() => UserModule),
     JwtModule,
-    ],
-  providers: [AuthService, JwtService, NaverStrategy, KakaoStrategy,
-  JwtStrategy, JwtRefreshStrategy],
-  exports: [AuthService, JwtService, NaverStrategy, KakaoStrategy,
-    JwtStrategy, JwtRefreshStrategy]
+  ],
+  providers: [
+    AuthService,
+    JwtService,
+    NaverStrategy,
+    KakaoStrategy,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    GoogleOauthStrategy,
+  ],
+  exports: [
+    AuthService,
+    JwtService,
+    NaverStrategy,
+    KakaoStrategy,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    GoogleOauthStrategy,
+  ],
 })
 export class AuthModule {}

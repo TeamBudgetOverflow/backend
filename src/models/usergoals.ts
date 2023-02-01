@@ -4,6 +4,7 @@ import {
   BaseEntity,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 import { Users } from './users';
 import { Goals } from './goals';
@@ -44,4 +45,7 @@ export class UserGoals extends BaseEntity {
   })
   @JoinColumn({ name: 'balanceId' })
   balanceId: Balances;
+
+  @Column({ unique: false, nullable: true })
+  status: string;
 }
