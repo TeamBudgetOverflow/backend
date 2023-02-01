@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from '../models/users';
+import { ExitUserDTO } from './dto/exitUser.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
 @Injectable()
@@ -64,5 +65,9 @@ export class UserService {
     targetUserInfo.image = image;
     targetUserInfo.description = description;
     await this.userRepository.save(targetUserInfo);
+  }
+
+  async exitUser(userId: number, data: ExitUserDTO) {
+    await this.userRepository.update({userId}, data);
   }
 }

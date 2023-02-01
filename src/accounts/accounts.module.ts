@@ -13,15 +13,19 @@ import { AccountsController } from './accounts.controller';
 import { AccountsService } from './accounts.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
+import { UserModule } from 'src/user/user.module';
+import { GoalModule } from 'src/goal/goal.module';
 
 @Module({
   imports: [
     HttpModule,
     TypeOrmModule.forFeature([Users, Accounts, UserGoals, Balances]),
     forwardRef(() => AuthModule),
+    forwardRef(() => UserModule),
+    GoalModule,
   ],
   controllers: [AccountsController],
-  providers: [AccountsService, UserService, AuthService,
-    JwtService, BalanceService, UserGoalService],
+  providers: [AccountsService, BalanceService],
+  exports: [AccountsService, BalanceService]
 })
 export class AccountsModule {}

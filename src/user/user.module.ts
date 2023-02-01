@@ -15,15 +15,19 @@ import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
 import { Badges } from 'src/models/badges';
 import { UserBadges } from 'src/models/userbadges';
+import { GoalModule } from 'src/goal/goal.module';
+import { AccountsModule } from 'src/accounts/accounts.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, UserGoals, Goals,
     Accounts, Balances, Badges, UserBadges]),
     forwardRef(() => AuthModule),
+    GoalModule,
+    AccountsModule,
   ],
-  providers: [UserService, GoalService, UserGoalService, BadgeService],
+  providers: [UserService, BadgeService],
   controllers: [UserController],
-  exports: [UserService],
+  exports: [UserService, BadgeService],
 })
 export class UserModule {}
