@@ -63,7 +63,7 @@ export class GoalController {
     }
     // 시작 날짜 > 끝 날짜 | 시작 날짜 = 오늘 혹은 과거
     // startDate는 오늘이 될 수 없음. 이 부분에 대한 세부 로직 필요
-    if(createGoalDTO.startDate > createGoalDTO.endDate /*||
+    if(new Date(createGoalDTO.startDate) > new Date(createGoalDTO.endDate) /*||
       (new Date(createGoalDTO.startDate) < new Date())*/ ){
       throw new HttpException(
         'Date 설정 오류',

@@ -61,7 +61,7 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
@@ -86,6 +86,7 @@ export class UserController {
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
+    console.log(req.user);
     const user = await this.userService.findUserByEmailAndCategory(
       req.user.email,
       req.user.loginCategory,
@@ -93,11 +94,12 @@ export class UserController {
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);
+      // console.log(createUser)
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
@@ -133,7 +135,7 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      res.json({
+      return res.json({
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
