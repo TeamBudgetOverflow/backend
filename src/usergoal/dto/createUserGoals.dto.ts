@@ -1,4 +1,4 @@
-import { IsNumber, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateUserGoalDTO {
   @IsNumber()
@@ -16,4 +16,8 @@ export class CreateUserGoalDTO {
   @IsNumber()
   @IsNotEmpty()
   readonly balanceId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly status: string;
 }

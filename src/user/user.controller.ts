@@ -86,7 +86,10 @@ export class UserController {
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmail(req.user.email);
+    const user = await this.userService.findUserByEmailAndCategory(
+      req.user.email,
+      req.user.loginCategory,
+    );
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);
@@ -119,7 +122,10 @@ export class UserController {
     @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmail(req.user.email);
+    const user = await this.userService.findUserByEmailAndCategory(
+      req.user.email,
+      req.user.loginCategory,
+    );
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);

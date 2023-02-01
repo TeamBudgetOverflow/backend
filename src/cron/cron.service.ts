@@ -29,6 +29,11 @@ export class CronService {
             // 1. recruit -> proceeding
             await this.goalService.goalUpdateStatus(getStartGoal[i].goalId, status);
             // 2. UserGoal 상태 변화
+            const getUserGoal = await this.userGoalService.getGoalByGoalId(getStartGoal[i].goalId);
+            status = "in progress";
+            for(let j=0; j<getUserGoal.length; j++){
+                await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
+            }
             // 3. 멤버 가져와서 채팅방 개설
         }
     }
@@ -40,12 +45,18 @@ export class CronService {
         const getEndGoal = await this.goalService.getEndGoalByStatus(
             status, aDate, bDate);
         console.log(getEndGoal);
-        status = "done"
+        status = "done";
         for(let i=0; i<getEndGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
             // 1. proceeding -> done
             await this.goalService.goalUpdateStatus(getEndGoal[i].goalId, status);
             // 2. UserGoal 상태 변화
+            const getUserGoal = await this.userGoalService.getGoalByGoalId(getEndGoal[i].goalId);
+            status = "done";
+            for(let j=0; j<getUserGoal.length; j++){
+                await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
+            }
+
             // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
         }
     }

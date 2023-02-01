@@ -61,6 +61,15 @@ export class GoalController {
         HttpStatus.BAD_REQUEST,
       );
     }
+    // 시작 날짜 > 끝 날짜 | 시작 날짜 = 오늘 혹은 과거
+    // startDate는 오늘이 될 수 없음. 이 부분에 대한 세부 로직 필요
+    if(createGoalDTO.startDate > createGoalDTO.endDate /*||
+      (new Date(createGoalDTO.startDate) < new Date())*/ ){
+      throw new HttpException(
+        'Date 설정 오류',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     // hashTag : Array -> String 변환
     let hashTag: string = '';
@@ -120,12 +129,16 @@ export class GoalController {
     }
     const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
     const balanceId: number = balanceCreate.balanceId;
+    let userGoalStatus: string;
+    if(result.headCount === 1) userGoalStatus = "in progress"
+    else userGoalStatus = "pending"
     // 내가 만든 목표 자동 참가
     const createUserGoalData: CreateUserGoalDTO = {
       userId,
       goalId,
       accountId,
       balanceId,
+      status : userGoalStatus
     };
     await this.usergoalService.joinGoal(createUserGoalData);
     // Transaction 적용 필요
@@ -175,11 +188,13 @@ export class GoalController {
       }
       const balanceCreate: Balances = await this.balanceService.initBalance(balanceData);
       const balanceId: number = balanceCreate.balanceId;
+      let status: string = "pending";
       const createUserGoalData: CreateUserGoalDTO = {
         userId,
         goalId,
         accountId,
         balanceId,
+        status,
       };
       await this.usergoalService.joinGoal(createUserGoalData);
       findGoal.curCount += 1;
