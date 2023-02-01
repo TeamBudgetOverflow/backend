@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
+import { BadgeService } from 'src/badges/badge.service';
 import { Goals } from 'src/models/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
@@ -11,6 +12,7 @@ export class CronService {
     constructor(
         private readonly goalService: GoalService,
         private readonly userGoalService: UserGoalService,
+        private readonly badgeService: BadgeService,
         private readonly schedulerRegistry: SchedulerRegistry,
     ){}
     private readonly logger = new Logger(CronService.name)
@@ -34,6 +36,12 @@ export class CronService {
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
             }
+            // ex. Grant users the badge no. 3
+            for (let k=0; k<getUserGoal.length; k++) {
+                const badgeId = 3; // Public Goal Started
+                const userId = getUserGoal[k].userId;
+                await this.badgeService.getBadge({ userId, badgeId });
+              }
             // 3. 멤버 가져와서 채팅방 개설
         }
     }
@@ -53,9 +61,22 @@ export class CronService {
             // 2. UserGoal 상태 변화
             const getUserGoal = await this.userGoalService.getGoalByGoalId(getEndGoal[i].goalId);
             status = "done";
+            const headCount = getEndGoal[i].headCount;
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
+                const userId = getUserGoal[j].userId;
+                let badgeId = 0;      
+                // ex. Grant users the badge no. 2 
+                if (headCount > 1) {
+                    badgeId = 2;   
+                } else {
+                    // ex. Grant users the badge no. 5
+                    badgeId = 5;
+                }
+                await this.badgeService.getBadge({ userId, badgeId });
             }
+            
+            
 
             // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
         }

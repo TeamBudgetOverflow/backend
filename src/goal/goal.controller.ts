@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { GoalService } from './goal.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
+import { BadgeService } from 'src/badges/badge.service';
 import {
   Controller,
   Get,
@@ -37,6 +38,7 @@ export class GoalController {
     private readonly usergoalService: UserGoalService,
     private readonly balanceService: BalanceService,
     private readonly accountService: AccountsService,
+    private readonly badgeService: BadgeService,
     private readonly connection: Connection,
   ) {}
 
@@ -138,8 +140,16 @@ export class GoalController {
       goalId,
       accountId,
       balanceId,
-      status : userGoalStatus
+      status: userGoalStatus,
     };
+    const existingUserGoals = await this.usergoalService.getGoalByUserId(
+      userId,
+    );
+    if (existingUserGoals.length === 0) {
+      const badgeId = 1; // Indiv Goal Created
+      await this.badgeService.getBadge({ userId, badgeId });
+    }
+
     await this.usergoalService.joinGoal(createUserGoalData);
     // Transaction 적용 필요
     res.json({ goalId, message: '목표 생성 완료' });

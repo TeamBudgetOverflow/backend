@@ -13,6 +13,7 @@ import { UserService } from '../user/user.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { BadgeService } from 'src/badges/badge.service';
 import { Accounts } from 'src/models/accounts';
 import { HttpModule } from '@nestjs/axios';
 import { CronModule } from 'src/cron/cron.module';
@@ -33,6 +34,7 @@ import { SchedulerRegistry } from 'src/cron/schedule.registry';
     JwtService,
     BalanceService,
     AccountsService,
+    BadgeService,
     CronService,
     SchedulerRegistry,
   ],
