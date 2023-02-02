@@ -19,22 +19,22 @@ import { HttpModule } from '@nestjs/axios';
 import { CronModule } from 'src/cron/cron.module';
 import { CronService } from 'src/cron/cron.service';
 import { SchedulerRegistry } from 'src/cron/schedule.registry';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, Goals, UserGoals, Balances, Accounts]),
     forwardRef(() => AuthModule),
     HttpModule,
+    forwardRef(() => UserModule),
   ],
   providers: [
     GoalService,
-    UserService,
     UserGoalService,
     AuthService,
     JwtService,
     BalanceService,
     AccountsService,
-    BadgeService,
     CronService,
     SchedulerRegistry,
   ],

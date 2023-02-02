@@ -35,13 +35,17 @@ export class CronService {
             status = "in progress";
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
+                const userId: number = getUserGoal[j].userId.userId;
+                if(getUserGoal[i].goalId.isPrivate === false) {
+                    // Public Goal Started
+                    // 참여했던 isPrivate == true 인 내역을 조회할 수 없음.
+                    const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
+                    if(getFirstJoin.length === 0) {
+                        const badgeId = 3; 
+                        await this.badgeService.getBadge({ userId, badgeId });
+                    }
+                }
             }
-            // ex. Grant users the badge no. 3
-            for (let k=0; k<getUserGoal.length; k++) {
-                const badgeId = 3; // Public Goal Started
-                const userId = getUserGoal[k].userId;
-                await this.badgeService.getBadge({ userId, badgeId });
-              }
             // 3. 멤버 가져와서 채팅방 개설
         }
     }
@@ -64,20 +68,36 @@ export class CronService {
             const headCount = getEndGoal[i].headCount;
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
-                const userId = getUserGoal[j].userId;
-                let badgeId = 0;      
-                // ex. Grant users the badge no. 2 
-                if (headCount > 1) {
-                    badgeId = 2;   
-                } else {
-                    // ex. Grant users the badge no. 5
-                    badgeId = 5;
-                }
-                await this.badgeService.getBadge({ userId, badgeId });
-            }
-            
-            
+                const userId = getUserGoal[j].userId.userId;
+                let badgeId = 0;
+                // 목표 액수 달성 시 이전 달성 횟수 파악 후 뱃지 획득
+                if(getUserGoal[j].goalId.amount === (
+                    getUserGoal[j].balanceId.current - getUserGoal[j].balanceId.initial
+                    )) {
+                    // 달성 목표 갯수를 가져올 떄 isPrivate 필터링이 되어있지 않음.
+                    const goalAchievCount = await this.userGoalService.getCountAchiev(userId);
 
+                    if (headCount > 1) {
+                        switch (goalAchievCount) {
+                            case 0: // 그룹 목표 첫 달성 badge no. 5
+                                badgeId = 5;
+                                await this.badgeService.getBadge({ userId, badgeId });
+                                break;
+                            case 2: // 세번쨰 그룹 목표 달성 badge no. 6
+                                badgeId = 6;
+                                await this.badgeService.getBadge({ userId, badgeId });
+                                break;
+                            default:
+                                break;
+                        }
+                    } else if(headCount === 1 && goalAchievCount === 0) {
+                        // ex. Grant users the badge no. 2
+                        // 개인 목표 첫 달성
+                        badgeId = 2;
+                        await this.badgeService.getBadge({ userId, badgeId });
+                    }
+                }
+            }
             // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
         }
     }

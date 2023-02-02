@@ -11,16 +11,17 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { GoalModule } from 'src/goal/goal.module';
 import { SchedulerRegistry } from './schedule.registry';
 import { CronController } from './cron.controller';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Goals]),
     ScheduleModule.forRoot(),
     GoalModule,
+    UserModule,
   ],
   providers: [
     CronService,
-    BadgeService,
     SchedulerRegistry,
   ],
   controllers: [CronController],
