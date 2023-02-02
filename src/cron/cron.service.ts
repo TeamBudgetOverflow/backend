@@ -24,7 +24,6 @@ export class CronService {
         let {aDate,bDate} = this.getKstTime(new Date());
         const getStartGoal: Goals[] = await this.goalService.getStartGoalByStatus(
             status, aDate, bDate);
-        console.log(getStartGoal);
         status = "proceeding"
         for(let i=0; i<getStartGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
@@ -36,15 +35,12 @@ export class CronService {
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
                 const userId: number = getUserGoal[j].userId.userId;
-                if(getUserGoal[i].goalId.isPrivate === false) {
-                    // Public Goal Started
-                    // 참여했던 isPrivate == true 인 내역을 조회할 수 없음.
-                    const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
-                    if(getFirstJoin.length === 0) {
-                        const badgeId = 3; 
-                        await this.badgeService.getBadge({ userId, badgeId });
-                    }
+                const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
+                if(getFirstJoin.length === 0) {
+                    const badgeId = 3; 
+                    await this.badgeService.getBadge({ userId, badgeId });
                 }
+                
             }
             // 3. 멤버 가져와서 채팅방 개설
         }
@@ -56,7 +52,6 @@ export class CronService {
         let {aDate,bDate} = this.getKstTime(new Date());
         const getEndGoal = await this.goalService.getEndGoalByStatus(
             status, aDate, bDate);
-        console.log(getEndGoal);
         status = "done";
         for(let i=0; i<getEndGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
