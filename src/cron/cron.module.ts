@@ -1,24 +1,26 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { Goals } from 'src/models/goals';
-import { UserGoals } from 'src/models/usergoals';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserGoalService } from '../usergoal/userGoal.service';
-import { HttpModule } from '@nestjs/axios';
-import { CronService } from './cron.service';
-import { GoalService } from 'src/goal/goal.service';
-import { BadgeService } from 'src/badges/badge.service';
-import { ScheduleModule } from '@nestjs/schedule';
-import { GoalModule } from 'src/goal/goal.module';
 import { SchedulerRegistry } from './schedule.registry';
 import { CronController } from './cron.controller';
+import { CronService } from './cron.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from 'src/user/user.module';
+import { GoalModule } from 'src/goal/goal.module';
+import { Users } from 'src/models/users';
+import { Goals } from 'src/models/goals';
+import { UserGoals } from 'src/models/usergoals';
+import { Accounts } from 'src/models/accounts';
+import { Balances } from 'src/models/balances';
+import { Badges } from 'src/models/badges';
+import { UserBadges } from 'src/models/userbadges';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Goals]),
+    TypeOrmModule.forFeature([Users, UserGoals, Goals,
+    Accounts, Balances, Badges, UserBadges]),
     ScheduleModule.forRoot(),
-    GoalModule,
-    UserModule,
+    forwardRef(() => GoalModule),
+    forwardRef(() => UserModule),
   ],
   providers: [
     CronService,

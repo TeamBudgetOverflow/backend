@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Res, Response, Param, Query } from "@nestjs/common";
+import { Body, Controller, Get, Res, Response, Inject, forwardRef, Query } from "@nestjs/common";
 import { CronService } from "./cron.service";
 import { CronJob } from 'cron';
 import { BadgeService } from "src/badges/badge.service";
@@ -8,6 +8,7 @@ import { BadgeService } from "src/badges/badge.service";
 export class CronController {
   constructor(
     private readonly cronService: CronService,
+    @Inject(forwardRef(() => BadgeService))
     private readonly badgeService: BadgeService,
   ) {}
 

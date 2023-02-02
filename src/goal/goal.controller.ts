@@ -8,14 +8,19 @@ import {
   Controller,
   Get,
   Req,
-  Request,
   Res,
-  HttpCode,
   HttpException,
   HttpStatus,
   UseGuards,
+  Inject,
+  forwardRef, Post, Param, Query, Body, Put, Delete
 } from '@nestjs/common';
-import { Post, Param, Query, Body, Put, Patch, Delete } from '@nestjs/common';
+import { Connection } from 'typeorm';
+import { Balances } from 'src/models/balances';
+import { UserGoals } from 'src/models/usergoals';
+import { AuthGuard } from '@nestjs/passport';
+import { AccountsService } from 'src/accounts/accounts.service';
+import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
@@ -23,23 +28,20 @@ import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { UpdateGoalDTO } from './dto/updateGoal.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
-import { Connection } from 'typeorm';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
-import { AuthGuard } from '@nestjs/passport';
-import { AccountsService } from 'src/accounts/accounts.service';
-import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 
 dotenv.config();
 
 @Controller('api/goals')
 export class GoalController {
   constructor(
+    @Inject(forwardRef(() => BalanceService))
+    private readonly balanceService: BalanceService,
+    @Inject(forwardRef(() => AccountsService))
+    private readonly accountService: AccountsService,
+    @Inject(forwardRef(() => BadgeService))
+    private readonly badgeService: BadgeService,
     private readonly goalService: GoalService,
     private readonly usergoalService: UserGoalService,
-    private readonly balanceService: BalanceService,
-    private readonly accountService: AccountsService,
-    private readonly badgeService: BadgeService,
     private readonly connection: Connection,
   ) {}
 

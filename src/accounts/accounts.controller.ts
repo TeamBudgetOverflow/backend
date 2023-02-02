@@ -12,24 +12,24 @@ import {
   HttpStatus,
   HttpException,
   Delete,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
-import { AccountsService } from './accounts.service';
-import { AddAccountDto } from './dto/addAccount.dto';
 import { Response } from 'express';
-import { BanksService } from 'src/banks/banks.service';
+import { AuthGuard } from '@nestjs/passport';
+import { AccountsService } from './accounts.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
+import { AddAccountDto } from './dto/addAccount.dto';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { HttpStatusCode } from 'axios';
-import { ModifyUserInfoDTO } from 'src/user/dto/modifyUser.dto';
 
 @Controller('/api/accounts')
 export class AccountsController {
   constructor(
+    @Inject(forwardRef(() => UserGoalService))
+    private readonly userGoalService: UserGoalService,
     private readonly accountService: AccountsService,
     private readonly balanceService: BalanceService,
-    private readonly userGoalService: UserGoalService,
   ) {}
 
   @Post('/:userId/balance/external')

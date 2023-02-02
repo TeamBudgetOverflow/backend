@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Brackets, Between } from 'typeorm';
+import { Repository, Brackets, Between } from 'typeorm';
 import { Goals } from '../models/goals';
-import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
-import { getAttributes } from 'sequelize-typescript';
 
 @Injectable()
 export class GoalService {

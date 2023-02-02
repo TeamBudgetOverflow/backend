@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Badges } from 'src/models/badges';
 import { UserBadges } from 'src/models/userbadges';
 import { Repository } from 'typeorm';
-import { GetBadgeDTO } from './dto/getBadge.dto';
 
 @Injectable()
 export class BadgeService {

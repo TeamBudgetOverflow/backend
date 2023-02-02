@@ -1,46 +1,48 @@
 import * as dotenv from 'dotenv';
 import { Response } from 'express';
-import { AuthService } from '../auth/auth.service';
-import { UserService } from './user.service';
-import { UserGoalService } from '../usergoal/userGoal.service';
-import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
-import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
-import { GoogleOauthGuard } from '../auth/google/google-oauth.guard';
 import {
   Controller,
   Get,
   Req,
-  Request,
   Res,
   Query,
-  HttpCode,
   HttpException,
   HttpStatus,
   UseGuards,
+  forwardRef,
+  Inject, Post, Patch, Put, Param, Body, Delete
 } from '@nestjs/common';
-import { Post, Patch, Put, Param, Body, Delete } from '@nestjs/common';
 import { createHash } from 'crypto';
-import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
-import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from '../auth/auth.service';
+import { UserService } from './user.service';
+import { UserGoalService } from '../usergoal/userGoal.service';
 import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
-import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
-import { ExitUserDTO } from './dto/exitUser.dto';
-import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { BalanceService } from 'src/balances/balances.service';
+import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
+import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
+import { GoogleOauthGuard } from '../auth/google/google-oauth.guard';
+import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { ExitUserDTO } from './dto/exitUser.dto';
+import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
+import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
 dotenv.config();
 
 @Controller('api/users')
 export class UserController {
   constructor(
+    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    @Inject(forwardRef(() => GoalService))
     private readonly goalService: GoalService,
+    @Inject(forwardRef(() => UserGoalService))
     private readonly userGoalService: UserGoalService,
+    @Inject(forwardRef(() => BalanceService))
     private readonly balanceService: BalanceService,
     private readonly badgeService: BadgeService,
+    private readonly userService: UserService,
   ) {}
 
   @Post('auth/google')

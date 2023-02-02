@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Inject, Logger, forwardRef } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
@@ -11,8 +11,11 @@ import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 @Injectable()
 export class CronService {
     constructor(
+        @Inject(forwardRef(() => GoalService))
         private readonly goalService: GoalService,
+        @Inject(forwardRef(() => UserGoalService))
         private readonly userGoalService: UserGoalService,
+        @Inject(forwardRef(() => BadgeService))
         private readonly badgeService: BadgeService,
         private readonly schedulerRegistry: SchedulerRegistry,
     ){}
