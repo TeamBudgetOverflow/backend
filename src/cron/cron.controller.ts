@@ -1,19 +1,22 @@
 import { Body, Controller, Get, Res, Response, Param, Query } from "@nestjs/common";
 import { CronService } from "./cron.service";
 import { CronJob } from 'cron';
+import { BadgeService } from "src/badges/badge.service";
 
 
 @Controller('api/cron')
 export class CronController {
   constructor(
     private readonly cronService: CronService,
+    private readonly badgeService: BadgeService,
   ) {}
 
   @Get()
   async getAllCron(
+    @Body() data,
     @Res() res: Response,
   ) {
-    await this.cronService.startGoal();
+    console.log(await this.badgeService.getBadge(data));
     res.json();
   }
 

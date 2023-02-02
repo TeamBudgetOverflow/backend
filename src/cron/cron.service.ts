@@ -25,10 +25,11 @@ export class CronService {
         let {aDate,bDate} = this.getKstTime(new Date());
         const getStartGoal: Goals[] = await this.goalService.getStartGoalByStatus(
             status, aDate, bDate);
-        status = "proceeding"
+        // 스케쥴링 적용이 필요한 목표 호출
         for(let i=0; i<getStartGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
             // 1. recruit -> proceeding
+            status = "proceeding"
             await this.goalService.goalUpdateStatus(getStartGoal[i].goalId, status);
             // 2. UserGoal 상태 변화
             const getUserGoal = await this.userGoalService.getGoalByGoalId(getStartGoal[i].goalId);
@@ -36,13 +37,12 @@ export class CronService {
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
                 const userId: number = getUserGoal[j].userId.userId;
-                const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
-                if(getFirstJoin.length === 0) {
+                const [getFirstJoin, count] = await this.userGoalService.getCountUserPastJoin(userId);
+                if(count === 0 && getStartGoal[i].headCount > 1) {
                     const badgeId = 3; 
                     let data: GetBadgeDTO = {User: userId, Badges: badgeId};
                     await this.badgeService.getBadge(data);
                 }
-                
             }
             // 3. 멤버 가져와서 채팅방 개설
         }
@@ -55,14 +55,14 @@ export class CronService {
         const getEndGoal = await this.goalService.getEndGoalByStatus(
             status, aDate, bDate);
         status = "done";
+        // 종료 목표 로직 수행
         for(let i=0; i<getEndGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
             // 1. proceeding -> done
             await this.goalService.goalUpdateStatus(getEndGoal[i].goalId, status);
-            // 2. UserGoal 상태 변화
             const getUserGoal = await this.userGoalService.getGoalByGoalId(getEndGoal[i].goalId);
-            status = "done";
             const headCount = getEndGoal[i].headCount;
+            // 2. UserGoal 상태 변화
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
                 const userId = getUserGoal[j].userId.userId;
@@ -71,17 +71,17 @@ export class CronService {
                 if(getUserGoal[j].goalId.amount === (
                     getUserGoal[j].balanceId.current - getUserGoal[j].balanceId.initial
                     )) {
-                    // 달성 목표 갯수를 가져올 떄 isPrivate 필터링이 되어있지 않음.
-                    const goalAchievCount = await this.userGoalService.getCountAchiev(userId);
+                    const goalCountAchievPersonal = await this.userGoalService.getCountAchievPersonal(userId);
+                    const getCountAchievGroup = await this.userGoalService.getCountAchievGroup(userId);
                     let data: GetBadgeDTO;
                     if (headCount > 1) {
-                        switch (goalAchievCount) {
-                            case 0: // 그룹 목표 첫 달성 badge no. 5
+                        switch (getCountAchievGroup) {
+                            case 1: // 그룹 목표 첫 달성 badge no. 5
                                 badgeId = 5;
                                 data = {User: userId, Badges: badgeId};
                                 await this.badgeService.getBadge(data);
                                 break;
-                            case 2: // 세번쨰 그룹 목표 달성 badge no. 6
+                            case 3: // 세번쨰 그룹 목표 달성 badge no. 6
                                 badgeId = 6;
                                 data = {User: userId, Badges: badgeId};
                                 await this.badgeService.getBadge(data);
@@ -89,7 +89,7 @@ export class CronService {
                             default:
                                 break;
                         }
-                    } else if(headCount === 1 && goalAchievCount === 0) {
+                    } else if(headCount === 1 && goalCountAchievPersonal === 1) {
                         // ex. Grant users the badge no. 2
                         // 개인 목표 첫 달성
                         badgeId = 2;
