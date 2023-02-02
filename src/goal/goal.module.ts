@@ -13,21 +13,23 @@ import { UserService } from '../user/user.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { BadgeService } from 'src/badges/badge.service';
 import { Accounts } from 'src/models/accounts';
 import { HttpModule } from '@nestjs/axios';
 import { CronModule } from 'src/cron/cron.module';
 import { CronService } from 'src/cron/cron.service';
 import { SchedulerRegistry } from 'src/cron/schedule.registry';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users, Goals, UserGoals, Balances, Accounts]),
     forwardRef(() => AuthModule),
     HttpModule,
+    forwardRef(() => UserModule),
   ],
   providers: [
     GoalService,
-    UserService,
     UserGoalService,
     AuthService,
     JwtService,

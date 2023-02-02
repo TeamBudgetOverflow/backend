@@ -6,16 +6,19 @@ import { UserGoalService } from '../usergoal/userGoal.service';
 import { HttpModule } from '@nestjs/axios';
 import { CronService } from './cron.service';
 import { GoalService } from 'src/goal/goal.service';
+import { BadgeService } from 'src/badges/badge.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { GoalModule } from 'src/goal/goal.module';
 import { SchedulerRegistry } from './schedule.registry';
 import { CronController } from './cron.controller';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Goals]),
     ScheduleModule.forRoot(),
     GoalModule,
+    UserModule,
   ],
   providers: [
     CronService,

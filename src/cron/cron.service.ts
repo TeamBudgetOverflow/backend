@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
+import { BadgeService } from 'src/badges/badge.service';
 import { Goals } from 'src/models/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
@@ -11,6 +12,7 @@ export class CronService {
     constructor(
         private readonly goalService: GoalService,
         private readonly userGoalService: UserGoalService,
+        private readonly badgeService: BadgeService,
         private readonly schedulerRegistry: SchedulerRegistry,
     ){}
     private readonly logger = new Logger(CronService.name)
@@ -22,7 +24,6 @@ export class CronService {
         let {aDate,bDate} = this.getKstTime(new Date());
         const getStartGoal: Goals[] = await this.goalService.getStartGoalByStatus(
             status, aDate, bDate);
-        console.log(getStartGoal);
         status = "proceeding"
         for(let i=0; i<getStartGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
@@ -33,6 +34,13 @@ export class CronService {
             status = "in progress";
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
+                const userId: number = getUserGoal[j].userId.userId;
+                const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
+                if(getFirstJoin.length === 0) {
+                    const badgeId = 3; 
+                    await this.badgeService.getBadge({ userId, badgeId });
+                }
+                
             }
             // 3. 멤버 가져와서 채팅방 개설
         }
@@ -44,7 +52,6 @@ export class CronService {
         let {aDate,bDate} = this.getKstTime(new Date());
         const getEndGoal = await this.goalService.getEndGoalByStatus(
             status, aDate, bDate);
-        console.log(getEndGoal);
         status = "done";
         for(let i=0; i<getEndGoal.length; i++) {
             // 가져온 Goal으로 로직 수행
@@ -53,10 +60,39 @@ export class CronService {
             // 2. UserGoal 상태 변화
             const getUserGoal = await this.userGoalService.getGoalByGoalId(getEndGoal[i].goalId);
             status = "done";
+            const headCount = getEndGoal[i].headCount;
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
-            }
+                const userId = getUserGoal[j].userId.userId;
+                let badgeId = 0;
+                // 목표 액수 달성 시 이전 달성 횟수 파악 후 뱃지 획득
+                if(getUserGoal[j].goalId.amount === (
+                    getUserGoal[j].balanceId.current - getUserGoal[j].balanceId.initial
+                    )) {
+                    // 달성 목표 갯수를 가져올 떄 isPrivate 필터링이 되어있지 않음.
+                    const goalAchievCount = await this.userGoalService.getCountAchiev(userId);
 
+                    if (headCount > 1) {
+                        switch (goalAchievCount) {
+                            case 0: // 그룹 목표 첫 달성 badge no. 5
+                                badgeId = 5;
+                                await this.badgeService.getBadge({ userId, badgeId });
+                                break;
+                            case 2: // 세번쨰 그룹 목표 달성 badge no. 6
+                                badgeId = 6;
+                                await this.badgeService.getBadge({ userId, badgeId });
+                                break;
+                            default:
+                                break;
+                        }
+                    } else if(headCount === 1 && goalAchievCount === 0) {
+                        // ex. Grant users the badge no. 2
+                        // 개인 목표 첫 달성
+                        badgeId = 2;
+                        await this.badgeService.getBadge({ userId, badgeId });
+                    }
+                }
+            }
             // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
         }
     }
