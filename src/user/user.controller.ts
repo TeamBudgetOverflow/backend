@@ -379,11 +379,26 @@ export class UserController {
               // error - 참가하지 않은 유저입니다.
               throw new HttpException('참가하지 않았습니다.', HttpStatus.BAD_REQUEST);
             } else {
-              // 중간 테이블 삭제
-              await this.userGoalService.exitGoal(accessUserGoalData);
-              // 참가자 숫자 변동
-              getGoal[i].goalId.headCount -= 1;
-              await this.goalService.updateGoalCurCount(goalId, getGoal[i].goalId.headCount);
+              // 목표 개설자 인 경우
+              // 참여 멤버 탈퇴 -> 목표 삭제
+              if(getGoal[i].goalId.userId.userId == req.user) {
+                const goalId = getGoal[i].goalId.goalId;
+                const memberExit = await this.userGoalService.getGoalByGoalId(goalId);
+                for(let j=0; j<memberExit.length; j++){
+                  let usergoalId: number = memberExit[j].userGoalsId;
+                  accessUserGoalData = {
+                    userId: memberExit[j].userId.userId,
+                    goalId: memberExit[j].goalId.goalId,
+                  }
+                  await this.userGoalService.exitGoal(accessUserGoalData);
+                }
+                await this.goalService.deleteGoal(getGoal[i].goalId.goalId);
+              }else { // 목표 참가자인 경우
+                await this.userGoalService.exitGoal(accessUserGoalData);
+                // 참가자 숫자 변동
+                getGoal[i].goalId.headCount -= 1;
+                await this.goalService.updateGoalCurCount(goalId, getGoal[i].goalId.headCount);
+              }
             }
           }else {
             // 3.2 현재 진행중이거나 완료된 목표에 대해서 balanceId = 0 처리
