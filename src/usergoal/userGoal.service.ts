@@ -30,8 +30,9 @@ export class UserGoalService {
       .createQueryBuilder('g')
       .where('g.userId = :userId', {userId})
       .leftJoin('g.goalId', 'goals')
+      .leftJoin('g.userId', 'users')
       .leftJoin('g.balanceId', 'balance')
-      .select(['g', 'goals', 'balance'])
+      .select(['g', 'goals', 'balance', 'users.userId'])
       .getMany();
   }
 

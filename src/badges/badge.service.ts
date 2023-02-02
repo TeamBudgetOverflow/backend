@@ -16,6 +16,7 @@ export class BadgeService {
 
   // 뱃지 획득
   async getBadge(data/*: GetBadgeDTO*/){
+    console.log(data);
     return await this.userBadgeRepository.save(data);
   }
 

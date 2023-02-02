@@ -6,6 +6,7 @@ import { BadgeService } from 'src/badges/badge.service';
 import { Goals } from 'src/models/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
+import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 
 @Injectable()
 export class CronService {
@@ -38,7 +39,8 @@ export class CronService {
                 const getFirstJoin = await this.userGoalService.getGoalByUserId(userId);
                 if(getFirstJoin.length === 0) {
                     const badgeId = 3; 
-                    await this.badgeService.getBadge({ userId, badgeId });
+                    let data: GetBadgeDTO = {User: userId, Badges: badgeId};
+                    await this.badgeService.getBadge(data);
                 }
                 
             }
@@ -64,23 +66,25 @@ export class CronService {
             for(let j=0; j<getUserGoal.length; j++){
                 await this.userGoalService.updateStauts(getUserGoal[j].userGoalsId, status);
                 const userId = getUserGoal[j].userId.userId;
-                let badgeId = 0;
+                let badgeId: number;
                 // 목표 액수 달성 시 이전 달성 횟수 파악 후 뱃지 획득
                 if(getUserGoal[j].goalId.amount === (
                     getUserGoal[j].balanceId.current - getUserGoal[j].balanceId.initial
                     )) {
                     // 달성 목표 갯수를 가져올 떄 isPrivate 필터링이 되어있지 않음.
                     const goalAchievCount = await this.userGoalService.getCountAchiev(userId);
-
+                    let data: GetBadgeDTO;
                     if (headCount > 1) {
                         switch (goalAchievCount) {
                             case 0: // 그룹 목표 첫 달성 badge no. 5
                                 badgeId = 5;
-                                await this.badgeService.getBadge({ userId, badgeId });
+                                data = {User: userId, Badges: badgeId};
+                                await this.badgeService.getBadge(data);
                                 break;
                             case 2: // 세번쨰 그룹 목표 달성 badge no. 6
                                 badgeId = 6;
-                                await this.badgeService.getBadge({ userId, badgeId });
+                                data = {User: userId, Badges: badgeId};
+                                await this.badgeService.getBadge(data);
                                 break;
                             default:
                                 break;
@@ -89,7 +93,8 @@ export class CronService {
                         // ex. Grant users the badge no. 2
                         // 개인 목표 첫 달성
                         badgeId = 2;
-                        await this.badgeService.getBadge({ userId, badgeId });
+                        data = {User: userId, Badges: badgeId};
+                        await this.badgeService.getBadge(data);
                     }
                 }
             }

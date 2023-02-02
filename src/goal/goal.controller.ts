@@ -28,6 +28,7 @@ import { Balances } from 'src/models/balances';
 import { UserGoals } from 'src/models/usergoals';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 
 dotenv.config();
 
@@ -89,15 +90,38 @@ export class GoalController {
       isPrivate = createGoalDTO.isPrivate;
     }
 
+    const pastCreateGoalData = await this.usergoalService.getGoalByUserId(userId);
+    console.log(pastCreateGoalData);
+    let personalCount: number = 0;
+    let groupCount: number = 0;
+    for(let i=0; i<pastCreateGoalData.length; i++) { 
+      // 생성자 본인에 대한 데이터 필터링
+      if(pastCreateGoalData[i].userId.userId == userId){
+        if(pastCreateGoalData[i].goalId.headCount === 1) personalCount += 1;
+        else groupCount += 1;
+      }
+    }
+    let badgeId: number;
     // 개인 목표 - status: 진행중proceeding
     // 팀 목표 - status: 모집중recruit
     let status: string;
     if(createGoalDTO.headCount === 1){
       status = "proceeding";
+      if(personalCount === 0){  // 개인 목표 첫 생성 뱃지 획득
+        badgeId = 1;
+        let data: GetBadgeDTO = {User: userId, Badges: badgeId};
+        await this.badgeService.getBadge(data);
+      }
     }else {
       status = "recruit";
+      if(groupCount === 0){   // 그룹 목표 첫 생성 뱃지 획득
+        console.log("test");
+        badgeId = 4;
+        let data: GetBadgeDTO = {User: userId, Badges: badgeId};
+        await this.badgeService.getBadge(data);
+      }
     }
-
+    console.log("어디 가니?");
     const end: Date = new Date(createGoalDTO.endDate);
     const start: Date = new Date(createGoalDTO.startDate);
     const period: number = (end.getTime() - start.getTime()) / (1000 * 60 *60 *24);
@@ -142,14 +166,6 @@ export class GoalController {
       balanceId,
       status: userGoalStatus,
     };
-    const existingUserGoals = await this.usergoalService.getGoalByUserId(
-      userId,
-    );
-    if (existingUserGoals.length === 0) {
-      const badgeId = 1; // Indiv Goal Created
-      await this.badgeService.getBadge({ userId, badgeId });
-    }
-
     await this.usergoalService.joinGoal(createUserGoalData);
     // Transaction 적용 필요
     res.json({ goalId, message: '목표 생성 완료' });
