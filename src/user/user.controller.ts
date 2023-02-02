@@ -80,6 +80,7 @@ export class UserController {
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
+      name: user.name,
       isExistPinCode
     });
   }
@@ -123,6 +124,7 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      name: user.name,
       isExistPinCode,
     });
   }
@@ -164,6 +166,7 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      name: user.name,
       isExistPinCode,
     });
   }
