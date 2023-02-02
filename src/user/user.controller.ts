@@ -66,9 +66,13 @@ export class UserController {
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -76,6 +80,7 @@ export class UserController {
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
+      isExistPinCode
     });
   }
 
@@ -104,9 +109,13 @@ export class UserController {
         refreshToken,
         message: '로그인 성공',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -114,6 +123,7 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      isExistPinCode,
     });
   }
 
@@ -140,9 +150,13 @@ export class UserController {
         refreshToken,
         message: '로그인 성공',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -150,6 +164,7 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      isExistPinCode,
     });
   }
 
