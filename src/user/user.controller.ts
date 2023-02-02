@@ -384,7 +384,7 @@ export class UserController {
             } else {
               // 목표 개설자 인 경우
               // 참여 멤버 탈퇴 -> 목표 삭제
-              if(getGoal[i].goalId.userId.userId == req.user) {
+              if(getGoal[i].userId.userId == req.user) {
                 const goalId = getGoal[i].goalId.goalId;
                 const memberExit = await this.userGoalService.getGoalByGoalId(goalId);
                 for(let j=0; j<memberExit.length; j++){
@@ -409,8 +409,9 @@ export class UserController {
             const current: number = 0;
             await this.balanceService.updateBalance(balanceId, current);
           }
-          // account 정보를 변경하는 method 필요
         }
+        // 뱃지 정보 삭제
+        await this.badgeService.deleteBadgeInfo(userId);
         res.json({ message: "회원 탈퇴가 완료되었습니다." });
   }
 }

@@ -16,7 +16,6 @@ export class BadgeService {
 
   // 뱃지 획득
   async getBadge(data/*: GetBadgeDTO*/){
-    console.log(data);
     return await this.userBadgeRepository.save(data);
   }
 
@@ -34,5 +33,15 @@ export class BadgeService {
   // 전체 뱃지 조회
   async getALLBadges(): Promise<Badges[]> {
     return await this.badgeRepository.find();
+  }
+
+  // 회원 탈퇴 시 뱃지 획득 내역 삭제
+  async deleteBadgeInfo(userId: number) {
+    return await this.userBadgeRepository
+      .createQueryBuilder('user_badges')
+      .delete()
+      .from('user_badges')
+      .where('User = :userId', {userId})
+      .execute();
   }
 }

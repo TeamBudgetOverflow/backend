@@ -91,7 +91,6 @@ export class GoalController {
     }
 
     const pastCreateGoalData = await this.usergoalService.getGoalByUserId(userId);
-    console.log(pastCreateGoalData);
     let personalCount: number = 0;
     let groupCount: number = 0;
     for(let i=0; i<pastCreateGoalData.length; i++) { 
@@ -115,13 +114,11 @@ export class GoalController {
     }else {
       status = "recruit";
       if(groupCount === 0){   // 그룹 목표 첫 생성 뱃지 획득
-        console.log("test");
         badgeId = 4;
         let data: GetBadgeDTO = {User: userId, Badges: badgeId};
         await this.badgeService.getBadge(data);
       }
     }
-    console.log("어디 가니?");
     const end: Date = new Date(createGoalDTO.endDate);
     const start: Date = new Date(createGoalDTO.startDate);
     const period: number = (end.getTime() - start.getTime()) / (1000 * 60 *60 *24);

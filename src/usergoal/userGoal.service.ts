@@ -40,9 +40,10 @@ export class UserGoalService {
     return await this.userGoalRepository
       .createQueryBuilder('g')
       .where('g.goalId = :goalId', {goalId})
+      .leftJoin('g.goalId', 'goal')
       .leftJoin('g.userId', 'users')
       .leftJoin('g.balanceId', 'balance')
-      .select(['g', 'users.userId', 'balance'])
+      .select(['g', 'goal.goalId', 'users.userId', 'balance'])
       .getMany();
   }
 
