@@ -255,8 +255,12 @@ export class AccountsController {
     if (findBalance.accountId.userId != userId) {
       throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
     } else {
-      await this.balanceService.updateBalance(balanceId, current);
-      res.json({ message: 'balance 수정 완료' });
+      if(findBalance.status === "in progress") {
+        await this.balanceService.updateBalance(balanceId, current);
+        res.json({ message: 'balance 수정 완료' });
+      }else {
+        throw new HttpException('수정 가능한 상태가 아닙니다.', HttpStatus.BAD_REQUEST);
+      }
     }
   }
 }
