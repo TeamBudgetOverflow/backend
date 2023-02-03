@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Badges } from 'src/models/badges';
 import { UserBadges } from 'src/models/userbadges';
 import { Repository } from 'typeorm';
-import { GetBadgeDTO } from './dto/getBadge.dto';
 
 @Injectable()
 export class BadgeService {
@@ -16,7 +15,9 @@ export class BadgeService {
 
   // 뱃지 획득
   async getBadge(data/*: GetBadgeDTO*/){
-    return await this.userBadgeRepository.save(data);
+    if(!this.duplicateBadgeSearch(data)) {
+      return await this.userBadgeRepository.save(data);
+    } else return null;
   }
 
   // 유저가 획득한 뱃지 가져오기
@@ -33,5 +34,21 @@ export class BadgeService {
   // 전체 뱃지 조회
   async getALLBadges(): Promise<Badges[]> {
     return await this.badgeRepository.find();
+  }
+
+  // 뱃지 중복 조회 방지
+  async duplicateBadgeSearch(data) {
+    console.log(data);
+    return await this.userBadgeRepository.findOneBy(data);
+  }  
+
+  // 회원 탈퇴 시 뱃지 획득 내역 삭제
+  async deleteBadgeInfo(userId: number) {
+    return await this.userBadgeRepository
+      .createQueryBuilder('user_badges')
+      .delete()
+      .from('user_badges')
+      .where('User = :userId', {userId})
+      .execute();
   }
 }

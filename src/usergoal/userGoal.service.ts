@@ -30,8 +30,9 @@ export class UserGoalService {
       .createQueryBuilder('g')
       .where('g.userId = :userId', {userId})
       .leftJoin('g.goalId', 'goals')
+      .leftJoin('g.userId', 'users')
       .leftJoin('g.balanceId', 'balance')
-      .select(['g', 'goals', 'balance'])
+      .select(['g', 'goals', 'balance', 'users.userId'])
       .getMany();
   }
 
@@ -39,8 +40,44 @@ export class UserGoalService {
     return await this.userGoalRepository
       .createQueryBuilder('g')
       .where('g.goalId = :goalId', {goalId})
-      .select(['g'])
+      .leftJoin('g.goalId', 'goal')
+      .leftJoin('g.userId', 'users')
+      .leftJoin('g.balanceId', 'balance')
+      .select(['g', 'goal.goalId', 'goal.amount', 
+      'users.userId', 'balance'])
       .getMany();
+  }
+
+  async getCountAchievPersonal(userId: number) {
+    return await this.userGoalRepository
+      .createQueryBuilder('g')
+      .where('g.userId = :userId', {userId})
+      .leftJoin('g.goalId', 'goals')
+      .leftJoin('g.balanceId', 'balance')
+      .andWhere('goals.headCount = 1')
+      .andWhere('goals.amount = (balance.current - balance.initial)')
+      .getCount();
+  }
+
+  async getCountAchievGroup(userId: number) {
+    return await this.userGoalRepository
+      .createQueryBuilder('g')
+      .where('g.userId = :userId', {userId})
+      .leftJoin('g.goalId', 'goals')
+      .leftJoin('g.balanceId', 'balance')
+      .andWhere('goals.headCount != 1')
+      .andWhere('goals.amount = (balance.current - balance.initial)')
+      .getCount();
+  }
+
+  async getCountUserPastJoin(userId: number) {
+    return await this.userGoalRepository
+      .createQueryBuilder('ug')
+      .where('ug.userId = :userId', {userId})
+      .andWhere('ug.status = :status', {status:"done"})
+      .leftJoin('ug.goalId', 'goals')
+      .select(['ug', 'goals.headCount'])
+      .getManyAndCount();
   }
 
   // 목표 참가

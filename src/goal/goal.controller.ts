@@ -3,18 +3,24 @@ import { Response } from 'express';
 import { GoalService } from './goal.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
+import { BadgeService } from 'src/badges/badge.service';
 import {
   Controller,
   Get,
   Req,
-  Request,
   Res,
-  HttpCode,
   HttpException,
   HttpStatus,
   UseGuards,
+  Inject,
+  forwardRef, Post, Param, Query, Body, Put, Delete
 } from '@nestjs/common';
-import { Post, Param, Query, Body, Put, Patch, Delete } from '@nestjs/common';
+import { Connection } from 'typeorm';
+import { Balances } from 'src/models/balances';
+import { UserGoals } from 'src/models/usergoals';
+import { AuthGuard } from '@nestjs/passport';
+import { AccountsService } from 'src/accounts/accounts.service';
+import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 import { CreateGoalDTO } from '../goal/dto/createGoal.dto';
 import { InputUpdateGoalDTO } from '../goal/dto/inputUpdateGoal.dto';
 import { InputCreateGoalDTO } from '../goal/dto/inputCreateGoal.dto';
@@ -22,21 +28,20 @@ import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { UpdateGoalDTO } from './dto/updateGoal.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
-import { Connection } from 'typeorm';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
-import { AuthGuard } from '@nestjs/passport';
-import { AccountsService } from 'src/accounts/accounts.service';
 
 dotenv.config();
 
 @Controller('api/goals')
 export class GoalController {
   constructor(
+    @Inject(forwardRef(() => BalanceService))
+    private readonly balanceService: BalanceService,
+    @Inject(forwardRef(() => AccountsService))
+    private readonly accountService: AccountsService,
+    @Inject(forwardRef(() => BadgeService))
+    private readonly badgeService: BadgeService,
     private readonly goalService: GoalService,
     private readonly usergoalService: UserGoalService,
-    private readonly balanceService: BalanceService,
-    private readonly accountService: AccountsService,
     private readonly connection: Connection,
   ) {}
 
@@ -87,15 +92,35 @@ export class GoalController {
       isPrivate = createGoalDTO.isPrivate;
     }
 
+    const pastCreateGoalData = await this.usergoalService.getGoalByUserId(userId);
+    let personalCount: number = 0;
+    let groupCount: number = 0;
+    for(let i=0; i<pastCreateGoalData.length; i++) { 
+      // 생성자 본인에 대한 데이터 필터링
+      if(pastCreateGoalData[i].userId.userId == userId){
+        if(pastCreateGoalData[i].goalId.headCount === 1) personalCount += 1;
+        else groupCount += 1;
+      }
+    }
+    let badgeId: number;
     // 개인 목표 - status: 진행중proceeding
     // 팀 목표 - status: 모집중recruit
     let status: string;
     if(createGoalDTO.headCount === 1){
       status = "proceeding";
+      if(personalCount === 0){  // 개인 목표 첫 생성 뱃지 획득
+        badgeId = 1;
+        let data: GetBadgeDTO = {User: userId, Badges: badgeId};
+        await this.badgeService.getBadge(data);
+      }
     }else {
       status = "recruit";
+      if(groupCount === 0){   // 그룹 목표 첫 생성 뱃지 획득
+        badgeId = 4;
+        let data: GetBadgeDTO = {User: userId, Badges: badgeId};
+        await this.badgeService.getBadge(data);
+      }
     }
-
     const end: Date = new Date(createGoalDTO.endDate);
     const start: Date = new Date(createGoalDTO.startDate);
     const period: number = (end.getTime() - start.getTime()) / (1000 * 60 *60 *24);
@@ -138,7 +163,7 @@ export class GoalController {
       goalId,
       accountId,
       balanceId,
-      status : userGoalStatus
+      status: userGoalStatus,
     };
     await this.usergoalService.joinGoal(createUserGoalData);
     // Transaction 적용 필요

@@ -3,9 +3,9 @@ import { IsNotEmpty, IsNumber } from 'class-validator';
 export class GetBadgeDTO {
   @IsNumber()
   @IsNotEmpty()
-  readonly userId: number;
+  readonly User: number;
 
   @IsNumber()
   @IsNotEmpty()
-  readonly badgeId: number;
+  readonly Badges: number;
 }

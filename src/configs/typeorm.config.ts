@@ -17,7 +17,7 @@ export const typeORMConfig: TypeOrmModuleOptions = {
   port: 3306,
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_DBNAME,
+  database: process.env.DB_TESTDBNAME,
   entities: [Users, Goals, UserGoals, Accounts, Banks, Balances,
   Badges, UserBadges],
   //migrations: [__dirname + '/migrations/*.ts'],

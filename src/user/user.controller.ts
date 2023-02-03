@@ -1,46 +1,48 @@
 import * as dotenv from 'dotenv';
 import { Response } from 'express';
-import { AuthService } from '../auth/auth.service';
-import { UserService } from './user.service';
-import { UserGoalService } from '../usergoal/userGoal.service';
-import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
-import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
-import { GoogleOauthGuard } from '../auth/google/google-oauth.guard';
 import {
   Controller,
   Get,
   Req,
-  Request,
   Res,
   Query,
-  HttpCode,
   HttpException,
   HttpStatus,
   UseGuards,
+  forwardRef,
+  Inject, Post, Patch, Put, Param, Body, Delete
 } from '@nestjs/common';
-import { Post, Patch, Put, Param, Body, Delete } from '@nestjs/common';
 import { createHash } from 'crypto';
-import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
-import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from '../auth/auth.service';
+import { UserService } from './user.service';
+import { UserGoalService } from '../usergoal/userGoal.service';
 import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
-import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
-import { ExitUserDTO } from './dto/exitUser.dto';
-import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { BalanceService } from 'src/balances/balances.service';
+import { NaverAuthGuard } from '../auth/naver/naver-auth.guard';
+import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
+import { GoogleOauthGuard } from '../auth/google/google-oauth.guard';
+import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { ExitUserDTO } from './dto/exitUser.dto';
+import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
+import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
 dotenv.config();
 
 @Controller('api/users')
 export class UserController {
   constructor(
+    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    @Inject(forwardRef(() => GoalService))
     private readonly goalService: GoalService,
+    @Inject(forwardRef(() => UserGoalService))
     private readonly userGoalService: UserGoalService,
+    @Inject(forwardRef(() => BalanceService))
     private readonly balanceService: BalanceService,
     private readonly badgeService: BadgeService,
+    private readonly userService: UserService,
   ) {}
 
   @Post('auth/google')
@@ -66,9 +68,13 @@ export class UserController {
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -76,6 +82,8 @@ export class UserController {
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
+      name: user.name,
+      isExistPinCode
     });
   }
 
@@ -104,9 +112,13 @@ export class UserController {
         refreshToken,
         message: '로그인 성공',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -114,6 +126,8 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      name: user.name,
+      isExistPinCode,
     });
   }
 
@@ -140,9 +154,13 @@ export class UserController {
         refreshToken,
         message: '로그인 성공',
         newComer: true,
+        name: createUser.name,
       });
     }
     // 유저가 있을때
+    let isExistPinCode: Boolean;
+    if(user.pinCode) isExistPinCode = true;
+    else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
     res.json({
@@ -150,6 +168,8 @@ export class UserController {
       refreshToken,
       message: '로그인 성공',
       newComer: false,
+      name: user.name,
+      isExistPinCode,
     });
   }
 
@@ -364,11 +384,26 @@ export class UserController {
               // error - 참가하지 않은 유저입니다.
               throw new HttpException('참가하지 않았습니다.', HttpStatus.BAD_REQUEST);
             } else {
-              // 중간 테이블 삭제
-              await this.userGoalService.exitGoal(accessUserGoalData);
-              // 참가자 숫자 변동
-              getGoal[i].goalId.headCount -= 1;
-              await this.goalService.updateGoalCurCount(goalId, getGoal[i].goalId.headCount);
+              // 목표 개설자 인 경우
+              // 참여 멤버 탈퇴 -> 목표 삭제
+              if(getGoal[i].userId.userId == req.user) {
+                const goalId = getGoal[i].goalId.goalId;
+                const memberExit = await this.userGoalService.getGoalByGoalId(goalId);
+                for(let j=0; j<memberExit.length; j++){
+                  let usergoalId: number = memberExit[j].userGoalsId;
+                  accessUserGoalData = {
+                    userId: memberExit[j].userId.userId,
+                    goalId: memberExit[j].goalId.goalId,
+                  }
+                  await this.userGoalService.exitGoal(accessUserGoalData);
+                }
+                await this.goalService.deleteGoal(getGoal[i].goalId.goalId);
+              }else { // 목표 참가자인 경우
+                await this.userGoalService.exitGoal(accessUserGoalData);
+                // 참가자 숫자 변동
+                getGoal[i].goalId.headCount -= 1;
+                await this.goalService.updateGoalCurCount(goalId, getGoal[i].goalId.headCount);
+              }
             }
           }else {
             // 3.2 현재 진행중이거나 완료된 목표에 대해서 balanceId = 0 처리
@@ -376,8 +411,9 @@ export class UserController {
             const current: number = 0;
             await this.balanceService.updateBalance(balanceId, current);
           }
-          // account 정보를 변경하는 method 필요
         }
+        // 뱃지 정보 삭제
+        await this.badgeService.deleteBadgeInfo(userId);
         res.json({ message: "회원 탈퇴가 완료되었습니다." });
   }
 }
