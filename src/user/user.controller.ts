@@ -259,7 +259,7 @@ export class UserController {
     const result = [];
     for (let i = 0; i < findUserBadges.length; i++) {
       result.push({
-        Badges: findUserBadges[i].Badges.badgeId,
+        badgeId: findUserBadges[i].Badges.badgeId,
       });
     }
     res.json({ result: result });

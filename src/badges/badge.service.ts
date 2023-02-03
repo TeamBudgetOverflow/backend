@@ -15,7 +15,7 @@ export class BadgeService {
 
   // 뱃지 획득
   async getBadge(data/*: GetBadgeDTO*/){
-    if(!this.duplicateBadgeSearch(data)) {
+    if(!(await this.duplicateBadgeSearch(data))) {
       return await this.userBadgeRepository.save(data);
     } else return null;
   }
@@ -38,8 +38,11 @@ export class BadgeService {
 
   // 뱃지 중복 조회 방지
   async duplicateBadgeSearch(data) {
-    console.log(data);
-    return await this.userBadgeRepository.findOneBy(data);
+    return await this.userBadgeRepository
+      .createQueryBuilder('ub')
+      .where('ub.User = :User', {User:data.User})
+      .andWhere('ub.Badges = :Badges', {Badges:data.Badges})
+      .getOne();
   }  
 
   // 회원 탈퇴 시 뱃지 획득 내역 삭제
