@@ -1,9 +1,9 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 
-@Catch(HttpException, Error)
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-    catch(exception: HttpException | Error, host: ArgumentsHost) {
+    catch(exception: HttpException | Error | unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
@@ -12,7 +12,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
             ? exception.getStatus()
             : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const errorMessage = exception.message;
+        let errorMessage: string;
+        if( exception instanceof HttpException ||
+            exception instanceof Error){
+            errorMessage = exception.message;
+        }else {
+            errorMessage = "unkwon Error Message";
+        }
         console.error(exception);
         response.status(status).json({
             statusCode: status,
