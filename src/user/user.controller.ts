@@ -192,6 +192,16 @@ export class UserController {
     if (userId != req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
+    if (!(pinCode.length === 6)){
+      throw new HttpException('잘못된 형식입니다.', 400);
+    }
+    const findUser = await this.userService.findUserByUserId(userId);
+    if(!findUser) {
+      throw new HttpException('존재하지 않는 유저입니다.', 400);
+    }
+    if(findUser.pinCode) {
+      throw new HttpException('이미 존재하는 핀코드입니다.', 400);
+    }
     const cryptoPinCode: string = createHash(process.env.ALGORITHM)
       .update(pinCode)
       .digest('base64');
@@ -209,6 +219,9 @@ export class UserController {
   ) {
     if (userId != req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
+    }
+    if (!(updatePinCodeDTO.updatePinCode.length === 6)){
+      throw new HttpException('잘못된 형식입니다.', 400);
     }
     const cryptoPinCode: string = createHash(process.env.ALGORITHM)
       .update(updatePinCodeDTO.pinCode)
