@@ -56,6 +56,22 @@ export class GoalController {
     const userId: number = req.user;
     const curCount = 1;
 
+    if(createGoalDTO.title.length < 4 ||
+      createGoalDTO.title.length > 25) {
+        throw new HttpException(
+          '잘못된 형식입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+    }
+
+    if(createGoalDTO.amount < 0 ||
+      createGoalDTO.amount > 70000 ) {
+        throw new HttpException(
+          '잘못된 형식입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+    }
+
     const checkRegister: UserGoals = await this.usergoalService.findUser({ 
       accountId : createGoalDTO.accountId,
       userId,
