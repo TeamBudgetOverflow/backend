@@ -13,6 +13,7 @@ import { Accounts } from './accounts';
 import { Goals } from './goals';
 import { UserBadges } from './userbadges';
 import { UserGoals } from './usergoals';
+import { Reports } from './reports';
 
 @Entity()
 export class Users extends BaseEntity {
@@ -61,4 +62,9 @@ export class Users extends BaseEntity {
     cascade: ['insert'],
   })
   UserBadge: UserBadges[];
+
+  @OneToMany(() => Reports, (report) => report.User, {
+    cascade: ['insert'],
+  })
+  Reports: Reports[];
 }
