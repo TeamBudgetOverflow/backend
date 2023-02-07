@@ -383,15 +383,18 @@ export class GoalController {
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async getAllGoal(@Query('page') page: number, @Res() res: Response) {
-    // 무한 스크롤 고려
+  async getAllGoal(@Query('cursor') cursor: number, @Res() res: Response) {
     const take = 5;
-    if (!page) page = 1;
-    const [sortResult, count] = await this.goalService.getAllGoals(take, page);
+    const [sortResult, count] = await this.goalService.getAllGoals(
+      take,
+      cursor,
+    );
     const result = [];
+    let newCursor: number;
     for (let i = 0; i < sortResult.length; i++) {
       const { userId, nickname } = sortResult[i].userId;
       const hashTag = sortResult[i].hashTag.split(',');
+      if (i === sortResult.length - 2) newCursor = sortResult[i].goalId;
       result.push({
         goalId: sortResult[i].goalId,
         userId: userId,
@@ -411,11 +414,10 @@ export class GoalController {
         updatedAt: sortResult[i].updatedAt,
       });
     }
-    const countPage: number = Math.ceil(count / take);
     let isLastPage: boolean;
-    if (page == countPage) isLastPage = true;
+    if (count < take) isLastPage = true;
     else isLastPage = false;
-    res.json({ result, isLastPage });
+    res.json({ result, cursor: newCursor, isLastPage });
   }
 
   // 임박 목표 불러오기
