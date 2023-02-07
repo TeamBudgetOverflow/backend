@@ -15,14 +15,6 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(user_email: string): Promise<any> {
-    const user = await this.userService.findUserByEmail(user_email);
-    if (!user) {
-      return null;
-    }
-    return user;
-  }
-
   async tokenValidate(token: string) {
     return await this.jwtService.verify(token, {
       secret: process.env.ACCESS_TOKEN_KEY,

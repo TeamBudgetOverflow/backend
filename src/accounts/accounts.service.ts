@@ -17,27 +17,6 @@ import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class AccountsService {
-  // .createQueryBuilder('userGoal')
-  // .leftJoin('userGoal.accountId', 'account')
-  // .leftJoin('userGoal.balanceId', 'balance')
-  // .where('userGoal.userGoalId = :userGoalId', { accountId })
-  // .getMany();
-  // .select([
-  //   'userGoal.userGoalsId',
-  //   'userId',
-  //   'userGoal.goalId',
-  //   'userGoal.accountId',
-  //   'userGoal.balanceId',
-  // ])
-  // .getOne();
-  // .where('userGoal.accountId = :accountId', { accountId: accountId })
-  // .getOne();
-  // .where('ug.accountId = :accountId', { accountId })
-  // .getMany();
-  // .leftJoin('ug.balanceId', 'balance')
-  // .select(['ug', 'balance'])
-  // .getOne();
-
   private readonly logger = new Logger(AccountsService.name);
   constructor(
     private readonly httpService: HttpService,
@@ -175,28 +154,6 @@ export class AccountsService {
     return result;
   }
 
-  // // might need to use querybuilder
-  // async getManuals(bankId): Promise<Accounts[]> {
-  //   const result: Accounts[] = await this.accountsRepository.find({
-  //     where: {
-  //       bank: {
-  //         id: bankId,
-  //       },
-  //     },
-  //     select: {
-  //       accountId: true,
-  //       bank: {
-  //         id: true,
-  //       },
-  //     },
-  //     order: {
-  //       accountId: 'ASC',
-  //     },
-  //   });
-
-  //   return result;
-  // }
-
   async getAccountBalance(accountId: number) {
     const result: UserGoals[] = await this.userGoalsRepository.find({});
     const targetBalance = [];
@@ -209,29 +166,6 @@ export class AccountsService {
       }
     }
     return targetBalance[0];
-
-    // return await this.dataSource
-    // .getRepository(UserGoals)
-    // .createQueryBuilder('userGoal')
-    // .leftJoin('userGoal.accountId', 'account')
-    // .leftJoin('userGoal.balanceId', 'balance')
-    // .where('userGoal.userGoalId = :userGoalId', { accountId })
-    // .getMany();
-    // .select([
-    //   'userGoal.userGoalsId',
-    //   'userId',
-    //   'userGoal.goalId',
-    //   'userGoal.accountId',
-    //   'userGoal.balanceId',
-    // ])
-    // .getOne();
-    // .where('userGoal.accountId = :accountId', { accountId: accountId })
-    // .getOne();
-    // .where('ug.accountId = :accountId', { accountId })
-    // .getMany();
-    // .leftJoin('ug.balanceId', 'balance')
-    // .select(['ug', 'balance'])
-    // .getOne();
   }
 
   async getConnectedAccounts(targetUserId: number) {
@@ -254,10 +188,6 @@ export class AccountsService {
   }
 
   async deleteAccount(targetAccountId: number) {
-    // await this.accountsRepository.delete({
-    //   accountId: targetAccountId,
-    // });
-
     const result = await this.accountsRepository.findOne({
       where: {
         accountId: targetAccountId,

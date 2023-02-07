@@ -11,15 +11,6 @@ export class UserService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
-  findUserByEmail(email: string): Promise<Users> {
-    const option = {
-      where: { email },
-      offset: 0,
-      limit: 1,
-      raw: true, //조회한 결과 객체로만 표기 옵션
-    };
-    return this.userRepository.findOne(option);
-  }
 
   findUserByEmailAndCategory(
     email: string,
@@ -49,15 +40,11 @@ export class UserService {
   }
 
   async createRefreshToken(userId: number, refreshToken: string) {
-    const findUserUpdate = await this.userRepository.findOneBy({ userId });
-    findUserUpdate.refreshToken = refreshToken;
-    await this.userRepository.save(findUserUpdate);
+    await this.userRepository.update(userId,{refreshToken});
   }
 
   async registerPinCode(userId: number, cryptoPinCode: string) {
-    const findUserUpdate = await this.userRepository.findOneBy({ userId });
-    findUserUpdate.pinCode = cryptoPinCode;
-    await this.userRepository.save(findUserUpdate);
+    await this.userRepository.update(userId,{pinCode : cryptoPinCode});
   }
 
   async getUserProfile(userId: number) {
@@ -81,6 +68,6 @@ export class UserService {
   }
 
   async exitUser(userId: number, data: ExitUserDTO) {
-    await this.userRepository.update({userId}, data);
+    await this.userRepository.update(userId, data);
   }
 }
