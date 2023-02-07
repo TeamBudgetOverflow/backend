@@ -11,6 +11,7 @@ import { BanksModule } from './banks/banks.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './cron/cron.module';
+import { ReportsModule } from './reports/report.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CronModule } from './cron/cron.module';
     AccountsModule,
     BanksModule,
     CronModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
