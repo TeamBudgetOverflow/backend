@@ -17,19 +17,22 @@ export class GoalService {
     return result;
   }
 
-  async getAllGoals(take: number, page: number): Promise<[Goals[], number]> {
-    return await this.goalRepository
+  async getAllGoals(take: number, cursor: number): Promise<[Goals[], number]> {
+    const query = await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {
         statuses: ['recruit', 'proceeding'],
       })
       .andWhere('g.headCount != 1')
       .leftJoin('g.userId', 'users')
-      .select(['g', 'users.userId', 'users.nickname'])
+      .select(['g', 'users.userId', 'users.nickname']);
+    if (cursor) query.andWhere('g.goalId < :cursor', { cursor });
+    const result = query
       .orderBy('g.createdAt', 'DESC')
-      .limit(take)
-      .offset(take * (page - 1))
+      // 결과값이 5일 경우 다음 페이지가 존재하는지 검증 하기위해 6개씩 take
+      .take(take + 1)
       .getManyAndCount();
+    return result;
   }
 
   async searchGoal(
