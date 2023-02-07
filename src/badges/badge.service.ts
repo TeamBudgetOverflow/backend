@@ -14,21 +14,20 @@ export class BadgeService {
   ) {}
 
   // 뱃지 획득
-  async getBadge(data/*: GetBadgeDTO*/){
-    if(!(await this.duplicateBadgeSearch(data))) {
-      return await this.userBadgeRepository.save(data);
-    } else return null;
+  async getBadge(data) {
+    if (!(await this.duplicateBadgeSearch(data))) {
+      await this.userBadgeRepository.save(data);
+    }
   }
 
   // 유저가 획득한 뱃지 가져오기
   async getUserBadges(userId: number): Promise<UserBadges[]> {
-    const result/*: UserBadges[]*/ =  await this.userBadgeRepository
+    return await this.userBadgeRepository
       .createQueryBuilder('ub')
-      .where('ub.User = :userId', {userId})
+      .where('ub.User = :userId', { userId })
       .leftJoin('ub.Badges', 'badge')
       .select(['ub', 'badge.badgeId'])
       .getMany();
-    return result;
   }
 
   // 전체 뱃지 조회
@@ -40,10 +39,10 @@ export class BadgeService {
   async duplicateBadgeSearch(data) {
     return await this.userBadgeRepository
       .createQueryBuilder('ub')
-      .where('ub.User = :User', {User:data.User})
-      .andWhere('ub.Badges = :Badges', {Badges:data.Badges})
+      .where('ub.User = :User', { User: data.User })
+      .andWhere('ub.Badges = :Badges', { Badges: data.Badges })
       .getOne();
-  }  
+  }
 
   // 회원 탈퇴 시 뱃지 획득 내역 삭제
   async deleteBadgeInfo(userId: number) {
@@ -51,7 +50,7 @@ export class BadgeService {
       .createQueryBuilder('user_badges')
       .delete()
       .from('user_badges')
-      .where('User = :userId', {userId})
+      .where('User = :userId', { userId })
       .execute();
   }
 }

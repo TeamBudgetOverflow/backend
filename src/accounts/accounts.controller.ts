@@ -252,6 +252,9 @@ export class AccountsController {
       balanceId,
     };
     const findBalance = await this.userGoalService.findUser(data);
+    if(!findBalance) {
+      throw new HttpException('잔액 결과가 없습니다.', HttpStatus.BAD_REQUEST);
+    }
     if (findBalance.accountId.userId != userId) {
       throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
     } else {
