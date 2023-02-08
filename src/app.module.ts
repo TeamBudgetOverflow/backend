@@ -13,10 +13,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './cron/cron.module';
 import { ReportsModule } from './reports/report.module';
 import { SlackModule } from './slack/slack.module';
+import slackConfig from './configs/slack.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [slackConfig] }),
     UserModule,
     GoalModule,
     TypeOrmModule.forRoot(typeORMConfig),

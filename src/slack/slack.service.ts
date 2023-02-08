@@ -18,7 +18,7 @@ export class SlackService {
         text: `Reporter: ${email}\n
             ReportId:${data.reportId}\n
             GoalId: ${data.goalId}\n
-            ReportedCount: ${data.reportCount}\n
+            ReportedCount: ${data.reportedCount}\n
             Reason: ${data.reason}`,
       })
       .then(() => {
