@@ -369,8 +369,8 @@ export class GoalController {
           case 'g.amount':
             newCursor = searchResult[i].amount;
             break;
-          case 'g.member':
-            newCursor = searchResult[i].member;
+          case 'g.headCount':
+            newCursor = searchResult[i].headCount;
             break;
           case 'g.period':
             newCursor = searchResult[i].period;
