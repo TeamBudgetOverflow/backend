@@ -23,6 +23,8 @@ import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { BalanceService } from 'src/balances/balances.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { SlackService } from 'src/slack/slack.service';
+import { report } from 'process';
 
 @Controller('api/report')
 export class ReportsController {
@@ -36,7 +38,19 @@ export class ReportsController {
     @Inject(forwardRef(() => BalanceService))
     private readonly balanceService: BalanceService,
     private readonly reportService: ReportsService,
+    private readonly slackService: SlackService,
   ) {}
+
+  @Post('test/slacktest')
+  async slackTest(@Res() res, @Body() reportBody) {
+    console.log(reportBody);
+    const { email, ...rest } = reportBody;
+    await this.slackService.sendSlackNotification(email, rest);
+
+    res.json({
+      message: `${email}, Slack successfully sent to the admin`,
+    });
+  }
 
   @Post(':goalId')
   @UseGuards(AuthGuard('jwt'))

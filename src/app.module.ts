@@ -12,10 +12,12 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './cron/cron.module';
 import { ReportsModule } from './reports/report.module';
+import { SlackModule } from './slack/slack.module';
+import slackConfig from './configs/slack.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [slackConfig] }),
     UserModule,
     GoalModule,
     TypeOrmModule.forRoot(typeORMConfig),
@@ -23,6 +25,7 @@ import { ReportsModule } from './reports/report.module';
     BanksModule,
     CronModule,
     ReportsModule,
+    SlackModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
