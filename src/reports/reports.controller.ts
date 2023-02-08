@@ -1,7 +1,7 @@
 import {
   Controller,
   Post,
-  Delete,
+  Get,
   Req,
   UseGuards,
   Body,
@@ -25,12 +25,15 @@ import { BalanceService } from 'src/balances/balances.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { SlackService } from 'src/slack/slack.service';
 import { report } from 'process';
+import { UserService } from 'src/user/user.service';
 
 @Controller('api/report')
 export class ReportsController {
   constructor(
     @Inject(forwardRef(() => GoalService))
     private readonly goalService: GoalService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
     @Inject(forwardRef(() => UserGoalService))
     private readonly userGoalService: UserGoalService,
     @Inject(forwardRef(() => AccountsService))
@@ -40,17 +43,6 @@ export class ReportsController {
     private readonly reportService: ReportsService,
     private readonly slackService: SlackService,
   ) {}
-
-  @Post('test/slacktest')
-  async slackTest(@Res() res, @Body() reportBody) {
-    console.log(reportBody);
-    const { email, ...rest } = reportBody;
-    await this.slackService.sendSlackNotification(email, rest);
-
-    res.json({
-      message: `${email}, Slack successfully sent to the admin`,
-    });
-  }
 
   @Post(':goalId')
   @UseGuards(AuthGuard('jwt'))
@@ -87,7 +79,6 @@ export class ReportsController {
     const data1 = { Goal: goalId, User: userId };
     // 검증: 이미 신고한 목표의 경우 중복 신고 불가
     const existReport = await this.reportService.getReport(data1);
-    console.log(existReport);
     if (existReport) {
       throw new HttpException(
         '이미 신고된 목표입니다.',
@@ -104,7 +95,25 @@ export class ReportsController {
     if (!result) {
       throw new HttpException('신고가 실패했습니다.', HttpStatus.NOT_FOUND);
     } else {
+      this.reportCountValidation(goalId);
       res.json({ message: '신고가 완료되었습니다.' });
+    }
+  }
+
+  // 목표 수가 일정치 이상 누적되면 슬렉으로 알림 호출
+  async reportCountValidation(goalId: number) {
+    const [reportList, count] = await this.reportService.getReportsByGoalId(
+      goalId,
+    );
+    if (count != 0) {
+      let data = [];
+      for (let i = 0; i < count; i++) {
+        data.push({
+          userEmail: reportList[i].User.email,
+          reason: reportList[i].reason,
+        });
+      }
+      await this.slackService.sendSlackNotification(goalId, count, data);
     }
   }
 
@@ -115,14 +124,15 @@ export class ReportsController {
     @Param('goalId') goalId,
     @Res() res: Response,
   ) {
-    const devId = req.user;
+    const userId = req.user;
+    const userData = await this.userService.findUserByUserId(userId);
     // 관리자 계정 검증 로직에 대한 합의가 이루어지지 않음
-    // if(devId !== ){
-    //   throw new HttpException(
-    //     '권한이 없는 호출입니다.',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    if (userData.loginCategory !== 'Dev') {
+      throw new HttpException(
+        '권한이 없는 호출입니다.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const userGoal = await this.userGoalService.getJoinUser(goalId);
     for (let i = 0; i < userGoal.length; i++) {
       let userGoalId = userGoal[i].userGoalsId;
@@ -130,8 +140,8 @@ export class ReportsController {
       // userGoal status 변경 - denied
       await this.userGoalService.updateStauts(userGoalId, status);
     }
-    // 목표 삭제
-    const result = await this.goalService.denyGoal(goalId);
+    // 목표 상태 변경 - denied
+    await this.goalService.denyGoal(goalId);
     res.json({ message: '신고된 목표가 처리되었습니다.' });
   }
 }

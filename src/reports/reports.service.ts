@@ -15,11 +15,20 @@ export class ReportsService {
   }
 
   async getReport(data): Promise<Reports> {
-    console.log(data);
     return await this.reportRepository
       .createQueryBuilder('r')
       .where('r.User = :User', { User: data.User })
       .andWhere('r.Goal = :Goal', { Goal: data.Goal })
       .getOne();
+  }
+
+  async getReportsByGoalId(goalId: number) {
+    return await this.reportRepository
+      .createQueryBuilder('r')
+      .where('r.Goal = :Goal', { Goal: goalId })
+      .leftJoin('r.User', 'User')
+      .leftJoin('r.Goal', 'Goal')
+      .select(['r.reportId', 'r.reason', 'User.email', 'Goal.goalId'])
+      .getManyAndCount();
   }
 }

@@ -135,9 +135,6 @@ export class CronService {
     }
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async report() {}
-
   // 이전 로직 남은 자료
   // 채팅방 폐쇄시 활용
   async addCronJob(

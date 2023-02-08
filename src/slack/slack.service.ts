@@ -12,18 +12,21 @@ export class SlackService {
     );
   }
 
-  async sendSlackNotification(email: string, data) {
+  async sendSlackNotification(goalId: number, count: number, data) {
+    let stringifyData = '';
+    for (let i = 0; i < data.length; i++) {
+      stringifyData += `UserEmail : ${data[i].userEmail}\n
+      Reason : ${data[i].reason}\n`;
+    }
     return this.webhook
       .send({
-        text: `Reporter: ${email}\n
-            ReportId:${data.reportId}\n
-            GoalId: ${data.goalId}\n
-            ReportedCount: ${data.reportedCount}\n
-            Reason: ${data.reason}`,
+        text: `GoalId: ${goalId}\n
+            ReportedCount: ${count}\n
+            ${stringifyData}`,
       })
       .then(() => {
         this.logger.log(
-          `slack push notification sent to #report-notifications - ${email} reported the goal ${data.goalId}`,
+          `slack push notification sent to #report-notifications - reported the goal ${goalId}`,
         );
       })
       .catch((e) => {
