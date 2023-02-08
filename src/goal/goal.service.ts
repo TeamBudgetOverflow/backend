@@ -17,19 +17,22 @@ export class GoalService {
     return result;
   }
 
-  async getAllGoals(take: number, page: number): Promise<[Goals[], number]> {
-    return await this.goalRepository
+  async getAllGoals(take: number, cursor: number): Promise<[Goals[], number]> {
+    const query = await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', {
         statuses: ['recruit', 'proceeding'],
       })
       .andWhere('g.headCount != 1')
       .leftJoin('g.userId', 'users')
-      .select(['g', 'users.userId', 'users.nickname'])
+      .select(['g', 'users.userId', 'users.nickname']);
+    if (cursor) query.andWhere('g.goalId < :cursor', { cursor });
+    const result = query
       .orderBy('g.createdAt', 'DESC')
-      .limit(take)
-      .offset(take * (page - 1))
+      // 결과값이 5일 경우 다음 페이지가 존재하는지 검증 하기위해 6개씩 take
+      .take(take + 1)
       .getManyAndCount();
+    return result;
   }
 
   async searchGoal(
@@ -40,9 +43,13 @@ export class GoalService {
     max: number,
     orderby: 'ASC' | 'DESC',
     take: number,
-    page: number,
+    cursor: number,
+    id: number,
   ): Promise<[Goals[], number]> {
-    return await this.goalRepository
+    const sortCondition = {};
+    sortCondition[sortOby] = orderby;
+    sortCondition['g.goalId'] = orderby;
+    const query = await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', { statuses })
       .andWhere(`${sortOby} BETWEEN ${min} AND ${max}`)
@@ -56,10 +63,31 @@ export class GoalService {
       )
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
-      .orderBy(`${sortOby}`, `${orderby}`)
-      .take(take)
-      .skip(take * (page - 1))
-      .getManyAndCount();
+      .orderBy(sortCondition);
+    if (cursor) {
+      if (orderby === 'DESC') {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(`${sortOby} = :cursor AND g.goalId < :id`, {
+              cursor,
+              id,
+            }).orWhere(`${sortOby} < :cursor`, { cursor });
+          }),
+        );
+      } else {
+        // ASC
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(`${sortOby} = :cursor AND g.goalId > :id`, {
+              cursor,
+              id,
+            }).orWhere(`${sortOby} > :cursor`, { sortOby, cursor });
+          }),
+        );
+      }
+    }
+    const result = await query.take(take + 1).getManyAndCount();
+    return result;
   }
 
   async searchGoalNotValue(
@@ -68,9 +96,9 @@ export class GoalService {
     statuses: string[],
     orderby: 'ASC' | 'DESC',
     take: number,
-    page: number,
+    id: number,
   ): Promise<[Goals[], number]> {
-    return await this.goalRepository
+    const query = await this.goalRepository
       .createQueryBuilder('g')
       .where('g.status IN (:...statuses)', { statuses })
       .andWhere('g.headCount != 1')
@@ -83,10 +111,13 @@ export class GoalService {
       )
       .leftJoin('g.userId', 'users')
       .select(['g', 'users.userId', 'users.nickname'])
-      .orderBy(`${sortOby}`, `${orderby}`)
-      .take(take)
-      .skip(take * (page - 1))
-      .getManyAndCount();
+      .orderBy(`${sortOby}`, `${orderby}`);
+    if (id) {
+      if (orderby === 'DESC') query.andWhere(`g.goalId < :id`, { id });
+      else query.andWhere(`g.goalId > :id`, { id });
+    }
+    const result = query.take(take + 1).getManyAndCount();
+    return result;
   }
 
   async getImminentGoal(take: number, status: string): Promise<Goals[]> {

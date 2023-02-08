@@ -275,7 +275,8 @@ export class GoalController {
   @UseGuards(AuthGuard('jwt'))
   async searchGoal(@Query() paginationQuery, @Res() res: Response) {
     // eslint-disable-next-line prefer-const
-    let { keyword, sortby, orderby, status, min, max, page } = paginationQuery;
+    let { keyword, sortby, orderby, status, min, max, cursor, id } =
+      paginationQuery;
     let sortOby = '';
     //sortBy가 비어있으면 생성 시간순으로 분류
     if (!sortby) sortOby = 'g.createdAt';
@@ -310,7 +311,6 @@ export class GoalController {
     else statuses = ['recruit', 'proceeding'];
 
     const take = 5;
-    if (!page) page = 1;
 
     let searchResult;
     let count: number;
@@ -323,7 +323,8 @@ export class GoalController {
         max,
         orderby,
         take,
-        page,
+        cursor,
+        id,
       );
     } else if (orderby === 'DESC' && !(sortOby === 'g.createdAt')) {
       // orderBy 설정이 되어있지 않으면 기본적으로 내림차순
@@ -335,7 +336,8 @@ export class GoalController {
         max,
         orderby,
         take,
-        page,
+        cursor,
+        id,
       );
     } else {
       // sortby와 max 가 둘 다 없는 경우
@@ -346,14 +348,38 @@ export class GoalController {
         statuses,
         orderby,
         take,
-        page,
+        id,
       );
     }
 
     const result = [];
-    for (let i = 0; i < searchResult.length; i++) {
+    let newCursor;
+    let length: number;
+    if (searchResult.length === 6) length = 5;
+    else length = searchResult.length;
+    for (let i = 0; i < length; i++) {
       const { userId, nickname } = searchResult[i].userId;
       const hashTag = searchResult[i].hashTag.split(',');
+      if (i === length - 1) {
+        id = searchResult[i].goalId;
+        switch (sortOby) {
+          // 정렬방식은 status - 진행중/모집중 - default: total
+          // sortBy - 목표금액amount / 모집인원member / 목표기간period
+          // orderBy - ASC(오름), DESC(내림)
+          case 'g.amount':
+            newCursor = searchResult[i].amount;
+            break;
+          case 'g.headCount':
+            newCursor = searchResult[i].headCount;
+            break;
+          case 'g.period':
+            newCursor = searchResult[i].period;
+            break;
+          case 'g.createdAt':
+            newCursor = searchResult[i].createdAt;
+            break;
+        }
+      }
       result.push({
         goalId: searchResult[i].goalId,
         userId: userId,
@@ -373,25 +399,30 @@ export class GoalController {
         updatedAt: searchResult[i].updatedAt,
       });
     }
-    const countPage: number = Math.ceil(count / take);
     let isLastPage: boolean;
-    if (page == countPage) isLastPage = true;
+    if (count < take) isLastPage = true;
     else isLastPage = false;
-    res.json({ result: result, isLastPage, count });
+    res.json({ result, cursor: newCursor, goalId: id, isLastPage, count });
   }
 
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async getAllGoal(@Query('page') page: number, @Res() res: Response) {
-    // 무한 스크롤 고려
+  async getAllGoal(@Query('cursor') cursor: number, @Res() res: Response) {
     const take = 5;
-    if (!page) page = 1;
-    const [sortResult, count] = await this.goalService.getAllGoals(take, page);
+    const [sortResult, count] = await this.goalService.getAllGoals(
+      take,
+      cursor,
+    );
     const result = [];
-    for (let i = 0; i < sortResult.length; i++) {
+    let newCursor: number;
+    let length: number;
+    if (sortResult.length === 6) length = 5;
+    else length = sortResult.length;
+    for (let i = 0; i < length; i++) {
       const { userId, nickname } = sortResult[i].userId;
       const hashTag = sortResult[i].hashTag.split(',');
+      if (i === length - 1) newCursor = sortResult[i].goalId;
       result.push({
         goalId: sortResult[i].goalId,
         userId: userId,
@@ -411,11 +442,10 @@ export class GoalController {
         updatedAt: sortResult[i].updatedAt,
       });
     }
-    const countPage: number = Math.ceil(count / take);
     let isLastPage: boolean;
-    if (page == countPage) isLastPage = true;
+    if (count < take) isLastPage = true;
     else isLastPage = false;
-    res.json({ result, isLastPage });
+    res.json({ result, cursor: newCursor, isLastPage });
   }
 
   // 임박 목표 불러오기
