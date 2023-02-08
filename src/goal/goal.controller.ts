@@ -494,6 +494,12 @@ export class GoalController {
     if (!findGoal) {
       throw new HttpException('존재하지 않는 목표입니다', HttpStatus.NOT_FOUND);
     }
+    if (findGoal.status === 'denied') {
+      throw new HttpException(
+        '정지 처리된 게시물입니다.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
     const joinUser = await this.usergoalService.getJoinUser(goalId);
     const member = [];
     for (let i = 0; i < joinUser.length; i++) {

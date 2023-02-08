@@ -21,4 +21,9 @@ export class BalanceService {
   async updateBalance(balanceId: number, current: number) {
     await this.balancesRepository.update({ balanceId }, { current });
   }
+
+  // delete balance
+  async deleteBalance(balanceId: number) {
+    await this.balancesRepository.delete({ balanceId });
+  }
 }
