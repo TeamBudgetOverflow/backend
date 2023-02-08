@@ -13,19 +13,25 @@ import { Accounts } from 'src/models/accounts';
 import { Balances } from 'src/models/balances';
 import { Badges } from 'src/models/badges';
 import { UserBadges } from 'src/models/userbadges';
+import { ReportsModule } from 'src/reports/report.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Users, UserGoals, Goals,
-    Accounts, Balances, Badges, UserBadges]),
+    TypeOrmModule.forFeature([
+      Users,
+      UserGoals,
+      Goals,
+      Accounts,
+      Balances,
+      Badges,
+      UserBadges,
+    ]),
     ScheduleModule.forRoot(),
     forwardRef(() => GoalModule),
     forwardRef(() => UserModule),
+    forwardRef(() => ReportsModule),
   ],
-  providers: [
-    CronService,
-    SchedulerRegistry,
-  ],
+  providers: [CronService, SchedulerRegistry],
   controllers: [CronController],
   exports: [CronService, SchedulerRegistry],
 })

@@ -184,7 +184,14 @@ export class GoalService {
     await this.goalRepository.update({ goalId }, { status });
   }
 
+  // 목표 삭제
   async deleteGoal(goalId: number) {
     await this.goalRepository.delete({ goalId });
+  }
+
+  // 신고로 인한 삭제시 status만 변경하여 검색에서 제외됨
+  async denyGoal(goalId: number) {
+    const status: string = 'denied';
+    return await this.goalRepository.update({ goalId }, { status });
   }
 }
