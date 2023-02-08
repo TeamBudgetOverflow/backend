@@ -6,7 +6,7 @@ import {
   Logger,
   forwardRef,
 } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
@@ -14,6 +14,7 @@ import { Goals } from 'src/models/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
 import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
+import { ReportsService } from 'src/reports/reports.service';
 
 @Injectable()
 export class CronService {
@@ -24,6 +25,8 @@ export class CronService {
     private readonly userGoalService: UserGoalService,
     @Inject(forwardRef(() => BadgeService))
     private readonly badgeService: BadgeService,
+    @Inject(forwardRef(() => ReportsService))
+    private readonly reportsService: ReportsService,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
   private readonly logger = new Logger(CronService.name);
@@ -131,6 +134,9 @@ export class CronService {
       // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
     }
   }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async report() {}
 
   // 이전 로직 남은 자료
   // 채팅방 폐쇄시 활용

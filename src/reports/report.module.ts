@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccountsModule } from 'src/accounts/accounts.module';
 import { GoalModule } from 'src/goal/goal.module';
 import { Goals } from 'src/models/goals';
 import { Reports } from 'src/models/reports';
@@ -13,6 +14,7 @@ import { ReportsService } from './reports.service';
     TypeOrmModule.forFeature([Users, Goals, Reports]),
     forwardRef(() => UserModule),
     forwardRef(() => GoalModule),
+    forwardRef(() => AccountsModule),
   ],
   controllers: [ReportsController],
   providers: [ReportsService],

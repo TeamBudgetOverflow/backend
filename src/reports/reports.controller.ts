@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Delete,
   Req,
   UseGuards,
   Body,
@@ -10,6 +11,7 @@ import {
   HttpStatus,
   Inject,
   forwardRef,
+  Put,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,12 +19,22 @@ import { GoalService } from 'src/goal/goal.service';
 import { InputReportGoalDTO } from './dto/inputReportGoal.dto';
 import { ReportGoalDTO } from './dto/reportGoal.dto';
 import { ReportsService } from './reports.service';
+import { UserGoalService } from 'src/usergoal/userGoal.service';
+import { AccountsService } from 'src/accounts/accounts.service';
+import { BalanceService } from 'src/balances/balances.service';
+import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 
 @Controller('api/report')
 export class ReportsController {
   constructor(
     @Inject(forwardRef(() => GoalService))
     private readonly goalService: GoalService,
+    @Inject(forwardRef(() => UserGoalService))
+    private readonly userGoalService: UserGoalService,
+    @Inject(forwardRef(() => AccountsService))
+    private readonly accountsService: AccountsService,
+    @Inject(forwardRef(() => BalanceService))
+    private readonly balanceService: BalanceService,
     private readonly reportService: ReportsService,
   ) {}
 
@@ -80,5 +92,32 @@ export class ReportsController {
     } else {
       res.json({ message: '신고가 완료되었습니다.' });
     }
+  }
+
+  @Put(':goalId')
+  @UseGuards(AuthGuard('jwt'))
+  async reportDeleteGoal(
+    @Req() req,
+    @Param('goalId') goalId,
+    @Res() res: Response,
+  ) {
+    const devId = req.user;
+    // 관리자 계정 검증 로직에 대한 합의가 이루어지지 않음
+    // if(devId !== ){
+    //   throw new HttpException(
+    //     '권한이 없는 호출입니다.',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+    const userGoal = await this.userGoalService.getJoinUser(goalId);
+    for (let i = 0; i < userGoal.length; i++) {
+      let userGoalId = userGoal[i].userGoalsId;
+      let status: string = 'denied';
+      // userGoal status 변경 - denied
+      await this.userGoalService.updateStauts(userGoalId, status);
+    }
+    // 목표 삭제
+    const result = await this.goalService.denyGoal(goalId);
+    res.json({ message: '신고된 목표가 처리되었습니다.' });
   }
 }
