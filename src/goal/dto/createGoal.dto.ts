@@ -65,7 +65,6 @@ export class CreateGoalDTO {
   readonly description: string;
 
   @IsString()
-  @ArrayMaxSize(10)
   readonly hashTag: string;
 
   @IsString()

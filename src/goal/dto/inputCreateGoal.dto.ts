@@ -21,13 +21,13 @@ export class InputCreateGoalDTO {
   @IsNotEmpty()
   readonly amount: number;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  readonly startDate: Date;
+  readonly startDate: string;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  readonly endDate: Date;
+  readonly endDate: string;
 
   @IsNumber()
   @IsNotEmpty()
@@ -48,7 +48,6 @@ export class InputCreateGoalDTO {
   @IsNotEmpty()
   readonly description: string;
 
-  @IsString()
   @IsArray()
   @ArrayMaxSize(10)
   readonly hashTag: string[];
@@ -60,4 +59,7 @@ export class InputCreateGoalDTO {
   @IsString()
   @IsOptional()
   readonly emoji?: string;
+
+  @IsBoolean()
+  readonly isManual: boolean;
 }
