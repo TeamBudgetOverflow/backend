@@ -75,6 +75,10 @@ export class GoalController {
     const userId: number = req.user;
     const curCount = 1;
 
+    console.log(createGoalDTO.startDate);
+    console.log(typeof createGoalDTO.startDate);
+    console.log(createGoalDTO.endDate);
+    console.log(typeof createGoalDTO.endDate);
     if (createGoalDTO.title.length < 4 || createGoalDTO.title.length > 25) {
       throw new HttpException('잘못된 형식입니다.', HttpStatus.BAD_REQUEST);
     }
@@ -594,8 +598,8 @@ export class GoalController {
       title: inputUpdateGoalDTO.title,
       description: inputUpdateGoalDTO.description,
       amount: inputUpdateGoalDTO.amount,
-      startDate: inputUpdateGoalDTO.startDate,
-      endDate: inputUpdateGoalDTO.endDate,
+      startDate: new Date(inputUpdateGoalDTO.startDate),
+      endDate: new Date(inputUpdateGoalDTO.endDate),
       hashTag: hashTag,
       emoji: inputUpdateGoalDTO.emoji,
       headCount: inputUpdateGoalDTO.headCount,

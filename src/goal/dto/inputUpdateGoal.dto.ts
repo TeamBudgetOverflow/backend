@@ -36,15 +36,14 @@ export class InputUpdateGoalDTO {
   @IsNotEmpty()
   readonly amount: number;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  readonly startDate: Date;
-
-  @IsDate()
-  @IsNotEmpty()
-  readonly endDate: Date;
+  readonly startDate: string;
 
   @IsString()
+  @IsNotEmpty()
+  readonly endDate: string;
+
   @IsArray()
   @ArrayMaxSize(10)
   readonly hashTag: string[];
@@ -56,4 +55,10 @@ export class InputUpdateGoalDTO {
   @IsNumber()
   @IsNotEmpty()
   readonly headCount: number;
+
+  @IsBoolean()
+  readonly isManual: boolean;
+
+  @IsNumber()
+  readonly accountId: number;
 }
