@@ -198,7 +198,7 @@ export class UserController {
     @Req() req,
     @Res() res: Response,
   ) {
-    if (userId != req.user) {
+    if (userId !== req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(pinCode.length === 6)) {
@@ -226,7 +226,7 @@ export class UserController {
     @Req() req,
     @Res() res: Response,
   ) {
-    if (userId != req.user) {
+    if (userId !== req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(updatePinCodeDTO.updatePinCode.length === 6)) {
@@ -294,7 +294,7 @@ export class UserController {
     @Param('userId') targetUserId: number,
   ) {
     const targetUserProfile = await this.userService.getUserProfile(
-      Number(targetUserId),
+      targetUserId,
     );
     if (targetUserProfile) {
       return res.json(targetUserProfile);
@@ -312,9 +312,7 @@ export class UserController {
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
     const userId = req.user;
-    // const user = 1;
-    // if (Number(userId) !== user) {
-    if (Number(targetUserId) === userId) {
+    if (targetUserId === userId) {
       await this.userService.modifyUser(userId, modifyInfo);
       res.json({
         message: 'Updated User Profile Succesfully',
@@ -451,6 +449,7 @@ export class UserController {
       } else {
         // 3.2 현재 진행중이거나 완료된 목표에 대해서
         // balanceId = 0 처리 accountId 처리
+        console.log(getGoal[i]);
         const balanceId: number = getGoal[i].balanceId.balanceId;
         const accountId: number = getGoal[i].accountId.accountId;
         const current: number = 0;

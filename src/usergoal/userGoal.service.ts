@@ -37,7 +37,8 @@ export class UserGoalService {
       .leftJoin('g.goalId', 'goals')
       .leftJoin('g.userId', 'users')
       .leftJoin('g.balanceId', 'balance')
-      .select(['g', 'goals', 'balance', 'users.userId'])
+      .leftJoin('g.accountId', 'account')
+      .select(['g', 'goals', 'balance', 'users.userId', 'account.accountId'])
       .getMany();
   }
 
