@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Users } from './users';
 import { UserGoals } from './usergoals';
+import { Reports } from './reports';
 
 @Entity()
 export class Goals extends BaseEntity {
@@ -40,7 +41,7 @@ export class Goals extends BaseEntity {
   @Column({ nullable: false })
   endDate: Date;
 
-  @Column({ nullable : false })
+  @Column({ nullable: false })
   period: number;
 
   @Column({ nullable: false })
@@ -74,4 +75,9 @@ export class Goals extends BaseEntity {
     cascade: ['insert'],
   })
   userGoals: UserGoals[];
+
+  @OneToMany(() => Reports, (report) => report.Goal, {
+    cascade: ['insert'],
+  })
+  Reports: Reports[];
 }
