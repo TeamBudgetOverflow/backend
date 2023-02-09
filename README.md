@@ -1,73 +1,56 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# :moneybag: 티끌모아 태산 :moneybag:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<img src="https://user-images.githubusercontent.com/112388311/217845677-e83d12f7-7660-4493-a259-4db5356b1460.png">
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 프로젝트 개요
 
-## Description
+:white_check_mark: **프로젝트 한줄 소개**
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+2030 재테크 병아리들을 위한 돈 모으기 습관 형성 서비스 입니다.
 
-## Installation
+:white_check_mark: **기획 의도**
 
-```bash
-$ npm install
-```
+재테크 관심도가 높아지고 있는 2030 세대들을 위해 작은 금액부터 목표를 세우고 관리하는 저축 습관 형성 서비스를 제공하고자 했습니다.
 
-## Running the app
+:white_check_mark: **진행 기간**
 
-```bash
-# development
-$ npm run start
+2022.12.30 - 2023.2.9 
+BackEnd Refactoring : 2023.2.10 - 2023.2.17
 
-# watch mode
-$ npm run start:dev
+:white_check_mark: **구성원** 
+:runner: [김수완](https://github.com/Grimdal032)
+:runner: [류제승](https://github.com/crystalyst)
+:runner: [김주향](https://github.com/joohyang0612)
 
-# production mode
-$ npm run start:prod
-```
+## 기술 스택
 
-## Test
+<div align="start">
+  <img src="https://img.shields.io/badge/typescript-3178C6?style=for-the-badge&logo=typescript&logoColor=black">
+  <img src="https://img.shields.io/badge/nestjs-E0234E?style=for-the-badge&logo=nestjs&logoColor=black">
+  <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=black">
+  <img src="https://img.shields.io/badge/passport-34E27A?style=for-the-badge&logo=passport&logoColor=black">
+  <img src="https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=black">
+  
+</div>
 
-```bash
-# unit tests
-$ npm run test
+## 사용 라이브러리
 
-# e2e tests
-$ npm run test:e2e
+[`passport`](https://www.npmjs.com/package/passport)
+[`class-transformer`](https://www.npmjs.com/package/class-transformer)
+[`class-validator`](https://www.npmjs.com/package/class-validator)
+[`typeorm`](https://www.npmjs.com/package/typeorm)
+[`@slack/webhook`](https://www.npmjs.com/package/@slack/webhook)
+[`@types/cron`](https://www.npmjs.com/package/@types/cron)
 
-# test coverage
-$ npm run test:cov
-```
+## 기술적 선택 이유 && 트러블 슈팅
 
-## Support
+:wrench: [TroubleShooting](https://www.notion.so/0c15396642cc4607991b275f8fe52c1a)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## API 명세 / 와이어프레임 / 시연 영상
 
-## Stay in touch
+:notebook: [API](https://www.notion.so/MVP-09346594381b498d94bbaf4f629193a9)
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+:art: [Figma](https://www.figma.com/file/XZx7V517CCYsc55go50xMZ/%ED%8B%B0%EB%81%8C%EB%AA%A8%EC%95%84%ED%83%9C%EC%82%B0?node-id=0%3A1&t=L9PpVmOEUqOAIzOP-0)
 
-## License
-
-Nest is [MIT licensed](LICENSE).
+:white_check_mark: [영상 링크](https://youtu.be/m_Olv_2fK-s) 
+## DB ERD
