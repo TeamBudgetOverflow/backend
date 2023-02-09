@@ -1,6 +1,6 @@
 # :moneybag: 티끌모아 태산 :moneybag:
 
-<img src="https://user-images.githubusercontent.com/112388311/217845677-e83d12f7-7660-4493-a259-4db5356b1460.png">
+<img src="https://user-images.githubusercontent.com/112388311/217845677-e83d12f7-7660-4493-a259-4db5356b1460.png" width="50%" height="50%">
 
 ## 프로젝트 개요
 
@@ -15,12 +15,14 @@
 :white_check_mark: **진행 기간**
 
 2022.12.30 - 2023.2.9 
+<br/>
 BackEnd Refactoring : 2023.2.10 - 2023.2.17
 
-:white_check_mark: **구성원** 
-:runner: [김수완](https://github.com/Grimdal032)
-:runner: [류제승](https://github.com/crystalyst)
-:runner: [김주향](https://github.com/joohyang0612)
+:white_check_mark: **BACKEND 구성원** 
+<br/><br/>
+🏃: [류제승](https://github.com/crystalyst)
+🏃: [김수완](https://github.com/Grimdal032)
+🏃: [김주향](https://github.com/joohyang0612)
 
 ## 기술 스택
 
@@ -30,7 +32,6 @@ BackEnd Refactoring : 2023.2.10 - 2023.2.17
   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=black">
   <img src="https://img.shields.io/badge/passport-34E27A?style=for-the-badge&logo=passport&logoColor=black">
   <img src="https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=black">
-  
 </div>
 
 ## 사용 라이브러리
@@ -44,15 +45,16 @@ BackEnd Refactoring : 2023.2.10 - 2023.2.17
 
 ## 기술적 선택 이유 && 트러블 슈팅
 
-:wrench: [TroubleShooting](https://www.notion.so/0c15396642cc4607991b275f8fe52c1a)
+🛠️: [TroubleShooting](https://www.notion.so/0c15396642cc4607991b275f8fe52c1a)
 
 ## API 명세 / 와이어프레임 / 시연 영상
 
-:notebook: [API](https://www.notion.so/MVP-09346594381b498d94bbaf4f629193a9)
+📓: [API](https://www.notion.so/MVP-09346594381b498d94bbaf4f629193a9)
 
-:art: [Figma](https://www.figma.com/file/XZx7V517CCYsc55go50xMZ/%ED%8B%B0%EB%81%8C%EB%AA%A8%EC%95%84%ED%83%9C%EC%82%B0?node-id=0%3A1&t=L9PpVmOEUqOAIzOP-0)
+🎨: [Figma](https://www.figma.com/file/XZx7V517CCYsc55go50xMZ/%ED%8B%B0%EB%81%8C%EB%AA%A8%EC%95%84%ED%83%9C%EC%82%B0?node-id=0%3A1&t=L9PpVmOEUqOAIzOP-0)
 
-:white_check_mark: [영상 링크](https://youtu.be/m_Olv_2fK-s) 
+📺: [시연 영상 링크](https://youtu.be/m_Olv_2fK-s) 
+
 ## DB ERD
 
 <img src="https://user-images.githubusercontent.com/112388311/217857714-6a2cb315-63b0-46d4-a8e5-873fc6948d58.png">
