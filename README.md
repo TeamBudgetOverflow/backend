@@ -54,3 +54,5 @@ BackEnd Refactoring : 2023.2.10 - 2023.2.17
 
 :white_check_mark: [영상 링크](https://youtu.be/m_Olv_2fK-s) 
 ## DB ERD
+
+<img src="https://user-images.githubusercontent.com/112388311/217857714-6a2cb315-63b0-46d4-a8e5-873fc6948d58.png">
