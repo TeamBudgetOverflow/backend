@@ -1,6 +1,9 @@
 # :moneybag: 티끌모아 태산 :moneybag:
 
 <img src="https://user-images.githubusercontent.com/112388311/217845677-e83d12f7-7660-4493-a259-4db5356b1460.png" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/112388311/218279933-d172dd24-0cc1-4c61-862f-8c74726d7b36.JPG">
+
+[Direct Link](https://teekle-taesan.com/)
 
 ## 프로젝트 개요
 
@@ -24,14 +27,28 @@ BackEnd Refactoring : 2023.2.10 - 2023.2.17
 🏃: [김수완](https://github.com/Grimdal032)
 🏃: [김주향](https://github.com/joohyang0612)
 
-## 기술 스택
+## 서비스 핵심기능
+<img src="https://user-images.githubusercontent.com/112388311/218279966-4a1f1b4b-1469-43de-b33e-81fb8f2e88b4.JPG" width="70%" height="70%">
+<img src="https://user-images.githubusercontent.com/112388311/218279972-4004a042-ca85-4666-b480-aa42ef1b2417.JPG" width="70%" height="70%">
+<img src="https://user-images.githubusercontent.com/112388311/218279978-8ec47534-a4f6-4e13-85b4-b19e80d1d467.JPG" width="70%" height="70%">
+<img src="https://user-images.githubusercontent.com/112388311/218279983-404c88e0-4cef-4343-93e6-e20d16516f96.JPG" width="70%" height="70%">
 
+## 🛠️기술 스택 & 협업
+**Back-End**
 <div align="start">
   <img src="https://img.shields.io/badge/typescript-3178C6?style=for-the-badge&logo=typescript&logoColor=black">
   <img src="https://img.shields.io/badge/nestjs-E0234E?style=for-the-badge&logo=nestjs&logoColor=black">
   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=black">
   <img src="https://img.shields.io/badge/passport-34E27A?style=for-the-badge&logo=passport&logoColor=black">
   <img src="https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=black">
+</div>
+<br/>
+
+**Tools**
+<div>
+  <img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white">
+  <img src="https://img.shields.io/badge/NOTION-181717?style=for-the-badge&logo=notion&logoColor=white">
+  <img src="https://img.shields.io/badge/SLACK-4A154B?style=for-the-badge&logo=slack&logoColor=white">
 </div>
 
 ## 사용 라이브러리
