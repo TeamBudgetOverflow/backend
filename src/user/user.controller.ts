@@ -58,10 +58,8 @@ export class UserController {
   @UseGuards(GoogleOauthGuard)
   async googleAuthRedirect(
     @Req() req,
-    @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-    console.log(req.user);
     const user = await this.userService.findUserByEmailAndCategory(
       req.user.email,
       req.user.loginCategory,
@@ -72,13 +70,13 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
@@ -86,24 +84,22 @@ export class UserController {
     else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
       name: user.name,
       isExistPinCode,
-    });
+    };
   }
 
   @Post('auth/naver')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
     @Req() req,
-    @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
-    console.log(req.user);
     const user = await this.userService.findUserByEmailAndCategory(
       req.user.email,
       req.user.loginCategory,
@@ -111,18 +107,17 @@ export class UserController {
     if (user === null) {
       // 유저가 없을때 회원가입 -> 로그인
       const createUser = await this.userService.oauthCreateUser(req.user);
-      // console.log(createUser)
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
@@ -130,21 +125,20 @@ export class UserController {
     else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
       name: user.name,
       isExistPinCode,
-    });
+    };
   }
 
   @UseGuards(KakaoAuthGuard)
   @Post('auth/kakao')
   async kakaoLoginCallback(
     @Req() req,
-    @Res() res: Response,
     @Query('code') code: string,
   ): Promise<any> {
     const user = await this.userService.findUserByEmailAndCategory(
@@ -158,13 +152,13 @@ export class UserController {
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
@@ -172,22 +166,22 @@ export class UserController {
     else isExistPinCode = false;
     const accessToken = await this.authService.createAccessToken(user);
     const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
       name: user.name,
       isExistPinCode,
-    });
+    };
   }
 
   @Delete()
   @UseGuards(AuthGuard('jwt'))
-  async logout(@Req() req, @Res() res: Response) {
+  async logout(@Req() req) {
     const userId: number = req.user;
     await this.authService.deleteRefreshToken(userId);
-    res.json({ message: '로그아웃 성공' });
+    return { message: '로그아웃 성공' };
   }
 
   @Post(':userId/pinCode')
@@ -196,7 +190,6 @@ export class UserController {
     @Param('userId') userId: number,
     @Body('pinCode') pinCode: string,
     @Req() req,
-    @Res() res: Response,
   ) {
     if (userId !== req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
@@ -215,7 +208,7 @@ export class UserController {
       .update(pinCode)
       .digest('base64');
     await this.userService.registerPinCode(userId, cryptoPinCode);
-    res.json({ message: '핀 코드 등록 완료' });
+    return { message: '핀 코드 등록 완료' };
   }
 
   @Put(':userId/pinCode')
@@ -224,7 +217,6 @@ export class UserController {
     @Param('userId') userId: number,
     @Body() updatePinCodeDTO: UpdatePinCodeDTO,
     @Req() req,
-    @Res() res: Response,
   ) {
     if (userId !== req.user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
@@ -242,7 +234,7 @@ export class UserController {
         .update(updatePinCodeDTO.updatePinCode)
         .digest('base64');
       await this.userService.registerPinCode(userId, cryptoPinCode);
-      res.json({ message: '핀 코드 수정 완료' });
+      return { message: '핀 코드 수정 완료' };
     } else {
       throw new HttpException('입력한 pinCode가 올바르지 않습니다', 400);
     }
@@ -251,32 +243,24 @@ export class UserController {
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('pinCode')
-  async accessTokenReissue(
-    @Body('pinCode') pinCode: string,
-    @Req() req,
-    @Res() res: Response,
-  ) {
+  async accessTokenReissue(@Body('pinCode') pinCode: string, @Req() req) {
     const accessToken = await this.authService.createAccessToken(req.user);
-    return res.json({
+    return {
       accessToken: 'Bearer ' + accessToken,
       message: 'accessToken 재발급',
-    });
+    };
   }
 
   @Get('badges')
   @UseGuards(AuthGuard('jwt'))
-  async getAllBadges(@Req() req, @Res() res: Response) {
+  async getAllBadges() {
     const getALLBadges = await this.badgeService.getALLBadges();
-    res.json({ result: getALLBadges });
+    return { result: getALLBadges };
   }
 
   @Get('badges/:userId')
   @UseGuards(AuthGuard('jwt'))
-  async getMyBadges(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
+  async getMyBadges(@Param('userId') userId: number) {
     const findUserBadges = await this.badgeService.getUserBadges(userId);
     const result = [];
     for (let i = 0; i < findUserBadges.length; i++) {
@@ -284,20 +268,16 @@ export class UserController {
         badgeId: findUserBadges[i].Badges.badgeId,
       });
     }
-    res.json({ result: result });
+    return { result: result };
   }
 
   @Get(':userId')
-  async getUserProfile(
-    @Req() req,
-    @Res() res: Response,
-    @Param('userId') targetUserId: number,
-  ) {
+  async getUserProfile(@Param('userId') targetUserId: number) {
     const targetUserProfile = await this.userService.getUserProfile(
       targetUserId,
     );
     if (targetUserProfile) {
-      return res.json(targetUserProfile);
+      return targetUserProfile;
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
@@ -307,16 +287,15 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   async modifyUserProfile(
     @Req() req,
-    @Res() res: Response,
     @Param('userId') targetUserId: number,
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
     const userId = req.user;
     if (targetUserId === userId) {
       await this.userService.modifyUser(userId, modifyInfo);
-      res.json({
+      return {
         message: 'Updated User Profile Succesfully',
-      });
+      };
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
@@ -324,11 +303,7 @@ export class UserController {
 
   @Get(':userId/goals')
   @UseGuards(AuthGuard('jwt'))
-  async getUserGoal(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
+  async getUserGoal(@Req() req, @Param('userId') userId: number) {
     const myUserId = req.user;
     const findGoals = await this.userGoalService.getGoalByUserId(userId);
     const result = [];
@@ -360,17 +335,13 @@ export class UserController {
         });
       }
     }
-    res.json({ result: result });
+    return { result: result };
   }
 
   // 회원 탈퇴
   @Delete('exit/:userId')
   @UseGuards(AuthGuard('jwt'))
-  async exitUsesr(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
+  async exitUsesr(@Req() req, @Param('userId') userId: number) {
     if (req.user !== Number(userId)) {
       throw new HttpException(
         '권한이 없는 호출입니다.',
@@ -449,7 +420,6 @@ export class UserController {
       } else {
         // 3.2 현재 진행중이거나 완료된 목표에 대해서
         // balanceId = 0 처리 accountId 처리
-        console.log(getGoal[i]);
         const balanceId: number = getGoal[i].balanceId.balanceId;
         const accountId: number = getGoal[i].accountId.accountId;
         const current: number = 0;
@@ -459,6 +429,6 @@ export class UserController {
     }
     // 뱃지 정보 삭제
     await this.badgeService.deleteBadgeInfo(userId);
-    res.json({ message: '회원 탈퇴가 완료되었습니다.' });
+    return { message: '회원 탈퇴가 완료되었습니다.' };
   }
 }

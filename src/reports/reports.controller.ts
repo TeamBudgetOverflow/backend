@@ -50,7 +50,6 @@ export class ReportsController {
     @Req() req,
     @Body() input: InputReportGoalDTO,
     @Param('goalId') goalId: number,
-    @Res() res: Response,
   ) {
     const userId: number = req.user;
     // 검증: reason 글자 수
@@ -96,7 +95,7 @@ export class ReportsController {
       throw new HttpException('신고가 실패했습니다.', HttpStatus.NOT_FOUND);
     } else {
       this.reportCountValidation(goalId);
-      res.json({ message: '신고가 완료되었습니다.' });
+      return { message: '신고가 완료되었습니다.' };
     }
   }
 
@@ -119,11 +118,7 @@ export class ReportsController {
 
   @Put(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async reportDeleteGoal(
-    @Req() req,
-    @Param('goalId') goalId,
-    @Res() res: Response,
-  ) {
+  async reportDeleteGoal(@Req() req, @Param('goalId') goalId) {
     const userId = req.user;
     const userData = await this.userService.findUserByUserId(userId);
     // 관리자 계정 검증 로직에 대한 합의가 이루어지지 않음
@@ -142,6 +137,6 @@ export class ReportsController {
     }
     // 목표 상태 변경 - denied
     await this.goalService.denyGoal(goalId);
-    res.json({ message: '신고된 목표가 처리되었습니다.' });
+    return { message: '신고된 목표가 처리되었습니다.' };
   }
 }

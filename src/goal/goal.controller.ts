@@ -67,18 +67,9 @@ export class GoalController {
   // 목표 생성
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async createGoal(
-    @Req() req,
-    @Body() createGoalDTO: InputCreateGoalDTO,
-    @Res() res: Response,
-  ) {
+  async createGoal(@Req() req, @Body() createGoalDTO: InputCreateGoalDTO) {
     const userId: number = req.user;
     const curCount = 1;
-
-    console.log(createGoalDTO.startDate);
-    console.log(typeof createGoalDTO.startDate);
-    console.log(createGoalDTO.endDate);
-    console.log(typeof createGoalDTO.endDate);
     if (createGoalDTO.title.length < 4 || createGoalDTO.title.length > 25) {
       throw new HttpException('잘못된 형식입니다.', HttpStatus.BAD_REQUEST);
     }
@@ -212,7 +203,7 @@ export class GoalController {
     };
     await this.usergoalService.joinGoal(createUserGoalData);
     // Transaction 적용 필요
-    res.json({ goalId, message: '목표 생성 완료' });
+    return { goalId, message: '목표 생성 완료' };
   }
 
   //목표 참가
@@ -222,7 +213,6 @@ export class GoalController {
     @Req() req,
     @Body('accountId') accountId: number,
     @Param('goalId') goalId: number,
-    @Res() res: Response,
   ) {
     const userId = req.user;
     const data = { goalId, userId };
@@ -270,14 +260,14 @@ export class GoalController {
       await this.usergoalService.joinGoal(createUserGoalData);
       findGoal.curCount += 1;
       await this.goalService.updateGoalCurCount(goalId, findGoal.curCount);
-      res.json({ message: '참가가 완료되었습니다.' });
+      return { message: '참가가 완료되었습니다.' };
     }
   }
 
   // 목표 검색
   @Get('search')
   @UseGuards(AuthGuard('jwt'))
-  async searchGoal(@Query() paginationQuery, @Res() res: Response) {
+  async searchGoal(@Query() paginationQuery) {
     // eslint-disable-next-line prefer-const
     let { keyword, sortby, orderby, status, min, max, cursor, id } =
       paginationQuery;
@@ -406,13 +396,13 @@ export class GoalController {
     let isLastPage: boolean;
     if (count < take) isLastPage = true;
     else isLastPage = false;
-    res.json({ result, cursor: newCursor, goalId: id, isLastPage, count });
+    return { result, cursor: newCursor, goalId: id, isLastPage, count };
   }
 
   // 목표 전체 조회
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async getAllGoal(@Query('cursor') cursor: number, @Res() res: Response) {
+  async getAllGoal(@Query('cursor') cursor: number) {
     const take = 5;
     const [sortResult, count] = await this.goalService.getAllGoals(
       take,
@@ -449,13 +439,13 @@ export class GoalController {
     let isLastPage: boolean;
     if (count < take) isLastPage = true;
     else isLastPage = false;
-    res.json({ result, cursor: newCursor, isLastPage });
+    return { result, cursor: newCursor, isLastPage };
   }
 
   // 임박 목표 불러오기
   @Get('imminent')
   @UseGuards(AuthGuard('jwt'))
-  async getImminentGoal(@Req() req, @Res() res: Response) {
+  async getImminentGoal() {
     const take = 10;
     const status = 'recruit';
     const sortResult = await this.goalService.getImminentGoal(take, status);
@@ -482,17 +472,13 @@ export class GoalController {
         updatedAt: sortResult[i].updatedAt,
       });
     }
-    res.json({ result });
+    return result;
   }
 
   // 목표 상세 조회
   @Get(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async getGoalDetail(
-    @Req() req,
-    @Param('goalId') goalId: number,
-    @Res() res: Response,
-  ) {
+  async getGoalDetail(@Req() req, @Param('goalId') goalId: number) {
     const myUserId = req.user;
     const findGoal = await this.goalService.getGoalDetail(goalId);
     if (!findGoal) {
@@ -561,7 +547,7 @@ export class GoalController {
       members: member,
     });
 
-    res.json({ result: result });
+    return result;
   }
 
   // 목표 수정
@@ -571,7 +557,6 @@ export class GoalController {
     @Req() req,
     @Param('goalId') goalId: number,
     @Body() inputUpdateGoalDTO: InputUpdateGoalDTO,
-    @Res() res: Response,
   ) {
     const userId: number = req.user;
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
@@ -605,18 +590,14 @@ export class GoalController {
       headCount: inputUpdateGoalDTO.headCount,
     };
     await this.goalService.updateGoal(goalId, data);
-    res.json({ message: '목표 수정 완료' });
+    return { message: '목표 수정 완료' };
   }
 
   // 목표 탈퇴
   // 목표 시작 전에만 가능함
   @Delete('exit/:goalId')
   @UseGuards(AuthGuard('jwt'))
-  async exitGoal(
-    @Req() req,
-    @Param('goalId') goalId: number,
-    @Res() res: Response,
-  ) {
+  async exitGoal(@Req() req, @Param('goalId') goalId: number) {
     const userId: number = req.user;
     // getGoalDetail 가져오기
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
@@ -639,18 +620,14 @@ export class GoalController {
       // 참가자 숫자 변동
       findGoal.curCount -= 1;
       await this.goalService.updateGoalCurCount(goalId, findGoal.curCount);
-      res.json({ message: '목표 탈퇴 완료' });
+      return { message: '목표 탈퇴 완료' };
     }
   }
 
   // 목표 삭제
   @Delete(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async deleteGoal(
-    @Req() req,
-    @Param('goalId') goalId: number,
-    @Res() res: Response,
-  ) {
+  async deleteGoal(@Req() req, @Param('goalId') goalId: number) {
     const userId: number = req.user;
     const find = await this.goalService.getGoalDetail(goalId);
     if (userId != find.userId.userId) {
@@ -663,7 +640,7 @@ export class GoalController {
       const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
       await this.usergoalService.exitGoal(accessUserGoalData);
       await this.goalService.deleteGoal(goalId);
-      res.json({ message: '목표 삭제 완료' });
+      return { message: '목표 삭제 완료' };
     }
   }
 }

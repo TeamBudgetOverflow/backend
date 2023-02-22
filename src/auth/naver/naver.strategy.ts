@@ -17,7 +17,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: any,
   ): Promise<any> {
     const email = profile._json.email;
     const name = profile.displayName; //
@@ -31,6 +30,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
       image,
       loginCategory,
     };
-    done(null, payload); // 실행 결과와 payload 리턴
+    return payload;
   }
 }
