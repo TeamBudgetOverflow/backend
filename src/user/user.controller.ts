@@ -1,10 +1,6 @@
-import * as dotenv from 'dotenv';
-import { Response } from 'express';
 import {
   Controller,
   Get,
-  Req,
-  Res,
   Query,
   HttpException,
   HttpStatus,
@@ -34,8 +30,8 @@ import { ExitUserDTO } from './dto/exitUser.dto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AccountsService } from 'src/accounts/accounts.service';
-
-dotenv.config();
+import { User } from 'src/common/decorators/user.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('api/users')
 export class UserController {
@@ -52,142 +48,137 @@ export class UserController {
     private readonly accountsService: AccountsService,
     private readonly badgeService: BadgeService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('auth/google')
   @UseGuards(GoogleOauthGuard)
   async googleAuthRedirect(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    console.log(req.user);
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
-      const createUser = await this.userService.oauthCreateUser(req.user);
+    if (existUser === null) {
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: 'Google OAuth Completed - Incoming User',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
-    });
+    };
   }
 
   @Post('auth/naver')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    console.log(req.user);
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
+    if (existUser === null) {
       // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(req.user);
-      // console.log(createUser)
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
-    });
+    };
   }
 
   @UseGuards(KakaoAuthGuard)
   @Post('auth/kakao')
   async kakaoLoginCallback(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
+    if (existUser === null) {
       // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(req.user);
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
       );
-      return res.json({
+      return {
         accessToken: 'Bearer ' + accessToken,
         refreshToken,
         message: '로그인 성공',
         newComer: true,
         name: createUser.name,
-      });
+      };
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
-    res.json({
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
+    return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
-    });
+    };
   }
 
   @Delete()
   @UseGuards(AuthGuard('jwt'))
-  async logout(@Req() req, @Res() res: Response) {
-    const userId: number = req.user;
+  async logout(@User() user) {
+    const userId: number = user;
     await this.authService.deleteRefreshToken(userId);
-    res.json({ message: '로그아웃 성공' });
+    return { message: '로그아웃 성공' };
   }
 
   @Post(':userId/pinCode')
@@ -195,10 +186,9 @@ export class UserController {
   async registerPinCode(
     @Param('userId') userId: number,
     @Body('pinCode') pinCode: string,
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
   ) {
-    if (userId !== req.user) {
+    if (userId !== user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(pinCode.length === 6)) {
@@ -211,11 +201,13 @@ export class UserController {
     if (findUser.pinCode) {
       throw new HttpException('이미 존재하는 핀코드입니다.', 400);
     }
-    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+    const cryptoPinCode: string = createHash(
+      this.configService.get<string>('ALGORITHM'),
+    )
       .update(pinCode)
       .digest('base64');
     await this.userService.registerPinCode(userId, cryptoPinCode);
-    res.json({ message: '핀 코드 등록 완료' });
+    return { message: '핀 코드 등록 완료' };
   }
 
   @Put(':userId/pinCode')
@@ -223,26 +215,29 @@ export class UserController {
   async updatePinCode(
     @Param('userId') userId: number,
     @Body() updatePinCodeDTO: UpdatePinCodeDTO,
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
   ) {
-    if (userId !== req.user) {
+    if (userId !== user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(updatePinCodeDTO.updatePinCode.length === 6)) {
       throw new HttpException('잘못된 형식입니다.', 400);
     }
-    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+    const cryptoPinCode: string = createHash(
+      this.configService.get<string>('ALGORITHM'),
+    )
       .update(updatePinCodeDTO.pinCode)
       .digest('base64');
     const findUser = await this.userService.findUserByUserId(userId);
 
     if (findUser.pinCode === cryptoPinCode) {
-      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+      const cryptoPinCode: string = createHash(
+        this.configService.get<string>('ALGORITHM'),
+      )
         .update(updatePinCodeDTO.updatePinCode)
         .digest('base64');
       await this.userService.registerPinCode(userId, cryptoPinCode);
-      res.json({ message: '핀 코드 수정 완료' });
+      return { message: '핀 코드 수정 완료' };
     } else {
       throw new HttpException('입력한 pinCode가 올바르지 않습니다', 400);
     }
@@ -251,32 +246,26 @@ export class UserController {
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('pinCode')
-  async accessTokenReissue(
-    @Body('pinCode') pinCode: string,
-    @Req() req,
-    @Res() res: Response,
-  ) {
-    const accessToken = await this.authService.createAccessToken(req.user);
-    return res.json({
+  async accessTokenReissue(@User() user) {
+    const accessToken = await this.authService.createAccessToken(user);
+    return {
       accessToken: 'Bearer ' + accessToken,
       message: 'accessToken 재발급',
-    });
+    };
   }
 
   @Get('badges')
   @UseGuards(AuthGuard('jwt'))
-  async getAllBadges(@Req() req, @Res() res: Response) {
+  async getAllBadges() {
     const getALLBadges = await this.badgeService.getALLBadges();
-    res.json({ result: getALLBadges });
+    return { result: getALLBadges };
   }
 
+  // 수정 필요
+  // reason : param으로 userId를 받아오는데 요청하는 사람 본인이라는 validation이 없음
   @Get('badges/:userId')
   @UseGuards(AuthGuard('jwt'))
-  async getMyBadges(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
+  async getMyBadges(@Param('userId') userId: number) {
     const findUserBadges = await this.badgeService.getUserBadges(userId);
     const result = [];
     for (let i = 0; i < findUserBadges.length; i++) {
@@ -284,20 +273,16 @@ export class UserController {
         badgeId: findUserBadges[i].Badges.badgeId,
       });
     }
-    res.json({ result: result });
+    return { result: result };
   }
 
   @Get(':userId')
-  async getUserProfile(
-    @Req() req,
-    @Res() res: Response,
-    @Param('userId') targetUserId: number,
-  ) {
+  async getUserProfile(@Param('userId') targetUserId: number) {
     const targetUserProfile = await this.userService.getUserProfile(
       targetUserId,
     );
     if (targetUserProfile) {
-      return res.json(targetUserProfile);
+      return targetUserProfile;
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
@@ -306,17 +291,16 @@ export class UserController {
   @Patch(':userId')
   @UseGuards(AuthGuard('jwt'))
   async modifyUserProfile(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (targetUserId === userId) {
       await this.userService.modifyUser(userId, modifyInfo);
-      res.json({
+      return {
         message: 'Updated User Profile Succesfully',
-      });
+      };
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
@@ -324,12 +308,8 @@ export class UserController {
 
   @Get(':userId/goals')
   @UseGuards(AuthGuard('jwt'))
-  async getUserGoal(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
-    const myUserId = req.user;
+  async getUserGoal(@User() user, @Param('userId') userId: number) {
+    const myUserId = user;
     const findGoals = await this.userGoalService.getGoalByUserId(userId);
     const result = [];
     for (let i = 0; i < findGoals.length; i++) {
@@ -360,18 +340,17 @@ export class UserController {
         });
       }
     }
-    res.json({ result: result });
+    // 확인 필요
+    // 다음과 같이 수정했을 경우 result에 대한 값이 제대로 나오는지 확인
+    // return { result };
+    return { result: result };
   }
 
   // 회원 탈퇴
   @Delete('exit/:userId')
   @UseGuards(AuthGuard('jwt'))
-  async exitUsesr(
-    @Req() req,
-    @Param('userId') userId: number,
-    @Res() res: Response,
-  ) {
-    if (req.user !== Number(userId)) {
+  async exitUsesr(@User() user, @Param('userId') userId: number) {
+    if (user !== Number(userId)) {
       throw new HttpException(
         '권한이 없는 호출입니다.',
         HttpStatus.BAD_REQUEST,
@@ -414,7 +393,7 @@ export class UserController {
         } else {
           // 목표 개설자 인 경우
           // 참여 멤버 탈퇴 -> 목표 삭제
-          if (getGoal[i].userId.userId == req.user) {
+          if (getGoal[i].userId.userId == user) {
             const goalId = getGoal[i].goalId.goalId;
             const memberExit = await this.userGoalService.getGoalByGoalId(
               goalId,
@@ -449,7 +428,6 @@ export class UserController {
       } else {
         // 3.2 현재 진행중이거나 완료된 목표에 대해서
         // balanceId = 0 처리 accountId 처리
-        console.log(getGoal[i]);
         const balanceId: number = getGoal[i].balanceId.balanceId;
         const accountId: number = getGoal[i].accountId.accountId;
         const current: number = 0;
@@ -459,6 +437,6 @@ export class UserController {
     }
     // 뱃지 정보 삭제
     await this.badgeService.deleteBadgeInfo(userId);
-    res.json({ message: '회원 탈퇴가 완료되었습니다.' });
+    return { message: '회원 탈퇴가 완료되었습니다.' };
   }
 }

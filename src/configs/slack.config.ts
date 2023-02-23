@@ -1,8 +1,5 @@
-import { registerAs } from '@nestjs/config';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
+import { ConfigService, registerAs } from '@nestjs/config';
 
 export default registerAs('slack', () => ({
-  url: process.env.SLACK_WEBHOOK_URL,
+  url: new ConfigService().get<string>('SLACK_WEBHOOK_URL'),
 }));

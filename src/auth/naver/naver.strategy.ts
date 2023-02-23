@@ -2,14 +2,15 @@ import { Strategy } from 'passport-naver';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy) {
-  constructor(private authService: AuthService) {
+  constructor(private configService: ConfigService) {
     super({
-      clientID: process.env.NAVER_CLIENT_ID,
-      clientSecret: process.env.NAVER_CLIENT_SECRET,
-      callbackURL: process.env.NAVER_CALLBACK_URL,
+      clientID: configService.get<string>('NAVER_CLIENT_ID'),
+      clientSecret: configService.get<string>('NAVER_CLIENT_SECRET'),
+      callbackURL: configService.get<string>('NAVER_CALLBACK_URL'),
     });
   }
 
@@ -17,7 +18,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: any,
   ): Promise<any> {
     const email = profile._json.email;
     const name = profile.displayName; //
@@ -31,6 +31,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
       image,
       loginCategory,
     };
-    done(null, payload); // 실행 결과와 payload 리턴
+    return payload;
   }
 }

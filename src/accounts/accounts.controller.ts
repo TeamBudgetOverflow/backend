@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Post,
-  Req,
-  Res,
   Headers,
   UseGuards,
   Get,
@@ -22,6 +20,7 @@ import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AddAccountDto } from './dto/addAccount.dto';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('/api/accounts')
 export class AccountsController {
@@ -42,17 +41,16 @@ export class AccountsController {
   @Get('/:accountId/users/:userId/balance')
   @UseGuards(AuthGuard('jwt'))
   async getAccountBalance(
-    @Req() req,
-    @Res() res,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') accountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const result = await this.accountService.getAccountBalance(
         Number(accountId),
       );
-      res.json(result);
+      return result;
     } else {
       throw new HttpException('User Does not exist', HttpStatus.BAD_REQUEST);
     }
@@ -61,12 +59,11 @@ export class AccountsController {
   @Post('/:userId')
   @UseGuards(AuthGuard('jwt'))
   async addAccount(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Body() accountInfo: AddAccountDto,
   ) {
-    const userId = req.user;
+    const userId = user;
     const bank = accountInfo.bankId;
     if (Number(targetUserId) === userId) {
       const targetUserAccounts = await this.accountService.getAccounts(userId);
@@ -86,7 +83,7 @@ export class AccountsController {
           if (bankId !== 2) {
             const data = { userId, bank, ...accountInfo };
             const result = await this.accountService.addAccount(data);
-            res.json({ accountId: result.accountId });
+            return { accountId: result.accountId };
           } else {
             throw new HttpException(
               'Please Provide a Real Account (Not Manual)',
@@ -97,7 +94,7 @@ export class AccountsController {
       } else {
         const data = { userId, bank };
         const result = await this.accountService.addAccount(data);
-        res.json({ accountId: result.accountId });
+        return { accountId: result.accountId };
       }
     } else {
       throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
@@ -106,12 +103,8 @@ export class AccountsController {
 
   @Post('/:userId/manual')
   @UseGuards(AuthGuard('jwt'))
-  async addManual(
-    @Req() req,
-    @Res() res,
-    @Param('userId') targetUserId: number,
-  ) {
-    const userId = req.user;
+  async addManual(@User() user, @Param('userId') targetUserId: number) {
+    const userId = user;
     // const userId = 1;
     // const user = 1; - tested with the fixed user Id
     // const bank = 3; // would be different - talk with FE
@@ -140,11 +133,11 @@ export class AccountsController {
             }
           }
         }
-        res.json({ accountId: trimmedAccounts[0] });
+        return { accountId: trimmedAccounts[0] };
       } else {
         const data = { userId, bank };
         const result = await this.accountService.addAccount(data);
-        res.json({ accountId: result.accountId });
+        return { accountId: result.accountId };
       }
     } else {
       throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
@@ -154,15 +147,14 @@ export class AccountsController {
   @Get('/:accountId/users/:userId')
   @UseGuards(AuthGuard('jwt'))
   async getAccountDetail(
-    @Req() req,
-    @Res() res,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') accountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const targetAccount = this.accountService.getIndivAccount(accountId);
-      res.json(targetAccount);
+      return targetAccount;
     } else {
       throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
     }
@@ -171,12 +163,11 @@ export class AccountsController {
   @Delete('/:accountId/users/:userId')
   @UseGuards(AuthGuard('jwt'))
   async deleteAccount(
-    @Req() req,
-    @Res() res: Response,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') targetAccountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const connectedAccounts = await this.accountService.getConnectedAccounts(
         userId,
@@ -195,9 +186,9 @@ export class AccountsController {
           );
         }
         await this.accountService.deleteAccount(targetAccountId);
-        res.json({
+        return {
           message: `AccountId ${targetAccountId} is successfully deleted`,
-        });
+        };
       }
     } else {
       throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
@@ -206,12 +197,7 @@ export class AccountsController {
 
   @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
-  async getAccounts(
-    @Req() req,
-    @Res() res: Response,
-    @Param('userId') targetUserId: number,
-  ) {
-    const user = req.user;
+  async getAccounts(@User() user, @Param('userId') targetUserId: number) {
     if (Number(targetUserId) === user) {
       const targetUserAccounts = await this.accountService.getAllAccounts(user);
       const connectedAccounts = await this.accountService.getConnectedAccounts(
@@ -232,7 +218,7 @@ export class AccountsController {
           connected,
         });
       }
-      res.json({ data: trimmedAccounts });
+      return { data: trimmedAccounts };
     } else {
       throw new HttpException('Not Authorized', HttpStatus.BAD_REQUEST);
     }
@@ -241,28 +227,30 @@ export class AccountsController {
   @Put('balance/:balanceId')
   @UseGuards(AuthGuard('jwt'))
   async updateBalance(
-    @Req() req,
+    @User() user,
     @Param('balanceId') balanceId: number,
     @Body('value') current: number,
-    @Res() res: Response,
   ) {
-    const userId = req.user;
+    const userId = user;
     const data: AccessUserGoalDTO = {
       userId,
       balanceId,
     };
     const findBalance = await this.userGoalService.findUser(data);
-    if(!findBalance) {
+    if (!findBalance) {
       throw new HttpException('잔액 결과가 없습니다.', HttpStatus.BAD_REQUEST);
     }
     if (findBalance.accountId.userId != userId) {
       throw new HttpException('접근 권한이 없습니다', HttpStatus.BAD_REQUEST);
     } else {
-      if(findBalance.status === "in progress") {
+      if (findBalance.status === 'in progress') {
         await this.balanceService.updateBalance(balanceId, current);
-        res.json({ message: 'balance 수정 완료' });
-      }else {
-        throw new HttpException('수정 가능한 상태가 아닙니다.', HttpStatus.BAD_REQUEST);
+        return { message: 'balance 수정 완료' };
+      } else {
+        throw new HttpException(
+          '수정 가능한 상태가 아닙니다.',
+          HttpStatus.BAD_REQUEST,
+        );
       }
     }
   }

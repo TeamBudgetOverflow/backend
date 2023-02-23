@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { SchedulerRegistry } from './schedule.registry';
-import { CronController } from './cron.controller';
 import { CronService } from './cron.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -32,7 +31,7 @@ import { ReportsModule } from 'src/reports/report.module';
     forwardRef(() => ReportsModule),
   ],
   providers: [CronService, SchedulerRegistry],
-  controllers: [CronController],
+  controllers: [],
   exports: [CronService, SchedulerRegistry],
 })
 export class CronModule {}
