@@ -1,6 +1,5 @@
-import { Controller, Get, Param, Req, Res } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { BanksService } from './banks.service';
-import { Response } from 'express';
 
 @Controller('api/banks')
 export class BanksController {

@@ -1,11 +1,8 @@
 import {
   Controller,
   Post,
-  Get,
-  Req,
   UseGuards,
   Body,
-  Res,
   Param,
   HttpException,
   HttpStatus,
@@ -13,7 +10,6 @@ import {
   forwardRef,
   Put,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { GoalService } from 'src/goal/goal.service';
 import { InputReportGoalDTO } from './dto/inputReportGoal.dto';
@@ -22,10 +18,9 @@ import { ReportsService } from './reports.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { BalanceService } from 'src/balances/balances.service';
-import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { SlackService } from 'src/slack/slack.service';
-import { report } from 'process';
 import { UserService } from 'src/user/user.service';
+import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('api/report')
 export class ReportsController {
@@ -47,11 +42,11 @@ export class ReportsController {
   @Post(':goalId')
   @UseGuards(AuthGuard('jwt'))
   async reportGoal(
-    @Req() req,
+    @User() user,
     @Body() input: InputReportGoalDTO,
     @Param('goalId') goalId: number,
   ) {
-    const userId: number = req.user;
+    const userId: number = user;
     // 검증: reason 글자 수
     if (input.reason.length < 4 || input.reason.length > 50) {
       throw new HttpException(
@@ -118,8 +113,8 @@ export class ReportsController {
 
   @Put(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async reportDeleteGoal(@Req() req, @Param('goalId') goalId) {
-    const userId = req.user;
+  async reportDeleteGoal(@User() user, @Param('goalId') goalId) {
+    const userId = user;
     const userData = await this.userService.findUserByUserId(userId);
     // 관리자 계정 검증 로직에 대한 합의가 이루어지지 않음
     if (userData.loginCategory !== 'Dev') {

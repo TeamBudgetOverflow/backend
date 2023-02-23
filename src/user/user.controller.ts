@@ -3,8 +3,6 @@ import { Response } from 'express';
 import {
   Controller,
   Get,
-  Req,
-  Res,
   Query,
   HttpException,
   HttpStatus,
@@ -34,6 +32,7 @@ import { ExitUserDTO } from './dto/exitUser.dto';
 import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AccountsService } from 'src/accounts/accounts.service';
+import { User } from 'src/common/decorators/user.decorator';
 
 dotenv.config();
 
@@ -57,15 +56,15 @@ export class UserController {
   @Post('auth/google')
   @UseGuards(GoogleOauthGuard)
   async googleAuthRedirect(
-    @Req() req,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
-      const createUser = await this.userService.oauthCreateUser(req.user);
+    if (existUser === null) {
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
@@ -80,16 +79,16 @@ export class UserController {
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
     return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: 'Google OAuth Completed - Returning User',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
     };
   }
@@ -97,16 +96,16 @@ export class UserController {
   @Post('auth/naver')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
-    @Req() req,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
+    if (existUser === null) {
       // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(req.user);
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
@@ -121,16 +120,16 @@ export class UserController {
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
     return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
     };
   }
@@ -138,16 +137,16 @@ export class UserController {
   @UseGuards(KakaoAuthGuard)
   @Post('auth/kakao')
   async kakaoLoginCallback(
-    @Req() req,
+    @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const user = await this.userService.findUserByEmailAndCategory(
-      req.user.email,
-      req.user.loginCategory,
+    const existUser = await this.userService.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
     );
-    if (user === null) {
+    if (existUser === null) {
       // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(req.user);
+      const createUser = await this.userService.oauthCreateUser(user);
       const accessToken = await this.authService.createAccessToken(createUser);
       const refreshToken = await this.authService.createRefreshToken(
         createUser,
@@ -162,24 +161,24 @@ export class UserController {
     }
     // 유저가 있을때
     let isExistPinCode: Boolean;
-    if (user.pinCode) isExistPinCode = true;
+    if (existUser.pinCode) isExistPinCode = true;
     else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(user);
-    const refreshToken = await this.authService.createRefreshToken(user);
+    const accessToken = await this.authService.createAccessToken(existUser);
+    const refreshToken = await this.authService.createRefreshToken(existUser);
     return {
       accessToken: 'Bearer ' + accessToken,
       refreshToken,
       message: '로그인 성공',
       newComer: false,
-      name: user.name,
+      name: existUser.name,
       isExistPinCode,
     };
   }
 
   @Delete()
   @UseGuards(AuthGuard('jwt'))
-  async logout(@Req() req) {
-    const userId: number = req.user;
+  async logout(@User() user) {
+    const userId: number = user;
     await this.authService.deleteRefreshToken(userId);
     return { message: '로그아웃 성공' };
   }
@@ -189,9 +188,9 @@ export class UserController {
   async registerPinCode(
     @Param('userId') userId: number,
     @Body('pinCode') pinCode: string,
-    @Req() req,
+    @User() user,
   ) {
-    if (userId !== req.user) {
+    if (userId !== user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(pinCode.length === 6)) {
@@ -216,9 +215,9 @@ export class UserController {
   async updatePinCode(
     @Param('userId') userId: number,
     @Body() updatePinCodeDTO: UpdatePinCodeDTO,
-    @Req() req,
+    @User() user,
   ) {
-    if (userId !== req.user) {
+    if (userId !== user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
     if (!(updatePinCodeDTO.updatePinCode.length === 6)) {
@@ -243,8 +242,8 @@ export class UserController {
   // 리프레쉬 토큰을 이용한 엑세스 토큰 재발급하기
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('pinCode')
-  async accessTokenReissue(@Body('pinCode') pinCode: string, @Req() req) {
-    const accessToken = await this.authService.createAccessToken(req.user);
+  async accessTokenReissue(@User() user) {
+    const accessToken = await this.authService.createAccessToken(user);
     return {
       accessToken: 'Bearer ' + accessToken,
       message: 'accessToken 재발급',
@@ -258,6 +257,8 @@ export class UserController {
     return { result: getALLBadges };
   }
 
+  // 수정 필요
+  // reason : param으로 userId를 받아오는데 요청하는 사람 본인이라는 validation이 없음
   @Get('badges/:userId')
   @UseGuards(AuthGuard('jwt'))
   async getMyBadges(@Param('userId') userId: number) {
@@ -286,11 +287,11 @@ export class UserController {
   @Patch(':userId')
   @UseGuards(AuthGuard('jwt'))
   async modifyUserProfile(
-    @Req() req,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Body() modifyInfo: ModifyUserInfoDTO,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (targetUserId === userId) {
       await this.userService.modifyUser(userId, modifyInfo);
       return {
@@ -303,8 +304,8 @@ export class UserController {
 
   @Get(':userId/goals')
   @UseGuards(AuthGuard('jwt'))
-  async getUserGoal(@Req() req, @Param('userId') userId: number) {
-    const myUserId = req.user;
+  async getUserGoal(@User() user, @Param('userId') userId: number) {
+    const myUserId = user;
     const findGoals = await this.userGoalService.getGoalByUserId(userId);
     const result = [];
     for (let i = 0; i < findGoals.length; i++) {
@@ -335,14 +336,17 @@ export class UserController {
         });
       }
     }
+    // 확인 필요
+    // 다음과 같이 수정했을 경우 result에 대한 값이 제대로 나오는지 확인
+    // return { result };
     return { result: result };
   }
 
   // 회원 탈퇴
   @Delete('exit/:userId')
   @UseGuards(AuthGuard('jwt'))
-  async exitUsesr(@Req() req, @Param('userId') userId: number) {
-    if (req.user !== Number(userId)) {
+  async exitUsesr(@User() user, @Param('userId') userId: number) {
+    if (user !== Number(userId)) {
       throw new HttpException(
         '권한이 없는 호출입니다.',
         HttpStatus.BAD_REQUEST,
@@ -385,7 +389,7 @@ export class UserController {
         } else {
           // 목표 개설자 인 경우
           // 참여 멤버 탈퇴 -> 목표 삭제
-          if (getGoal[i].userId.userId == req.user) {
+          if (getGoal[i].userId.userId == user) {
             const goalId = getGoal[i].goalId.goalId;
             const memberExit = await this.userGoalService.getGoalByGoalId(
               goalId,

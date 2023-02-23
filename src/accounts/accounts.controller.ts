@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Post,
-  Req,
-  Res,
   Headers,
   UseGuards,
   Get,
@@ -22,6 +20,7 @@ import { BalanceService } from 'src/balances/balances.service';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { AddAccountDto } from './dto/addAccount.dto';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
+import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('/api/accounts')
 export class AccountsController {
@@ -42,11 +41,11 @@ export class AccountsController {
   @Get('/:accountId/users/:userId/balance')
   @UseGuards(AuthGuard('jwt'))
   async getAccountBalance(
-    @Req() req,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') accountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const result = await this.accountService.getAccountBalance(
         Number(accountId),
@@ -60,11 +59,11 @@ export class AccountsController {
   @Post('/:userId')
   @UseGuards(AuthGuard('jwt'))
   async addAccount(
-    @Req() req,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Body() accountInfo: AddAccountDto,
   ) {
-    const userId = req.user;
+    const userId = user;
     const bank = accountInfo.bankId;
     if (Number(targetUserId) === userId) {
       const targetUserAccounts = await this.accountService.getAccounts(userId);
@@ -104,8 +103,8 @@ export class AccountsController {
 
   @Post('/:userId/manual')
   @UseGuards(AuthGuard('jwt'))
-  async addManual(@Req() req, @Param('userId') targetUserId: number) {
-    const userId = req.user;
+  async addManual(@User() user, @Param('userId') targetUserId: number) {
+    const userId = user;
     // const userId = 1;
     // const user = 1; - tested with the fixed user Id
     // const bank = 3; // would be different - talk with FE
@@ -148,11 +147,11 @@ export class AccountsController {
   @Get('/:accountId/users/:userId')
   @UseGuards(AuthGuard('jwt'))
   async getAccountDetail(
-    @Req() req,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') accountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const targetAccount = this.accountService.getIndivAccount(accountId);
       return targetAccount;
@@ -164,11 +163,11 @@ export class AccountsController {
   @Delete('/:accountId/users/:userId')
   @UseGuards(AuthGuard('jwt'))
   async deleteAccount(
-    @Req() req,
+    @User() user,
     @Param('userId') targetUserId: number,
     @Param('accountId') targetAccountId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     if (Number(targetUserId) === userId) {
       const connectedAccounts = await this.accountService.getConnectedAccounts(
         userId,
@@ -198,8 +197,7 @@ export class AccountsController {
 
   @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
-  async getAccounts(@Req() req, @Param('userId') targetUserId: number) {
-    const user = req.user;
+  async getAccounts(@User() user, @Param('userId') targetUserId: number) {
     if (Number(targetUserId) === user) {
       const targetUserAccounts = await this.accountService.getAllAccounts(user);
       const connectedAccounts = await this.accountService.getConnectedAccounts(
@@ -229,11 +227,11 @@ export class AccountsController {
   @Put('balance/:balanceId')
   @UseGuards(AuthGuard('jwt'))
   async updateBalance(
-    @Req() req,
+    @User() user,
     @Param('balanceId') balanceId: number,
     @Body('value') current: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     const data: AccessUserGoalDTO = {
       userId,
       balanceId,

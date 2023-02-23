@@ -7,8 +7,6 @@ import { BadgeService } from 'src/badges/badge.service';
 import {
   Controller,
   Get,
-  Req,
-  Res,
   HttpException,
   HttpStatus,
   UseGuards,
@@ -34,6 +32,7 @@ import { AccessUserGoalDTO } from '../usergoal/dto/accessUserGoals.dto';
 import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { UpdateGoalDTO } from './dto/updateGoal.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
+import { User } from 'src/common/decorators/user.decorator';
 
 dotenv.config();
 
@@ -67,8 +66,8 @@ export class GoalController {
   // 목표 생성
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async createGoal(@Req() req, @Body() createGoalDTO: InputCreateGoalDTO) {
-    const userId: number = req.user;
+  async createGoal(@User() user, @Body() createGoalDTO: InputCreateGoalDTO) {
+    const userId: number = user;
     const curCount = 1;
     if (createGoalDTO.title.length < 4 || createGoalDTO.title.length > 25) {
       throw new HttpException('잘못된 형식입니다.', HttpStatus.BAD_REQUEST);
@@ -210,11 +209,11 @@ export class GoalController {
   @Post('join/:goalId')
   @UseGuards(AuthGuard('jwt'))
   async joinGoal(
-    @Req() req,
+    @User() user,
     @Body('accountId') accountId: number,
     @Param('goalId') goalId: number,
   ) {
-    const userId = req.user;
+    const userId = user;
     const data = { goalId, userId };
     const checkRegister: UserGoals = await this.usergoalService.findUser(data);
     if (checkRegister) {
@@ -478,8 +477,8 @@ export class GoalController {
   // 목표 상세 조회
   @Get(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async getGoalDetail(@Req() req, @Param('goalId') goalId: number) {
-    const myUserId = req.user;
+  async getGoalDetail(@User() user, @Param('goalId') goalId: number) {
+    const myUserId = user;
     const findGoal = await this.goalService.getGoalDetail(goalId);
     if (!findGoal) {
       throw new HttpException('존재하지 않는 목표입니다', HttpStatus.NOT_FOUND);
@@ -554,11 +553,11 @@ export class GoalController {
   @Put(':goalId')
   @UseGuards(AuthGuard('jwt'))
   async updateGoal(
-    @Req() req,
+    @User() user,
     @Param('goalId') goalId: number,
     @Body() inputUpdateGoalDTO: InputUpdateGoalDTO,
   ) {
-    const userId: number = req.user;
+    const userId: number = user;
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
     if (userId != findGoal.userId.userId) {
       throw new HttpException(
@@ -597,8 +596,8 @@ export class GoalController {
   // 목표 시작 전에만 가능함
   @Delete('exit/:goalId')
   @UseGuards(AuthGuard('jwt'))
-  async exitGoal(@Req() req, @Param('goalId') goalId: number) {
-    const userId: number = req.user;
+  async exitGoal(@User() user, @Param('goalId') goalId: number) {
+    const userId: number = user;
     // getGoalDetail 가져오기
     const findGoal = await this.goalService.getGoalByGoalId(goalId);
     if (userId === findGoal.userId.userId) {
@@ -627,8 +626,8 @@ export class GoalController {
   // 목표 삭제
   @Delete(':goalId')
   @UseGuards(AuthGuard('jwt'))
-  async deleteGoal(@Req() req, @Param('goalId') goalId: number) {
-    const userId: number = req.user;
+  async deleteGoal(@User() user, @Param('goalId') goalId: number) {
+    const userId: number = user;
     const find = await this.goalService.getGoalDetail(goalId);
     if (userId != find.userId.userId) {
       throw new HttpException('삭제 권한이 없습니다.', 400);
