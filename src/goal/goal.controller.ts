@@ -1,5 +1,3 @@
-import * as dotenv from 'dotenv';
-import { Response } from 'express';
 import { GoalService } from './goal.service';
 import { UserGoalService } from '../usergoal/userGoal.service';
 import { BalanceService } from 'src/balances/balances.service';
@@ -33,8 +31,6 @@ import { CreateUserGoalDTO } from '../usergoal/dto/createUserGoals.dto';
 import { UpdateGoalDTO } from './dto/updateGoal.dto';
 import { InitBalanceDTO } from 'src/balances/dto/initBalance.dto';
 import { User } from 'src/common/decorators/user.decorator';
-
-dotenv.config();
 
 @Controller('api/goals')
 export class GoalController {

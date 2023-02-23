@@ -1,19 +1,17 @@
-import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { winstonLogger } from './common/utils/winston.util';
 import { HttpExceptionFilter } from './common/exceptionFilters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
-
-dotenv.config();
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: winstonLogger,
   });
-
+  const configService = app.get(ConfigService);
   app.enableCors({ origin: true, credentials: true });
-  const port = process.env.PORT || 3000;
+  const port = configService.get<number>('PORT', 3000);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

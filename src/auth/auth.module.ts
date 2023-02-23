@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,7 +10,6 @@ import { JwtRefreshStrategy } from './jwt/jwt-refresh.strategy';
 import { UserModule } from '../user/user.module';
 import { Users } from 'src/models/users';
 
-dotenv.config();
 @Module({
   imports: [
     TypeOrmModule.forFeature([Users]),

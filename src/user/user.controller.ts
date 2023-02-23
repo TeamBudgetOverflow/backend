@@ -1,5 +1,3 @@
-import * as dotenv from 'dotenv';
-import { Response } from 'express';
 import {
   Controller,
   Get,
@@ -33,8 +31,7 @@ import { UpdatePinCodeDTO } from './dto/updatePinCode.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { User } from 'src/common/decorators/user.decorator';
-
-dotenv.config();
+import { ConfigService } from '@nestjs/config';
 
 @Controller('api/users')
 export class UserController {
@@ -51,6 +48,7 @@ export class UserController {
     private readonly accountsService: AccountsService,
     private readonly badgeService: BadgeService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('auth/google')
@@ -203,7 +201,9 @@ export class UserController {
     if (findUser.pinCode) {
       throw new HttpException('이미 존재하는 핀코드입니다.', 400);
     }
-    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+    const cryptoPinCode: string = createHash(
+      this.configService.get<string>('ALGORITHM'),
+    )
       .update(pinCode)
       .digest('base64');
     await this.userService.registerPinCode(userId, cryptoPinCode);
@@ -223,13 +223,17 @@ export class UserController {
     if (!(updatePinCodeDTO.updatePinCode.length === 6)) {
       throw new HttpException('잘못된 형식입니다.', 400);
     }
-    const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+    const cryptoPinCode: string = createHash(
+      this.configService.get<string>('ALGORITHM'),
+    )
       .update(updatePinCodeDTO.pinCode)
       .digest('base64');
     const findUser = await this.userService.findUserByUserId(userId);
 
     if (findUser.pinCode === cryptoPinCode) {
-      const cryptoPinCode: string = createHash(process.env.ALGORITHM)
+      const cryptoPinCode: string = createHash(
+        this.configService.get<string>('ALGORITHM'),
+      )
         .update(updatePinCodeDTO.updatePinCode)
         .digest('base64');
       await this.userService.registerPinCode(userId, cryptoPinCode);
