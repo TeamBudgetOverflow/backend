@@ -19,7 +19,7 @@
 
 2022.12.30 - 2023.2.9 
 <br/>
-BackEnd Refactoring : 2023.2.10 - 2023.2.17
+BackEnd Refactoring : 2023.2.10 - 현재 진행중 [김수완](https://github.com/Grimdal032)
 
 :white_check_mark: **BACKEND 구성원** 
 <br/><br/>
