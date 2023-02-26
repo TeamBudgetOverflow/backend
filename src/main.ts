@@ -5,6 +5,8 @@ import { HttpExceptionFilter } from './common/exceptionFilters/http-exception.fi
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+declare const module: any;
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: winstonLogger,
@@ -22,5 +24,9 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(port);
   console.log(`listening on port ${port}`);
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 bootstrap();
