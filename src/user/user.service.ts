@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Users } from '../models/users';
+import { Users } from '../entity/users';
 import { ExitUserDTO } from './dto/exitUser.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 
@@ -40,19 +40,25 @@ export class UserService {
   }
 
   async createRefreshToken(userId: number, refreshToken: string) {
-    await this.userRepository.update(userId,{refreshToken});
+    await this.userRepository.update(userId, { refreshToken });
   }
 
   async registerPinCode(userId: number, cryptoPinCode: string) {
-    await this.userRepository.update(userId,{pinCode : cryptoPinCode});
+    await this.userRepository.update(userId, { pinCode: cryptoPinCode });
   }
 
   async getUserProfile(userId: number) {
     const targetUserInfo = await this.userRepository
       .createQueryBuilder('u')
-      .where('u.userId = :userId', {userId})
-      .select(['u.email', 'u.name', 'u.nickname',
-      'u.image', 'u.loginCategory', 'u.description'])
+      .where('u.userId = :userId', { userId })
+      .select([
+        'u.email',
+        'u.name',
+        'u.nickname',
+        'u.image',
+        'u.loginCategory',
+        'u.description',
+      ])
       .getOne();
     return targetUserInfo;
   }

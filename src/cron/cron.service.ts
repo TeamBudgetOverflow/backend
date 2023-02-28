@@ -10,7 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
-import { Goals } from 'src/models/goals';
+import { Goals } from 'src/entity/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
 import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';

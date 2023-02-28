@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserGoals } from '../models/usergoals';
+import { UserGoals } from '../entity/usergoals';
 
 @Injectable()
 export class UserGoalService {

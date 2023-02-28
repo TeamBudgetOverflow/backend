@@ -10,9 +10,9 @@ import {
   map,
   Observable,
 } from 'rxjs';
-import { Accounts } from 'src/models/accounts';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
+import { Accounts } from 'src/entity/accounts';
+import { Balances } from 'src/entity/balances';
+import { UserGoals } from 'src/entity/usergoals';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()

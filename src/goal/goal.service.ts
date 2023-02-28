@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets, Between } from 'typeorm';
-import { Goals } from '../models/goals';
+import { Goals } from '../entity/goals';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
 
 @Injectable()

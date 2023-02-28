@@ -5,13 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from 'src/user/user.module';
 import { GoalModule } from 'src/goal/goal.module';
-import { Users } from 'src/models/users';
-import { Goals } from 'src/models/goals';
-import { UserGoals } from 'src/models/usergoals';
-import { Accounts } from 'src/models/accounts';
-import { Balances } from 'src/models/balances';
-import { Badges } from 'src/models/badges';
-import { UserBadges } from 'src/models/userbadges';
+import { Users } from 'src/entity/users';
+import { Goals } from 'src/entity/goals';
+import { UserGoals } from 'src/entity/usergoals';
+import { Accounts } from 'src/entity/accounts';
+import { Balances } from 'src/entity/balances';
+import { Badges } from 'src/entity/badges';
+import { UserBadges } from 'src/entity/userbadges';
 import { ReportsModule } from 'src/reports/report.module';
 
 @Module({

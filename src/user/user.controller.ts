@@ -13,6 +13,7 @@ import {
   Param,
   Body,
   Delete,
+  ValidationPipe,
 } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { AuthGuard } from '@nestjs/passport';
@@ -214,7 +215,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   async updatePinCode(
     @Param('userId') userId: number,
-    @Body() updatePinCodeDTO: UpdatePinCodeDTO,
+    @Body(new ValidationPipe()) updatePinCodeDTO: UpdatePinCodeDTO,
     @User() user,
   ) {
     if (userId !== user) {
@@ -293,7 +294,7 @@ export class UserController {
   async modifyUserProfile(
     @User() user,
     @Param('userId') targetUserId: number,
-    @Body() modifyInfo: ModifyUserInfoDTO,
+    @Body(new ValidationPipe()) modifyInfo: ModifyUserInfoDTO,
   ) {
     const userId = user;
     if (targetUserId === userId) {

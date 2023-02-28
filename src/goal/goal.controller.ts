@@ -16,10 +16,11 @@ import {
   Body,
   Put,
   Delete,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Connection } from 'typeorm';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
+import { Balances } from 'src/entity/balances';
+import { UserGoals } from 'src/entity/usergoals';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
@@ -62,7 +63,10 @@ export class GoalController {
   // 목표 생성
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async createGoal(@User() user, @Body() createGoalDTO: InputCreateGoalDTO) {
+  async createGoal(
+    @User() user,
+    @Body(new ValidationPipe()) createGoalDTO: InputCreateGoalDTO,
+  ) {
     const userId: number = user;
     const curCount = 1;
     if (createGoalDTO.title.length < 4 || createGoalDTO.title.length > 25) {
@@ -541,8 +545,7 @@ export class GoalController {
       updatedAt: findGoal.updatedAt,
       members: member,
     });
-
-    return result;
+    return { result };
   }
 
   // 목표 수정

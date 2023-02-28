@@ -2,7 +2,7 @@ import { Body, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { Balances } from 'src/models/balances';
+import { Balances } from 'src/entity/balances';
 import { InitBalanceDTO } from './dto/initBalance.dto';
 
 @Injectable()

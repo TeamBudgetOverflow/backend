@@ -1,52 +1,26 @@
+import { PickType } from '@nestjs/swagger/dist/type-helpers';
 import {
   ArrayMaxSize,
   IsNumber,
   IsBoolean,
-  IsDate,
   IsArray,
   IsNotEmpty,
   IsString,
-  MinLength,
-  MaxLength,
-  isString,
   IsOptional,
 } from 'class-validator';
+import { Goals } from 'src/entity/goals';
 
-export class InputCreateGoalDTO {
+export class InputCreateGoalDTO extends PickType(Goals, [
+  'amount',
+  'startDate',
+  'endDate',
+  'headCount',
+  'title',
+  'description',
+]) {
   @IsBoolean()
   @IsOptional()
   readonly isPrivate?: boolean;
-
-  @IsNumber()
-  @IsNotEmpty()
-  readonly amount: number;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly startDate: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly endDate: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  readonly headCount: number;
-
-  @IsString()
-  @MinLength(4)
-  @MaxLength(25, {
-    message: 'The maximum length of the title is 25',
-  })
-  @IsNotEmpty()
-  readonly title: string;
-
-  @IsString()
-  @MaxLength(255, {
-    message: 'The maximum length of the content is 255',
-  })
-  @IsNotEmpty()
-  readonly description: string;
 
   @IsArray()
   @ArrayMaxSize(10)
