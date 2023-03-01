@@ -1,6 +1,8 @@
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber } from 'class-validator';
+import { Reports } from 'src/entity/reports';
 
-export class ReportGoalDTO {
+export class ReportGoalDTO extends PickType(Reports, ['reason']) {
   @IsNumber()
   @IsNotEmpty()
   readonly Goal: number;
@@ -8,8 +10,4 @@ export class ReportGoalDTO {
   @IsNumber()
   @IsNotEmpty()
   readonly User: number;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly reason: string;
 }
