@@ -69,7 +69,7 @@
 | JWT | 서버의 부하를 줄일 수 있고 보안성이 뛰어나며 클라이언트 측에서 발급되는 토큰을 사용하여 인증 요청을 간단하게 처리할 수 있음. |
 | Cron | CRON 모듈식 표현으로 스케쥴링 구현이 쉽고 유지보수하기 좋은 코드 작성 |
 
-## 서비스 핵심기능
+## 🔎서비스 핵심기능
 <img src="https://user-images.githubusercontent.com/112388311/218279966-4a1f1b4b-1469-43de-b33e-81fb8f2e88b4.JPG" width="70%" height="70%">
 <img src="https://user-images.githubusercontent.com/112388311/218279972-4004a042-ca85-4666-b480-aa42ef1b2417.JPG" width="70%" height="70%">
 <img src="https://user-images.githubusercontent.com/112388311/218279978-8ec47534-a4f6-4e13-85b4-b19e80d1d467.JPG" width="70%" height="70%">
@@ -77,14 +77,38 @@
 
 ## 🔥 트러블 슈팅
 
+✔️ **다대다 관계 해소** </br>
+* **어떤 문제인가?**
+  * 유저, 목표, 계좌 간 테이블이 A:B, B:C, A:C 라는 다대다 관계를 형성 
+* **어떻게 해결했는가?**
+  * 유저, 목표, 계좌 테이블 사이에 UserGoals라는 중간테이블을 생성하여 중간 테이블에서 관리함.
 
+✔️ **Table Constraints Issue** </br>
+* **어떤 문제인가?**
+  * ERD를 구축하는 과정에서 다대다 관계를 표현하기 위해 Associate Entity를 생성하였고, 실제 모델을 구축할 때에도 ERD를 반영하여 Foreign Key 제약조건이 들어간 Associate Table을 구축
+  * 이러한 디자인 초이스로 인해 User 테이블이나 Account 테이블에서 데이터 삭제가 불가능한 문제점 발견
+* **원인 파악**
+  * Associate Table에서 Foreign Key로 참조하고 있는 개별 테이블의 Primary Key가 삭제될 수 없기 때문
+* **어떻게 해결했는가?**
+  * 유저 탈퇴, 계좌 삭제 등의 로직을 실제로 데이터를 삭제하지는 않되 (참조되는 key값은 그대로 보존) key값 이외의 다른 값들을 null 혹은 유효하지 않은 데이터로 나타내는 방식으로 구현
+
+✔️ **Dto Data Validation & Data Type Transform** </br>
+* **어떤 문제인가?**
+  * 작업 중 Body 값으로 Dto에 정의되지 않은 필드가 들어가더라도 정상적으로 API 로직이 실행되는 문제를 발견
+  * 또한, userId, accountId 등의 데이터를 파라미터로 받을 때, 아무리 데이터 타입을 number로 지정해주더라도 데이터가 string으로 들어오는 문제를 발견
+* **원인 파악**
+  * Dto 자체는 정의되지 않은 다른 필드 (Dto 외)가 Body값으로 전달되더라도 따로 걸러내는 기능을 하지 않는다는 점을 파악
+  * 파라미터값을 string으로 받는 것이 default 설정이라는 점도 파악
+* **어떻게 해결했는가?**
+  * Nest.js 프로젝트 디렉토리의 최상단에 위치한 main.ts에 ValidationPipe를 적용하여 이 두가지 문제를 해결할 수 있다는 것을 알아냄
+  * ValidationPipe들이 제공하는 옵션들 중 whitelist/forbidNonWhitelisted를 true로 적용한 이후, Dto에 명시되지 않은 데이터 타입이 Body에 넘겨졌을 시 API 호출 과정에서 Exception을 띄우고 해당 필드가 허용되지 않은 필드라고 명시해주는 것을 확인
+  * transform 옵션을 사용함으로써 controller와 service에서 id값을 param으로부터 number로 받을 수 있었습니다. 즉, 하나하나 Type Conversion을 해줄 필요가 없어진 것
 
 ## 📄 DB ERD
 <img src="https://user-images.githubusercontent.com/112388311/217857714-6a2cb315-63b0-46d4-a8e5-873fc6948d58.png">
 
 ## API 명세 / 와이어프레임
-
-📓: [API](https://www.notion.so/MVP-09346594381b498d94bbaf4f629193a9)
+📓: [API](https://www.notion.so/MVP-09346594381b498d94bbaf4f629193a9) </br>
 🎨: [Figma](https://www.figma.com/file/XZx7V517CCYsc55go50xMZ/%ED%8B%B0%EB%81%8C%EB%AA%A8%EC%95%84%ED%83%9C%EC%82%B0?node-id=0%3A1&t=L9PpVmOEUqOAIzOP-0)
 
 ## 📣 마케팅 전략
@@ -100,6 +124,8 @@
 ## 🧑🏻‍🔧 피드백 개선
 ### 🏷️ 신고하기 기능 및 가리기(Soft Delete)
 📭 **피드백**: 목표 이름이나 설명에 불건전한 단어가 있어 보기 불편함. 추가 조치할 수 있으면 좋겠다.
-🧰 **개선 결과**:
-![image](https://user-images.githubusercontent.com/112388311/222981388-6da4980e-8b4a-4f6d-9085-e582953b81b6.png)
 
+🧰 **개선 결과**: 목표 상세보기 - 더보기에서 신고가 가능하고 신고가 접수되면 Slack으로 알람이 가게끔 구현함.
+
+![image](https://user-images.githubusercontent.com/112388311/222981388-6da4980e-8b4a-4f6d-9085-e582953b81b6.png)
+![image](https://user-images.githubusercontent.com/112388311/222981590-857ae4a4-a12f-4366-a535-593331438240.png)
