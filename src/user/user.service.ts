@@ -115,6 +115,16 @@ export class UserService {
     await this.userRepository.update(userId, { pinCode: cryptoPinCode });
   }
 
+<<<<<<< HEAD
+=======
+  async checkUpdate(userId: number, pinCode: string) {
+    const findUser = await this.findUserByUserId(userId);
+    if (findUser.pinCode === pinCode) {
+      throw new HttpException('기존 pinCode와 일치합니다', 400);
+    }
+  }
+
+>>>>>>> 0a587a5 (github commit 정상적인지 테스트 - git email 수정)
   async getUserProfile(userId: number) {
     const targetUserInfo = await this.userRepository
       .createQueryBuilder('u')
