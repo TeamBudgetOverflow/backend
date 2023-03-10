@@ -15,7 +15,6 @@ import {
   Delete,
   ValidationPipe,
 } from '@nestjs/common';
-import { createHash } from 'crypto';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../auth/auth.service';
 import { UserService } from './user.service';
@@ -33,6 +32,7 @@ import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 
 @Controller('api/users')
 export class UserController {
@@ -58,37 +58,23 @@ export class UserController {
     @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const existUser = await this.userService.findUserByEmailAndCategory(
-      user.email,
-      user.loginCategory,
-    );
-    if (existUser === null) {
-      const createUser = await this.userService.oauthCreateUser(user);
-      const accessToken = await this.authService.createAccessToken(createUser);
-      const refreshToken = await this.authService.createRefreshToken(
-        createUser,
-      );
-      return {
-        accessToken: 'Bearer ' + accessToken,
-        refreshToken,
-        message: 'Google OAuth Completed - Incoming User',
-        newComer: true,
-        name: createUser.name,
-      };
-    }
-    // 유저가 있을때
-    let isExistPinCode: Boolean;
-    if (existUser.pinCode) isExistPinCode = true;
-    else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(existUser);
-    const refreshToken = await this.authService.createRefreshToken(existUser);
-    return {
-      accessToken: 'Bearer ' + accessToken,
+    const {
+      accessToken,
       refreshToken,
-      message: 'Google OAuth Completed - Returning User',
-      newComer: false,
-      name: existUser.name,
-      isExistPinCode,
+      newComer,
+      name,
+      isExistPinCode = false,
+    } = await this.userService.login(user);
+    const message = newComer
+      ? 'Google OAuth Completed - Incoming User'
+      : 'Google OAuth Completed - Returning User';
+    return {
+      accessToken: `Bearer ${accessToken}`,
+      refreshToken,
+      message,
+      newComer,
+      name,
+      ...(isExistPinCode && { isExistPinCode }), // isExistPinCode가 true일 때만 추가
     };
   }
 
@@ -98,38 +84,23 @@ export class UserController {
     @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const existUser = await this.userService.findUserByEmailAndCategory(
-      user.email,
-      user.loginCategory,
-    );
-    if (existUser === null) {
-      // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(user);
-      const accessToken = await this.authService.createAccessToken(createUser);
-      const refreshToken = await this.authService.createRefreshToken(
-        createUser,
-      );
-      return {
-        accessToken: 'Bearer ' + accessToken,
-        refreshToken,
-        message: '로그인 성공',
-        newComer: true,
-        name: createUser.name,
-      };
-    }
-    // 유저가 있을때
-    let isExistPinCode: Boolean;
-    if (existUser.pinCode) isExistPinCode = true;
-    else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(existUser);
-    const refreshToken = await this.authService.createRefreshToken(existUser);
-    return {
-      accessToken: 'Bearer ' + accessToken,
+    const {
+      accessToken,
       refreshToken,
-      message: '로그인 성공',
-      newComer: false,
-      name: existUser.name,
-      isExistPinCode,
+      newComer,
+      name,
+      isExistPinCode = false,
+    } = await this.userService.login(user);
+    const message = newComer
+      ? 'Naver OAuth Completed - Incoming User'
+      : 'Naver OAuth Completed - Returning User';
+    return {
+      accessToken: `Bearer ${accessToken}`,
+      refreshToken,
+      message,
+      newComer,
+      name,
+      ...(isExistPinCode && { isExistPinCode }),
     };
   }
 
@@ -139,38 +110,23 @@ export class UserController {
     @User() user,
     @Query('code') code: string,
   ): Promise<any> {
-    const existUser = await this.userService.findUserByEmailAndCategory(
-      user.email,
-      user.loginCategory,
-    );
-    if (existUser === null) {
-      // 유저가 없을때 회원가입 -> 로그인
-      const createUser = await this.userService.oauthCreateUser(user);
-      const accessToken = await this.authService.createAccessToken(createUser);
-      const refreshToken = await this.authService.createRefreshToken(
-        createUser,
-      );
-      return {
-        accessToken: 'Bearer ' + accessToken,
-        refreshToken,
-        message: '로그인 성공',
-        newComer: true,
-        name: createUser.name,
-      };
-    }
-    // 유저가 있을때
-    let isExistPinCode: Boolean;
-    if (existUser.pinCode) isExistPinCode = true;
-    else isExistPinCode = false;
-    const accessToken = await this.authService.createAccessToken(existUser);
-    const refreshToken = await this.authService.createRefreshToken(existUser);
-    return {
-      accessToken: 'Bearer ' + accessToken,
+    const {
+      accessToken,
       refreshToken,
-      message: '로그인 성공',
-      newComer: false,
-      name: existUser.name,
-      isExistPinCode,
+      newComer,
+      name,
+      isExistPinCode = false,
+    } = await this.userService.login(user);
+    const message = newComer
+      ? 'Kakao OAuth Completed - Incoming User'
+      : 'Kakao OAuth Completed - Returning User';
+    return {
+      accessToken: `Bearer ${accessToken}`,
+      refreshToken,
+      message,
+      newComer,
+      name,
+      ...(isExistPinCode && { isExistPinCode }),
     };
   }
 
@@ -202,12 +158,7 @@ export class UserController {
     if (findUser.pinCode) {
       throw new HttpException('이미 존재하는 핀코드입니다.', 400);
     }
-    const cryptoPinCode: string = createHash(
-      this.configService.get<string>('ALGORITHM'),
-    )
-      .update(pinCode)
-      .digest('base64');
-    await this.userService.registerPinCode(userId, cryptoPinCode);
+    await this.userService.registerPinCode(userId, pinCode);
     return { message: '핀 코드 등록 완료' };
   }
 
@@ -230,7 +181,8 @@ export class UserController {
       .update(updatePinCodeDTO.pinCode)
       .digest('base64');
     const findUser = await this.userService.findUserByUserId(userId);
-
+    console.log(findUser.pinCode);
+    console.log(cryptoPinCode);
     if (findUser.pinCode === cryptoPinCode) {
       const cryptoPinCode: string = createHash(
         this.configService.get<string>('ALGORITHM'),

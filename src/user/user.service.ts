@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, HttpException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHash } from 'crypto';
+import { AuthService } from 'src/auth/auth.service';
 import { Repository } from 'typeorm';
 import { Users } from '../entity/users';
 import { ExitUserDTO } from './dto/exitUser.dto';
@@ -10,9 +13,45 @@ export class UserService {
   constructor(
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
-  findUserByEmailAndCategory(
+  async login(user: Users) {
+    const existUser = await this.findUserByEmailAndCategory(
+      user.email,
+      user.loginCategory,
+    );
+    if (existUser === null) {
+      const createUser = await this.oauthCreateUser(user);
+      const accessToken = await this.authService.createAccessToken(createUser);
+      const refreshToken = await this.authService.createRefreshToken(
+        createUser,
+      );
+      return {
+        accessToken,
+        refreshToken,
+        newComer: true,
+        name: createUser.name,
+      };
+    } else {
+      let isExistPinCode: Boolean;
+      if (existUser.pinCode) isExistPinCode = true;
+      else isExistPinCode = false;
+      const accessToken = await this.authService.createAccessToken(existUser);
+      const refreshToken = await this.authService.createRefreshToken(existUser);
+      return {
+        accessToken,
+        refreshToken,
+        newComer: false,
+        name: existUser.name,
+        isExistPinCode,
+      };
+    }
+  }
+
+  async findUserByEmailAndCategory(
     email: string,
     loginCategory: string,
   ): Promise<Users> {
@@ -43,8 +82,24 @@ export class UserService {
     await this.userRepository.update(userId, { refreshToken });
   }
 
-  async registerPinCode(userId: number, cryptoPinCode: string) {
+  async registerPinCode(userId: number, pinCode: string) {
+    console.log(pinCode);
+    const cryptoPinCode: string = createHash(
+      this.configService.get<string>('ALGORITHM'),
+    )
+      .update(pinCode)
+      .digest('base64');
+    await this.checkUpdate(userId, cryptoPinCode);
     await this.userRepository.update(userId, { pinCode: cryptoPinCode });
+  }
+
+  async checkUpdate(userId: number, pinCode: string) {
+    const findUser = await this.findUserByUserId(userId);
+    console.log(findUser.pinCode);
+    console.log(pinCode);
+    if (findUser.pinCode === pinCode) {
+      throw new HttpException('기존 pinCode와 일치합니다', 400);
+    }
   }
 
   async getUserProfile(userId: number) {
