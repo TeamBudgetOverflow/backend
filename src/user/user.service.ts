@@ -95,8 +95,6 @@ export class UserService {
 
   async checkUpdate(userId: number, pinCode: string) {
     const findUser = await this.findUserByUserId(userId);
-    console.log(findUser.pinCode);
-    console.log(pinCode);
     if (findUser.pinCode === pinCode) {
       throw new HttpException('기존 pinCode와 일치합니다', 400);
     }
