@@ -806,8 +806,12 @@ export class GoalService {
   }
 
   // 목표 시작, 완료 시 호출
-  async goalUpdateStatus(goalId: number, status: string) {
-    await this.goalRepository.update({ goalId }, { status });
+  async goalUpdateStatus(
+    goalId: number,
+    status: string,
+    queryRunner: QueryRunner,
+  ) {
+    await queryRunner.manager.update(Goals, { goalId }, { status });
   }
 
   // 목표 삭제
