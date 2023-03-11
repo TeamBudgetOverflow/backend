@@ -22,6 +22,7 @@ import {
   Between,
   EntityManager,
   DeepPartial,
+  DataSource,
 } from 'typeorm';
 import { Goals } from '../entity/goals';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
@@ -40,6 +41,7 @@ export class GoalService {
     @Inject(forwardRef(() => AccountsService))
     private readonly accountService: AccountsService,
     private readonly usergoalService: UserGoalService,
+    private dataSource: DataSource,
   ) {}
 
   async createGoalLogic(
@@ -689,33 +691,51 @@ export class GoalService {
   async updateGoalCurCount(
     goalId: number,
     curCount: number,
-    manager?: EntityManager,
+    manager: EntityManager,
   ) {
     await manager.update(Goals, { goalId }, { curCount });
   }
 
   async exitGoalLogic(goalId: number, userId: number) {
-    // getGoalDetail 가져오기
-    const findGoal = await this.getGoalByGoalId(goalId);
-    if (userId === findGoal.userId.userId) {
-      // if 개설자 본인일 경우 에러 리턴
-      throw new HttpException(
-        '접근할 수 없는 권한입니다.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    // 1. 참가한 유저인지 확인
-    const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-    const find = await this.usergoalService.findUser(accessUserGoalData);
-    if (find == null) {
-      // error - 참가하지 않은 유저입니다.
-      throw new HttpException('참가하지 않았습니다.', HttpStatus.BAD_REQUEST);
-    } else {
-      // 중간 테이블 삭제
-      await this.usergoalService.exitGoal(accessUserGoalData);
-      // 참가자 숫자 변동
-      findGoal.curCount -= 1;
-      await this.updateGoalCurCount(goalId, findGoal.curCount);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // getGoalDetail 가져오기
+      const findGoal = await this.getGoalByGoalId(goalId);
+      if (userId === findGoal.userId.userId) {
+        // if 개설자 본인일 경우 에러 리턴
+        throw new HttpException(
+          '접근할 수 없는 권한입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      // 1. 참가한 유저인지 확인
+      const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+      const find = await this.usergoalService.findUser(accessUserGoalData);
+      if (find == null) {
+        // error - 참가하지 않은 유저입니다.
+        throw new HttpException('참가하지 않았습니다.', HttpStatus.BAD_REQUEST);
+      } else {
+        // 중간 테이블 삭제
+        await this.usergoalService.exitGoal(
+          accessUserGoalData,
+          queryRunner.manager,
+        );
+        // 참가자 숫자 변동
+        findGoal.curCount -= 1;
+        await this.updateGoalCurCount(
+          goalId,
+          findGoal.curCount,
+          queryRunner.manager,
+        );
+      }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
   }
 

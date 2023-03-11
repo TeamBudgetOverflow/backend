@@ -99,7 +99,7 @@ export class UserGoalService {
   }
 
   // 목표 탈퇴
-  async exitGoal(data, manager?: EntityManager) {
+  async exitGoal(data, manager: EntityManager) {
     const findId = await this.userGoalRepository.findOneBy(data);
     await manager.remove(findId.userGoalsId);
   }
