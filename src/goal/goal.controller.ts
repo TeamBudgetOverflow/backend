@@ -48,7 +48,10 @@ export class GoalController {
 
     await this.goalService.verifyLinkedAccount(createGoalDTO.accountId, userId);
 
-    const result = await this.goalService.createGoal(createGoalDTO, userId);
+    const result = await this.goalService.createGoalLogic(
+      createGoalDTO,
+      userId,
+    );
 
     return { goalId: result.goalId, message: '목표 생성 완료' };
   }

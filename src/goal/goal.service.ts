@@ -42,14 +42,28 @@ export class GoalService {
     private readonly usergoalService: UserGoalService,
   ) {}
 
-  async createGoal(
+  async createGoalLogic(
     createGoalDTO: InputCreateGoalDTO,
     userId: number,
   ): Promise<Goals> {
     // 1. 첫 개인 목표/그룹 목표 생성 시 뱃지 획득 로직
     await this.getBadgeValidation(userId, createGoalDTO);
+    // 2. 목표 생성 - 데이터 조립 / 생성
+    const result = await this.createGoal(createGoalDTO, userId);
+    // 3. 내가 만든 목표 자동 참가
+    await this.createGoalJoin(result, createGoalDTO, userId);
+    return result;
+  }
 
-    // 2. 데이터 조립
+  async createGoal(createGoalDTO: InputCreateGoalDTO, userId: number) {
+    const data = await this.createGoalDataProcess(createGoalDTO, userId);
+    return await this.goalRepository.save(data);
+  }
+
+  async createGoalDataProcess(
+    createGoalDTO: InputCreateGoalDTO,
+    userId: number,
+  ) {
     // hashTag : Array -> String 변환
     const hashTag = await this.hashArrayTohashString(createGoalDTO.hashTag);
     // isPrivate default Value = false
@@ -79,7 +93,14 @@ export class GoalService {
       hashTag: hashTag,
       emoji: createGoalDTO.emoji,
     };
-    const result = await this.goalRepository.save(data);
+    return data;
+  }
+
+  async createGoalJoin(
+    result: Goals,
+    createGoalDTO: InputCreateGoalDTO,
+    userId,
+  ) {
     const goalId: number = result.goalId;
     const accountId: number = createGoalDTO.accountId;
     // update account field 'assigned' to true
@@ -105,7 +126,6 @@ export class GoalService {
       status: userGoalStatus,
     };
     await this.usergoalService.joinGoal(createUserGoalData);
-    return result;
   }
 
   // 이미 목표에 연결된 계좌인지 검증
@@ -190,7 +210,7 @@ export class GoalService {
     }
   }
 
-  // 존재하지 않는 목표
+  // 목표 검증 후 참가 수행
   async checkGoal(accountId: number, goalId: number, userId: number) {
     const findGoal = await this.getGoalByGoalId(goalId);
     if (!findGoal) {
@@ -554,6 +574,7 @@ export class GoalService {
         updatedAt: sortResult[i].updatedAt,
       });
     }
+    return result;
   }
 
   async getGoalDetail(goalId: number): Promise<Goals> {
