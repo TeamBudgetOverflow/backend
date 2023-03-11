@@ -49,8 +49,7 @@ export class UserService {
     );
     if (existUser === null) {
       const createUser = await this.oauthCreateUser(user);
-      const accessToken = await this.authService.createAccessToken(createUser);
-      const refreshToken = await this.authService.createRefreshToken(
+      const { accessToken, refreshToken } = await this.generateToken(
         createUser,
       );
       return {
@@ -63,8 +62,7 @@ export class UserService {
       let isExistPinCode: Boolean;
       if (existUser.pinCode) isExistPinCode = true;
       else isExistPinCode = false;
-      const accessToken = await this.authService.createAccessToken(existUser);
-      const refreshToken = await this.authService.createRefreshToken(existUser);
+      const { accessToken, refreshToken } = await this.generateToken(existUser);
       return {
         accessToken,
         refreshToken,
@@ -73,6 +71,12 @@ export class UserService {
         isExistPinCode,
       };
     }
+  }
+
+  async generateToken(user: Users) {
+    const accessToken = await this.authService.createAccessToken(user);
+    const refreshToken = await this.authService.createRefreshToken(user);
+    return { accessToken, refreshToken };
   }
 
   async findUserByEmailAndCategory(
@@ -193,6 +197,7 @@ export class UserService {
       console.log('트렌젝션 시작');
       // 1. 회원 정보 빈 값 처리
       await this.nullableUserData(userId, queryRunner.manager);
+      // 2. 회원이 참가한 목표에 대한 처리
       const getGoal = await this.userGoalService.getGoalByUserId(userId);
       for (let i = 0; i < getGoal.length; i++) {
         let goalId: number = getGoal[i].goalId.goalId;
@@ -200,7 +205,7 @@ export class UserService {
           userId,
           goalId,
         };
-        // 2. 개인 목표 삭제
+        // 2.1 개인 목표 삭제
         if (getGoal[i].goalId.headCount === 1) {
           await this.deletePersonalGoal(
             accessUserGoalData,
@@ -208,7 +213,7 @@ export class UserService {
             queryRunner.manager,
           );
         }
-        // 3. 팀 목표 처리
+        // 2.2 팀 목표 처리
         await this.processTeamGoal(
           getGoal,
           accessUserGoalData,
