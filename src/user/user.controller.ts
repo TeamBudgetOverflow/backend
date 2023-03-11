@@ -39,14 +39,8 @@ export class UserController {
   constructor(
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-    @Inject(forwardRef(() => GoalService))
-    private readonly goalService: GoalService,
     @Inject(forwardRef(() => UserGoalService))
     private readonly userGoalService: UserGoalService,
-    @Inject(forwardRef(() => BalanceService))
-    private readonly balanceService: BalanceService,
-    @Inject(forwardRef(() => AccountsService))
-    private readonly accountsService: AccountsService,
     private readonly badgeService: BadgeService,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
@@ -145,6 +139,7 @@ export class UserController {
     @Body('pinCode') pinCode: string,
     @User() user,
   ) {
+    console.log(pinCode);
     if (userId !== user) {
       throw new HttpException('허가되지 않은 접근입니다', 400);
     }
@@ -155,9 +150,9 @@ export class UserController {
     if (!findUser) {
       throw new HttpException('존재하지 않는 유저입니다.', 400);
     }
-    if (findUser.pinCode) {
-      throw new HttpException('이미 존재하는 핀코드입니다.', 400);
-    }
+    // if (findUser.pinCode) {
+    //   throw new HttpException('이미 존재하는 핀코드입니다.', 400);
+    // }
     await this.userService.registerPinCode(userId, pinCode);
     return { message: '핀 코드 등록 완료' };
   }
@@ -175,14 +170,16 @@ export class UserController {
     if (!(updatePinCodeDTO.updatePinCode.length === 6)) {
       throw new HttpException('잘못된 형식입니다.', 400);
     }
+    if (updatePinCodeDTO.pinCode === updatePinCodeDTO.updatePinCode) {
+      throw new HttpException('기존 pinCode와 일치합니다', 400);
+    }
     const cryptoPinCode: string = createHash(
       this.configService.get<string>('ALGORITHM'),
     )
       .update(updatePinCodeDTO.pinCode)
       .digest('base64');
     const findUser = await this.userService.findUserByUserId(userId);
-    console.log(findUser.pinCode);
-    console.log(cryptoPinCode);
+    // 핀코드가 제대로 입력되었는지 검증
     if (findUser.pinCode === cryptoPinCode) {
       const cryptoPinCode: string = createHash(
         this.configService.get<string>('ALGORITHM'),
@@ -214,8 +211,6 @@ export class UserController {
     return { result: getALLBadges };
   }
 
-  // 수정 필요
-  // reason : param으로 userId를 받아오는데 요청하는 사람 본인이라는 validation이 없음
   @Get('badges/:userId')
   @UseGuards(AuthGuard('jwt'))
   async getMyBadges(@Param('userId') userId: number) {
@@ -264,132 +259,27 @@ export class UserController {
   async getUserGoal(@User() user, @Param('userId') userId: number) {
     const myUserId = user;
     const findGoals = await this.userGoalService.getGoalByUserId(userId);
-    const result = [];
-    for (let i = 0; i < findGoals.length; i++) {
-      if (myUserId != userId && findGoals[i].goalId.isPrivate == true) {
-        continue;
-      } else if (findGoals[i].goalId.status === 'denied') {
-        continue;
-      } else {
-        const hashTag = findGoals[i].goalId.hashTag.split(',');
-        result.push({
-          isPrivate: findGoals[i].goalId.isPrivate,
-          goalId: findGoals[i].goalId.goalId,
-          amount: findGoals[i].goalId.amount,
-          curCount: findGoals[i].goalId.curCount,
-          headCount: findGoals[i].goalId.headCount,
-          startDate: findGoals[i].goalId.startDate,
-          endDate: findGoals[i].goalId.endDate,
-          period: findGoals[i].goalId.period,
-          status: findGoals[i].goalId.status,
-          title: findGoals[i].goalId.title,
-          hashTag: hashTag,
-          emoji: findGoals[i].goalId.emoji,
-          description: findGoals[i].goalId.description,
-          createdAt: findGoals[i].goalId.createdAt,
-          updatedAt: findGoals[i].goalId.updatedAt,
-          attainment:
-            (findGoals[i].balanceId.current / findGoals[i].goalId.amount) * 100,
-        });
-      }
-    }
-    // 확인 필요
-    // 다음과 같이 수정했을 경우 result에 대한 값이 제대로 나오는지 확인
-    // return { result };
-    return { result: result };
+    const result = await this.userService.dataProcessingForUserPage(
+      findGoals,
+      myUserId,
+      userId,
+    );
+    return { result };
   }
 
   // 회원 탈퇴
   @Delete('exit/:userId')
   @UseGuards(AuthGuard('jwt'))
   async exitUsesr(@User() user, @Param('userId') userId: number) {
+    console.log('회원탈퇴 ----------------------');
+    console.log(user, userId);
     if (user !== Number(userId)) {
       throw new HttpException(
         '권한이 없는 호출입니다.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    const data: ExitUserDTO = {
-      email: 'Exit User', // 현재 협의가 필요
-      name: '탈퇴한 사용자',
-      nickname: '탈퇴한 사용자',
-      image: null,
-      loginCategory: null,
-      pinCode: null,
-      refreshToken: null,
-      description: null,
-    };
-    // 1. 회원 정보 빈 값 처리
-    await this.userService.exitUser(userId, data);
-    const getGoal = await this.userGoalService.getGoalByUserId(userId);
-    for (let i = 0; i < getGoal.length; i++) {
-      let goalId: number = getGoal[i].goalId.goalId;
-      let accessUserGoalData: AccessUserGoalDTO = {
-        userId,
-        goalId,
-      };
-      // 2. 개인 목표 삭제
-      if (getGoal[i].goalId.headCount === 1) {
-        await this.userGoalService.exitGoal(accessUserGoalData);
-        await this.goalService.deleteGoal(goalId);
-      }
-      // 3. 팀 목표 처리
-      // 3.1 현재 모집중인 팀 목표에 대한 탈퇴 처리
-      if (getGoal[i].goalId.status === 'recruit') {
-        const find = await this.userGoalService.findUser(accessUserGoalData);
-        if (find == null) {
-          // error - 참가하지 않은 유저입니다.
-          throw new HttpException(
-            '참가하지 않았습니다.',
-            HttpStatus.BAD_REQUEST,
-          );
-        } else {
-          // 목표 개설자 인 경우
-          // 참여 멤버 탈퇴 -> 목표 삭제
-          if (getGoal[i].userId.userId == user) {
-            const goalId = getGoal[i].goalId.goalId;
-            const memberExit = await this.userGoalService.getGoalByGoalId(
-              goalId,
-            );
-            for (let j = 0; j < memberExit.length; j++) {
-              let accountId: number = memberExit[j].accountId.accountId;
-              let balanceId: number = memberExit[j].balanceId.balanceId;
-              accessUserGoalData = {
-                userId: memberExit[j].userId.userId,
-                goalId: memberExit[j].goalId.goalId,
-              };
-              await this.userGoalService.exitGoal(accessUserGoalData);
-              await this.accountsService.deleteAccount(accountId);
-              await this.balanceService.deleteBalance(balanceId);
-            }
-            await this.goalService.deleteGoal(getGoal[i].goalId.goalId);
-          } else {
-            let accountId: number = find[i].accountId.accountId;
-            let balanceId: number = find[i].balanceId.balanceId;
-            // 목표 참가자인 경우
-            await this.userGoalService.exitGoal(accessUserGoalData);
-            await this.accountsService.deleteAccount(accountId);
-            await this.balanceService.deleteBalance(balanceId);
-            // 참가자 숫자 변동
-            getGoal[i].goalId.headCount -= 1;
-            await this.goalService.updateGoalCurCount(
-              goalId,
-              getGoal[i].goalId.headCount,
-            );
-          }
-        }
-      } else {
-        // 3.2 현재 진행중이거나 완료된 목표에 대해서
-        // balanceId = 0 처리 accountId 처리
-        const balanceId: number = getGoal[i].balanceId.balanceId;
-        const accountId: number = getGoal[i].accountId.accountId;
-        const current: number = 0;
-        await this.accountsService.deleteAccount(accountId);
-        await this.balanceService.updateBalance(balanceId, current);
-      }
-    }
-    // 뱃지 정보 삭제
-    await this.badgeService.deleteBadgeInfo(userId);
+    await this.userService.exitUser(userId, user);
     return { message: '회원 탈퇴가 완료되었습니다.' };
   }
 }

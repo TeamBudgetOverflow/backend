@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Brackets, Between } from 'typeorm';
+import { Repository, Brackets, Between, EntityManager } from 'typeorm';
 import { Goals } from '../entity/goals';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
 
@@ -171,8 +171,12 @@ export class GoalService {
   }
 
   // 목표 참가자 숫자 변화
-  async updateGoalCurCount(goalId: number, curCount: number) {
-    await this.goalRepository.update({ goalId }, { curCount });
+  async updateGoalCurCount(
+    goalId: number,
+    curCount: number,
+    manager: EntityManager,
+  ) {
+    await manager.update(Goals, { goalId }, { curCount });
   }
 
   async updateGoal(goalId: number, data: UpdateGoalDTO) {
@@ -185,8 +189,8 @@ export class GoalService {
   }
 
   // 목표 삭제
-  async deleteGoal(goalId: number) {
-    await this.goalRepository.delete({ goalId });
+  async deleteGoal(goalId: number, manager: EntityManager) {
+    await manager.remove({ goalId });
   }
 
   // 신고로 인한 삭제시 status만 변경하여 검색에서 제외됨

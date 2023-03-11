@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 export class BanksService {
   constructor(
     @InjectRepository(Banks)
-    private bankRepository: Repository<Banks>,
+    private readonly bankRepository: Repository<Banks>,
   ) {}
   async getBank(bankId) {
     const { bankCode, bankName } = await this.bankRepository.findOne({

@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Body, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { AxiosError, AxiosResponse } from 'axios';
-import { Not } from 'typeorm';
+import { EntityManager, Not } from 'typeorm';
 import {
   catchError,
   firstValueFrom,
@@ -187,7 +187,7 @@ export class AccountsService {
     return targetAccounts;
   }
 
-  async deleteAccount(targetAccountId: number) {
+  async deleteAccount(targetAccountId: number, manager?: EntityManager) {
     const result = await this.accountsRepository.findOne({
       where: {
         accountId: targetAccountId,
@@ -199,7 +199,11 @@ export class AccountsService {
     result.bankUserPw = null;
     result.acctNo = null;
     result.acctPw = null;
-    await this.accountsRepository.save(result);
+    if (manager) {
+      await manager.save(result);
+    } else {
+      await this.accountsRepository.save(result);
+    }
     return result;
   }
 }

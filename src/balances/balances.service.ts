@@ -1,6 +1,6 @@
 import { Body, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 
 import { Balances } from 'src/entity/balances';
 import { InitBalanceDTO } from './dto/initBalance.dto';
@@ -18,12 +18,24 @@ export class BalanceService {
   }
 
   // update balance
-  async updateBalance(balanceId: number, current: number) {
-    await this.balancesRepository.update({ balanceId }, { current });
+  async updateBalance(
+    balanceId: number,
+    current: number,
+    manager?: EntityManager,
+  ) {
+    if (manager) {
+      await manager.update(Balances, { balanceId }, { current });
+    } else {
+      await this.balancesRepository.update({ balanceId }, { current });
+    }
   }
 
   // delete balance
-  async deleteBalance(balanceId: number) {
-    await this.balancesRepository.delete({ balanceId });
+  async deleteBalance(balanceId: number, manager?: EntityManager) {
+    if (manager) {
+      await manager.remove({ balanceId });
+    } else {
+      await this.balancesRepository.delete({ balanceId });
+    }
   }
 }
