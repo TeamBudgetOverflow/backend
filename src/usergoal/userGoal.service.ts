@@ -109,7 +109,7 @@ export class UserGoalService {
     return await this.userGoalRepository.findOneBy(data);
   }
 
-  // 목표 시작 혹은 종료 시 status 변화
+  // 목표 시작 혹은 종료, 신고 처리 시 status 변화
   async updateStauts(userGoalsId: number, status: string) {
     await this.userGoalRepository.update(userGoalsId, { status });
   }
