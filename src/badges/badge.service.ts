@@ -14,9 +14,9 @@ export class BadgeService {
   ) {}
 
   // 뱃지 획득
-  async getBadge(data) {
+  async getBadge(data, queryRunner: QueryRunner) {
     if (!(await this.duplicateBadgeSearch(data))) {
-      await this.userBadgeRepository.save(data);
+      await queryRunner.manager.getRepository(Badges).save(data);
     }
   }
 

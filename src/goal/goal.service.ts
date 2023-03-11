@@ -48,18 +48,32 @@ export class GoalService {
     createGoalDTO: InputCreateGoalDTO,
     userId: number,
   ): Promise<Goals> {
-    // 1. 첫 개인 목표/그룹 목표 생성 시 뱃지 획득 로직
-    await this.getBadgeValidation(userId, createGoalDTO);
-    // 2. 목표 생성 - 데이터 조립 / 생성
-    const result = await this.createGoal(createGoalDTO, userId);
-    // 3. 내가 만든 목표 자동 참가
-    await this.createGoalJoin(result, createGoalDTO, userId);
-    return result;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      // 1. 첫 개인 목표/그룹 목표 생성 시 뱃지 획득 로직
+      await this.getBadgeValidation(userId, createGoalDTO, queryRunner);
+      // 2. 목표 생성 - 데이터 조립 / 생성
+      const result = await this.createGoal(createGoalDTO, userId, queryRunner);
+      // 3. 내가 만든 목표 자동 참가
+      await this.createGoalJoin(result, createGoalDTO, userId, queryRunner);
+      await queryRunner.commitTransaction();
+      return result;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async createGoal(createGoalDTO: InputCreateGoalDTO, userId: number) {
+  async createGoal(
+    createGoalDTO: InputCreateGoalDTO,
+    userId: number,
+    queryRunner: QueryRunner,
+  ) {
     const data = await this.createGoalDataProcess(createGoalDTO, userId);
-    return await this.goalRepository.save(data);
+    return await queryRunner.manager.getRepository(Goals).save(data);
   }
 
   async createGoalDataProcess(
@@ -102,11 +116,12 @@ export class GoalService {
     result: Goals,
     createGoalDTO: InputCreateGoalDTO,
     userId,
+    queryRunner: QueryRunner,
   ) {
     const goalId: number = result.goalId;
     const accountId: number = createGoalDTO.accountId;
     // update account field 'assigned' to true
-    await this.accountService.updateAccountAssignment(accountId);
+    await this.accountService.updateAccountAssignment(accountId, queryRunner);
     const balanceData: InitBalanceDTO = {
       initial: 0,
       current: 0,
@@ -114,6 +129,7 @@ export class GoalService {
     };
     const balanceCreate: Balances = await this.balanceService.initBalance(
       balanceData,
+      queryRunner,
     );
     const balanceId: number = balanceCreate.balanceId;
     let userGoalStatus: string;
@@ -127,7 +143,7 @@ export class GoalService {
       balanceId,
       status: userGoalStatus,
     };
-    await this.usergoalService.joinGoal(createUserGoalData);
+    await this.usergoalService.joinGoal(createUserGoalData, queryRunner);
   }
 
   // 이미 목표에 연결된 계좌인지 검증
@@ -158,7 +174,11 @@ export class GoalService {
   }
 
   // 첫 개인 목표/그룹 목표 생성 시 뱃지 획득 로직
-  async getBadgeValidation(userId: number, createGoalDTO: InputCreateGoalDTO) {
+  async getBadgeValidation(
+    userId: number,
+    createGoalDTO: InputCreateGoalDTO,
+    queryRunner: QueryRunner,
+  ) {
     const pastCreateGoalData = await this.usergoalService.getGoalByUserId(
       userId,
     );
@@ -181,7 +201,7 @@ export class GoalService {
         // 개인 목표 첫 생성 뱃지 획득
         badgeId = 1;
         const data: GetBadgeDTO = { User: userId, Badges: badgeId };
-        await this.badgeService.getBadge(data);
+        await this.badgeService.getBadge(data, queryRunner);
       }
     } else {
       status = 'recruit';
@@ -189,7 +209,7 @@ export class GoalService {
         // 그룹 목표 첫 생성 뱃지 획득
         badgeId = 4;
         const data: GetBadgeDTO = { User: userId, Badges: badgeId };
-        await this.badgeService.getBadge(data);
+        await this.badgeService.getBadge(data, queryRunner);
       }
     }
   }
