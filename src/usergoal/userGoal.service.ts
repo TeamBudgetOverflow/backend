@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { UserGoals } from '../entity/usergoals';
 
 @Injectable()
@@ -94,14 +94,14 @@ export class UserGoalService {
   }
 
   // 목표 참가
-  async joinGoal(data) {
-    await this.userGoalRepository.save(data);
+  async joinGoal(data, queryRunner: QueryRunner) {
+    await queryRunner.manager.getRepository(UserGoals).save(data);
   }
 
   // 목표 탈퇴
-  async exitGoal(data, manager: EntityManager) {
+  async exitGoal(data, queryRunner: QueryRunner) {
     const findId = await this.userGoalRepository.findOneBy(data);
-    await manager.remove(findId.userGoalsId);
+    await queryRunner.manager.remove(findId.userGoalsId);
   }
 
   // 해당 목표에 참가한 유저인지 반환

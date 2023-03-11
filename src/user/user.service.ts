@@ -16,7 +16,7 @@ import { UserGoals } from 'src/entity/usergoals';
 import { GoalService } from 'src/goal/goal.service';
 import { AccessUserGoalDTO } from 'src/usergoal/dto/accessUserGoals.dto';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { Repository, DataSource, QueryRunner } from 'typeorm';
 import { Users } from '../entity/users';
 import { ExitUserDTO } from './dto/exitUser.dto';
 import { ModifyUserInfoDTO } from './dto/modifyUser.dto';
@@ -196,7 +196,7 @@ export class UserService {
     try {
       console.log('트렌젝션 시작');
       // 1. 회원 정보 빈 값 처리
-      await this.nullableUserData(userId, queryRunner.manager);
+      await this.nullableUserData(userId, queryRunner);
       // 2. 회원이 참가한 목표에 대한 처리
       const getGoal = await this.userGoalService.getGoalByUserId(userId);
       for (let i = 0; i < getGoal.length; i++) {
@@ -210,7 +210,7 @@ export class UserService {
           await this.deletePersonalGoal(
             accessUserGoalData,
             goalId,
-            queryRunner.manager,
+            queryRunner,
           );
         }
         // 2.2 팀 목표 처리
@@ -220,11 +220,11 @@ export class UserService {
           i,
           user,
           goalId,
-          queryRunner.manager,
+          queryRunner,
         );
       }
       // 4. 뱃지 정보 삭제
-      await this.badgeService.deleteBadgeInfo(userId, queryRunner.manager);
+      await this.badgeService.deleteBadgeInfo(userId, queryRunner);
       await queryRunner.commitTransaction();
     } catch (error) {
       console.log(error);
@@ -235,7 +235,7 @@ export class UserService {
   }
 
   // 회원 정보 빈 값 처리
-  async nullableUserData(userId: number, manager: EntityManager) {
+  async nullableUserData(userId: number, queryRunner: QueryRunner) {
     const data: ExitUserDTO = {
       email: 'Exit User',
       name: '탈퇴한 사용자',
@@ -246,17 +246,17 @@ export class UserService {
       refreshToken: null,
       description: null,
     };
-    await manager.update(Users, userId, data);
+    await queryRunner.manager.update(Users, userId, data);
   }
 
   // 개인 목표 삭제
   async deletePersonalGoal(
     accessUserGoalData: AccessUserGoalDTO,
     goalId: number,
-    manager: EntityManager,
+    queryRunner: QueryRunner,
   ) {
-    await this.userGoalService.exitGoal(accessUserGoalData, manager);
-    await this.goalService.deleteGoal(goalId, manager);
+    await this.userGoalService.exitGoal(accessUserGoalData, queryRunner);
+    await this.goalService.deleteGoal(goalId, queryRunner);
   }
 
   // 팀 목표 처리
@@ -266,7 +266,8 @@ export class UserService {
     i: number,
     user: number,
     goalId: number,
-    manager: EntityManager,
+
+    queryRunner: QueryRunner,
   ) {
     // 1 현재 모집중인 팀 목표에 대한 탈퇴 처리
     if (getGoal[i].goalId.status === 'recruit') {
@@ -276,11 +277,11 @@ export class UserService {
         i,
         goalId,
         user,
-        manager,
+        queryRunner,
       );
     } else {
       // 2 현재 진행중이거나 완료된 목표에 대해서
-      await this.processTeamGoalIfElse(getGoal, i, manager);
+      await this.processTeamGoalIfElse(getGoal, i, queryRunner);
     }
   }
 
@@ -291,7 +292,7 @@ export class UserService {
     i: number,
     goalId: number,
     user: number,
-    manager: EntityManager,
+    queryRunner: QueryRunner,
   ) {
     const find = await this.userGoalService.findUser(accessUserGoalData);
     if (find == null) {
@@ -310,24 +311,27 @@ export class UserService {
             userId: memberExit[j].userId.userId,
             goalId: memberExit[j].goalId.goalId,
           };
-          await this.userGoalService.exitGoal(accessUserGoalData, manager);
-          await this.accountsService.deleteAccount(accountId, manager);
-          await this.balanceService.deleteBalance(balanceId, manager);
+          await this.userGoalService.exitGoal(accessUserGoalData, queryRunner);
+          await this.accountsService.deleteAccount(accountId, queryRunner);
+          await this.balanceService.deleteBalance(balanceId, queryRunner);
         }
-        await this.goalService.deleteGoal(getGoal[i].goalId.goalId, manager);
+        await this.goalService.deleteGoal(
+          getGoal[i].goalId.goalId,
+          queryRunner,
+        );
       } else {
         let accountId: number = find[i].accountId.accountId;
         let balanceId: number = find[i].balanceId.balanceId;
         // 목표 참가자인 경우
-        await this.userGoalService.exitGoal(accessUserGoalData, manager);
-        await this.accountsService.deleteAccount(accountId, manager);
-        await this.balanceService.deleteBalance(balanceId, manager);
+        await this.userGoalService.exitGoal(accessUserGoalData, queryRunner);
+        await this.accountsService.deleteAccount(accountId, queryRunner);
+        await this.balanceService.deleteBalance(balanceId, queryRunner);
         // 참가자 숫자 변동
         getGoal[i].goalId.headCount -= 1;
         await this.goalService.updateGoalCurCount(
           goalId,
           getGoal[i].goalId.headCount,
-          manager,
+          queryRunner,
         );
       }
     }
@@ -337,13 +341,13 @@ export class UserService {
   async processTeamGoalIfElse(
     getGoal: UserGoals[],
     i: number,
-    manager: EntityManager,
+    queryRunner: QueryRunner,
   ) {
     // balanceId = 0 처리 accountId 처리
     const balanceId: number = getGoal[i].balanceId.balanceId;
     const accountId: number = getGoal[i].accountId.accountId;
     const current: number = 0;
-    await this.accountsService.deleteAccount(accountId, manager);
-    await this.balanceService.updateBalance(balanceId, current, manager);
+    await this.accountsService.deleteAccount(accountId, queryRunner);
+    await this.balanceService.updateBalance(balanceId, current, queryRunner);
   }
 }

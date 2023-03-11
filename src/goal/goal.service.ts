@@ -20,9 +20,9 @@ import {
   Repository,
   Brackets,
   Between,
-  EntityManager,
   DeepPartial,
   DataSource,
+  QueryRunner,
 } from 'typeorm';
 import { Goals } from '../entity/goals';
 import { UpdateGoalDTO } from '../goal/dto/updateGoal.dto';
@@ -238,27 +238,38 @@ export class GoalService {
     goalId: number,
     findGoal: Goals,
   ) {
-    await this.accountService.updateAccountAssignment(accountId);
-    const balanceData: InitBalanceDTO = {
-      initial: 0,
-      current: 0,
-      chkType: 'Direct Input',
-    };
-    const balanceCreate: Balances = await this.balanceService.initBalance(
-      balanceData,
-    );
-    const balanceId: number = balanceCreate.balanceId;
-    const status = 'pending';
-    const createUserGoalData: CreateUserGoalDTO = {
-      userId,
-      goalId,
-      accountId,
-      balanceId,
-      status,
-    };
-    await this.usergoalService.joinGoal(createUserGoalData);
-    findGoal.curCount += 1;
-    await this.updateGoalCurCount(goalId, findGoal.curCount);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await this.accountService.updateAccountAssignment(accountId, queryRunner);
+      const balanceData: InitBalanceDTO = {
+        initial: 0,
+        current: 0,
+        chkType: 'Direct Input',
+      };
+      const balanceCreate: Balances = await this.balanceService.initBalance(
+        balanceData,
+        queryRunner,
+      );
+      const balanceId: number = balanceCreate.balanceId;
+      const status = 'pending';
+      const createUserGoalData: CreateUserGoalDTO = {
+        userId,
+        goalId,
+        accountId,
+        balanceId,
+        status,
+      };
+      await this.usergoalService.joinGoal(createUserGoalData, queryRunner);
+      findGoal.curCount += 1;
+      await this.updateGoalCurCount(goalId, findGoal.curCount, queryRunner);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async searchConditionProcess(paginationQuery) {
@@ -691,9 +702,9 @@ export class GoalService {
   async updateGoalCurCount(
     goalId: number,
     curCount: number,
-    manager: EntityManager,
+    queryRunner: QueryRunner,
   ) {
-    await manager.update(Goals, { goalId }, { curCount });
+    await queryRunner.manager.update(Goals, { goalId }, { curCount });
   }
 
   async exitGoalLogic(goalId: number, userId: number) {
@@ -719,17 +730,10 @@ export class GoalService {
         throw new HttpException('참가하지 않았습니다.', HttpStatus.BAD_REQUEST);
       } else {
         // 중간 테이블 삭제
-        await this.usergoalService.exitGoal(
-          accessUserGoalData,
-          queryRunner.manager,
-        );
+        await this.usergoalService.exitGoal(accessUserGoalData, queryRunner);
         // 참가자 숫자 변동
         findGoal.curCount -= 1;
-        await this.updateGoalCurCount(
-          goalId,
-          findGoal.curCount,
-          queryRunner.manager,
-        );
+        await this.updateGoalCurCount(goalId, findGoal.curCount, queryRunner);
       }
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -787,8 +791,8 @@ export class GoalService {
   }
 
   // 목표 삭제
-  async deleteGoal(goalId: number, manager: EntityManager) {
-    await manager.remove({ goalId });
+  async deleteGoal(goalId: number, queryRunner: QueryRunner) {
+    await queryRunner.manager.remove({ goalId });
   }
 
   async deleteGoalLogic(goalId: number, userId: number) {
@@ -805,11 +809,8 @@ export class GoalService {
         throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
       } else {
         const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-        await this.usergoalService.exitGoal(
-          accessUserGoalData,
-          queryRunner.manager,
-        );
-        await this.deleteGoal(goalId, queryRunner.manager);
+        await this.usergoalService.exitGoal(accessUserGoalData, queryRunner);
+        await this.deleteGoal(goalId, queryRunner);
       }
       await queryRunner.commitTransaction();
     } catch (error) {

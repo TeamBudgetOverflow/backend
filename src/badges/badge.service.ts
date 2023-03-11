@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Badges } from 'src/entity/badges';
 import { UserBadges } from 'src/entity/userbadges';
-import { EntityManager, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
 export class BadgeService {
@@ -45,7 +45,7 @@ export class BadgeService {
   }
 
   // 회원 탈퇴 시 뱃지 획득 내역 삭제
-  async deleteBadgeInfo(userId: number, manager: EntityManager) {
-    await manager.delete(UserBadges, { user: userId });
+  async deleteBadgeInfo(userId: number, queryRunner: QueryRunner) {
+    await queryRunner.manager.delete(UserBadges, { user: userId });
   }
 }
