@@ -787,22 +787,35 @@ export class GoalService {
   }
 
   // 목표 삭제
-  async deleteGoal(goalId: number, manager?: EntityManager) {
+  async deleteGoal(goalId: number, manager: EntityManager) {
     await manager.remove({ goalId });
   }
 
   async deleteGoalLogic(goalId: number, userId: number) {
-    const find = await this.getGoalDetail(goalId);
-    if (userId != find.userId.userId) {
-      throw new HttpException('삭제 권한이 없습니다.', 400);
-    }
-    // 참가자가 2명이상이면 삭제 불가능
-    if (find.curCount >= 2) {
-      throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
-    } else {
-      const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
-      await this.usergoalService.exitGoal(accessUserGoalData);
-      await this.deleteGoal(goalId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const find = await this.getGoalDetail(goalId);
+      if (userId != find.userId.userId) {
+        throw new HttpException('삭제 권한이 없습니다.', 400);
+      }
+      // 참가자가 2명이상이면 삭제 불가능
+      if (find.curCount >= 2) {
+        throw new HttpException('참가한 유저가 있어 삭제가 불가능합니다.', 400);
+      } else {
+        const accessUserGoalData: AccessUserGoalDTO = { userId, goalId };
+        await this.usergoalService.exitGoal(
+          accessUserGoalData,
+          queryRunner.manager,
+        );
+        await this.deleteGoal(goalId, queryRunner.manager);
+      }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
   }
 
