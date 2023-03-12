@@ -1,14 +1,9 @@
-import {
-    IsString,
-    IsNotEmpty,
-  } from 'class-validator';
+import { PickType } from '@nestjs/swagger/dist';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { Users } from 'src/entity/users';
 
-  export class UpdatePinCodeDTO {
-    @IsString()
-    @IsNotEmpty()
-    readonly pinCode: string;
-
-    @IsString()
-    @IsNotEmpty()
-    readonly updatePinCode: string;
-  }
+export class UpdatePinCodeDTO extends PickType(Users, ['pinCode']) {
+  @IsString()
+  @IsNotEmpty()
+  readonly updatePinCode: string;
+}

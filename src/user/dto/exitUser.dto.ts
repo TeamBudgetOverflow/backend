@@ -1,35 +1,13 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { Users } from 'src/entity/users';
 
-export class ExitUserDTO {
-  @IsString()
-  @IsNotEmpty()
-  readonly email: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly nickname: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly image: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly loginCategory: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly pinCode: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly refreshToken: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly description: string;
-}
+export class ExitUserDTO extends PickType(Users, [
+  'email',
+  'name',
+  'nickname',
+  'image',
+  'loginCategory',
+  'pinCode',
+  'refreshToken',
+  'description',
+] as const) {}

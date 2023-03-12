@@ -8,11 +8,11 @@ import { HttpModule } from '@nestjs/axios';
 import { CronModule } from 'src/cron/cron.module';
 import { UserModule } from 'src/user/user.module';
 import { AccountsModule } from 'src/accounts/accounts.module';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
-import { Accounts } from 'src/models/accounts';
-import { Users } from 'src/models/users';
-import { Goals } from 'src/models/goals';
+import { Balances } from 'src/entity/balances';
+import { UserGoals } from 'src/entity/usergoals';
+import { Accounts } from 'src/entity/accounts';
+import { Users } from 'src/entity/users';
+import { Goals } from 'src/entity/goals';
 
 @Module({
   imports: [

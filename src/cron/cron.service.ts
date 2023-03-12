@@ -10,11 +10,13 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { GoalService } from 'src/goal/goal.service';
 import { BadgeService } from 'src/badges/badge.service';
-import { Goals } from 'src/models/goals';
+import { Goals } from 'src/entity/goals';
 import { UserGoalService } from 'src/usergoal/userGoal.service';
 import { SchedulerRegistry } from './schedule.registry';
 import { GetBadgeDTO } from 'src/badges/dto/getBadge.dto';
 import { ReportsService } from 'src/reports/reports.service';
+import { DataSource, QueryRunner } from 'typeorm';
+import { UserGoals } from 'src/entity/usergoals';
 
 @Injectable()
 export class CronService {
@@ -28,110 +30,187 @@ export class CronService {
     @Inject(forwardRef(() => ReportsService))
     private readonly reportsService: ReportsService,
     private readonly schedulerRegistry: SchedulerRegistry,
+    private dataSource: DataSource,
   ) {}
   private readonly logger = new Logger(CronService.name);
 
   // 매일 자정 검사
   @Cron('0 0 0 * * *')
   async startGoal() {
-    let status = 'recruit';
     const { aDate, bDate } = this.getKstTime(new Date());
+    const status = 'recruit';
     const getStartGoal: Goals[] = await this.goalService.getStartGoalByStatus(
       status,
       aDate,
       bDate,
     );
-    // 스케쥴링 적용이 필요한 목표 호출
-    for (let i = 0; i < getStartGoal.length; i++) {
-      // 가져온 Goal으로 로직 수행
-      // 1. recruit -> proceeding
-      status = 'proceeding';
-      await this.goalService.goalUpdateStatus(getStartGoal[i].goalId, status);
-      // 2. UserGoal 상태 변화
-      const getUserGoal = await this.userGoalService.getGoalByGoalId(
-        getStartGoal[i].goalId,
-      );
-      status = 'in progress';
-      for (let j = 0; j < getUserGoal.length; j++) {
-        await this.userGoalService.updateStauts(
-          getUserGoal[j].userGoalsId,
-          status,
-        );
-        const userId: number = getUserGoal[j].userId.userId;
-        const [getFirstJoin, count] =
-          await this.userGoalService.getCountUserPastJoin(userId);
-        if (count === 0 && getStartGoal[i].headCount > 1) {
-          const badgeId = 3;
-          const data: GetBadgeDTO = { User: userId, Badges: badgeId };
-          await this.badgeService.getBadge(data);
-        }
+    // 트랜젝션 처리를 위한 별도 메소드 호출
+    await this.processStartGoals(getStartGoal);
+  }
+
+  async processStartGoals(getStartGoal: Goals[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 스케쥴링 적용이 필요한 목표 호출
+      for (let i = 0; i < getStartGoal.length; i++) {
+        // 가져온 Goal으로 로직 수행
+        await this.processGoal(getStartGoal, queryRunner, i);
       }
-      // 3. 멤버 가져와서 채팅방 개설
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async processGoal(
+    getStartGoal: Goals[],
+    queryRunner: QueryRunner,
+    i: number,
+  ) {
+    // 1. recruit -> proceeding
+    let status = 'proceeding';
+    await this.goalService.goalUpdateStatus(
+      getStartGoal[i].goalId,
+      status,
+      queryRunner,
+    );
+    // 2. UserGoal 상태 변화
+    const getUserGoal = await this.userGoalService.getGoalByGoalId(
+      getStartGoal[i].goalId,
+    );
+    status = 'in progress';
+    for (let j = 0; j < getUserGoal.length; j++) {
+      await this.userGoalService.updateStauts(
+        getUserGoal[j].userGoalsId,
+        status,
+        queryRunner,
+      );
+      // 뱃지 획득 검증
+      const userId: number = getUserGoal[j].userId.userId;
+      const [getFirstJoin, count] =
+        await this.userGoalService.getCountUserPastJoin(userId);
+      if (count === 0 && getStartGoal[i].headCount > 1) {
+        const badgeId = 3;
+        const data: GetBadgeDTO = { User: userId, Badges: badgeId };
+        await this.badgeService.getBadge(data, queryRunner);
+      }
     }
   }
 
   @Cron('0 0 0 * * *')
   async endGoal() {
-    let status = 'proceeding';
+    const status = 'proceeding';
     const { aDate, bDate } = this.getKstTime(new Date());
     const getEndGoal = await this.goalService.getEndGoalByStatus(
       status,
       aDate,
       bDate,
     );
-    status = 'done';
-    // 종료 목표 로직 수행
-    for (let i = 0; i < getEndGoal.length; i++) {
-      // 가져온 Goal으로 로직 수행
-      // 1. proceeding -> done
-      await this.goalService.goalUpdateStatus(getEndGoal[i].goalId, status);
-      const getUserGoal = await this.userGoalService.getGoalByGoalId(
-        getEndGoal[i].goalId,
-      );
-      const headCount = getEndGoal[i].headCount;
-      // 2. UserGoal 상태 변화
-      for (let j = 0; j < getUserGoal.length; j++) {
-        await this.userGoalService.updateStauts(
-          getUserGoal[j].userGoalsId,
-          status,
-        );
-        const userId = getUserGoal[j].userId.userId;
-        let badgeId: number;
-        // 목표 액수 달성 시 이전 달성 횟수 파악 후 뱃지 획득
-        if (
-          getUserGoal[j].goalId.amount ===
-          getUserGoal[j].balanceId.current - getUserGoal[j].balanceId.initial
-        ) {
-          const goalCountAchievPersonal =
-            await this.userGoalService.getCountAchievPersonal(userId);
-          const getCountAchievGroup =
-            await this.userGoalService.getCountAchievGroup(userId);
-          let data: GetBadgeDTO;
-          if (headCount > 1) {
-            switch (getCountAchievGroup) {
-              case 1: // 그룹 목표 첫 달성 badge no. 5
-                badgeId = 5;
-                data = { User: userId, Badges: badgeId };
-                await this.badgeService.getBadge(data);
-                break;
-              case 3: // 세번쨰 그룹 목표 달성 badge no. 6
-                badgeId = 6;
-                data = { User: userId, Badges: badgeId };
-                await this.badgeService.getBadge(data);
-                break;
-              default:
-                break;
-            }
-          } else if (headCount === 1 && goalCountAchievPersonal === 1) {
-            // ex. Grant users the badge no. 2
-            // 개인 목표 첫 달성
-            badgeId = 2;
-            data = { User: userId, Badges: badgeId };
-            await this.badgeService.getBadge(data);
-          }
-        }
+    await this.processEndGoals(getEndGoal);
+  }
+
+  async processEndGoals(endGoals: Goals[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 스케쥴링 적용이 필요한 목표 호출
+      for (let i = 0; i < endGoals.length; i++) {
+        // 가져온 Goal으로 로직 수행
+        await this.processEndGoal(endGoals[i], queryRunner);
       }
-      // 3. 채팅방 폐쇄 -> 3일 후 채팅방 폐쇄 스케쥴링
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 목표 상태 변경
+  async processEndGoal(endGoal: Goals, queryRunner: QueryRunner) {
+    const headCount = endGoal.headCount;
+    const status = 'done';
+    // 1. proceeding -> done
+    await this.goalService.goalUpdateStatus(
+      endGoal.goalId,
+      status,
+      queryRunner,
+    );
+    const getUserGoal = await this.userGoalService.getGoalByGoalId(
+      endGoal.goalId,
+    );
+    // UserGoal 상태 변경
+    for (let i = 0; i < getUserGoal.length; i++) {
+      await this.processEndUserGoal(
+        headCount,
+        getUserGoal[i],
+        queryRunner,
+        status,
+      );
+    }
+  }
+
+  // UserGoal 상태 변경
+  async processEndUserGoal(
+    headCount: number,
+    getUserGoal: UserGoals,
+    queryRunner: QueryRunner,
+    status: string,
+  ) {
+    await this.userGoalService.updateStauts(
+      getUserGoal.userGoalsId,
+      status,
+      queryRunner,
+    );
+    await this.processEndGoalGetBadges(getUserGoal, headCount, queryRunner);
+  }
+
+  async processEndGoalGetBadges(
+    getUserGoal: UserGoals,
+    headCount: number,
+    queryRunner: QueryRunner,
+  ) {
+    const userId = getUserGoal.userId.userId;
+    let badgeId: number;
+    // 목표 액수 달성 시 이전 달성 횟수 파악 후 뱃지 획득
+    if (
+      getUserGoal.goalId.amount ===
+      getUserGoal.balanceId.current - getUserGoal.balanceId.initial
+    ) {
+      const goalCountAchievPersonal =
+        await this.userGoalService.getCountAchievPersonal(userId);
+      const getCountAchievGroup =
+        await this.userGoalService.getCountAchievGroup(userId);
+      let data: GetBadgeDTO;
+      if (headCount > 1) {
+        switch (getCountAchievGroup) {
+          case 1: // 그룹 목표 첫 달성 badge no. 5
+            badgeId = 5;
+            data = { User: userId, Badges: badgeId };
+            await this.badgeService.getBadge(data, queryRunner);
+            break;
+          case 3: // 세번쨰 그룹 목표 달성 badge no. 6
+            badgeId = 6;
+            data = { User: userId, Badges: badgeId };
+            await this.badgeService.getBadge(data, queryRunner);
+            break;
+          default:
+            break;
+        }
+      } else if (headCount === 1 && goalCountAchievPersonal === 1) {
+        // ex. Grant users the badge no. 2
+        // 개인 목표 첫 달성
+        badgeId = 2;
+        data = { User: userId, Badges: badgeId };
+        await this.badgeService.getBadge(data, queryRunner);
+      }
     }
   }
 

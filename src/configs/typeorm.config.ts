@@ -1,14 +1,14 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Users } from '../models/users';
-import { Goals } from '../models/goals';
-import { UserGoals } from '../models/usergoals';
-import { Accounts } from 'src/models/accounts';
-import { Banks } from 'src/models/banks';
-import { Balances } from 'src/models/balances';
-import { Badges } from 'src/models/badges';
-import { UserBadges } from 'src/models/userbadges';
-import { Reports } from 'src/models/reports';
+import { Users } from '../entity/users';
+import { Goals } from '../entity/goals';
+import { UserGoals } from '../entity/usergoals';
+import { Accounts } from 'src/entity/accounts';
+import { Banks } from 'src/entity/banks';
+import { Balances } from 'src/entity/balances';
+import { Badges } from 'src/entity/badges';
+import { UserBadges } from 'src/entity/userbadges';
+import { Reports } from 'src/entity/reports';
 
 export async function getTypeOrmConfig(): Promise<TypeOrmModuleOptions> {
   const configService = new ConfigService();

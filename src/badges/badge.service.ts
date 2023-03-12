@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Badges } from 'src/models/badges';
-import { UserBadges } from 'src/models/userbadges';
-import { Repository } from 'typeorm';
+import { Badges } from 'src/entity/badges';
+import { UserBadges } from 'src/entity/userbadges';
+import { UserGoals } from 'src/entity/usergoals';
+import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
 export class BadgeService {
@@ -14,10 +15,16 @@ export class BadgeService {
   ) {}
 
   // 뱃지 획득
-  async getBadge(data) {
-    if (!(await this.duplicateBadgeSearch(data))) {
-      await this.userBadgeRepository.save(data);
+  async getBadge(data, queryRunner: QueryRunner) {
+    const isDuplicated = await this.duplicateBadgeSearch(data, queryRunner);
+    if (!isDuplicated) {
+      await this.saveBadge(data, queryRunner);
     }
+  }
+
+  // 뱃지 저장
+  async saveBadge(data, queryRunner: QueryRunner) {
+    await queryRunner.manager.getRepository(Badges).save(data);
   }
 
   // 유저가 획득한 뱃지 가져오기
@@ -36,8 +43,9 @@ export class BadgeService {
   }
 
   // 뱃지 중복 조회 방지
-  async duplicateBadgeSearch(data) {
-    return await this.userBadgeRepository
+  async duplicateBadgeSearch(data, queryRunner: QueryRunner) {
+    return await queryRunner.manager
+      .getRepository(UserGoals)
       .createQueryBuilder('ub')
       .where('ub.User = :User', { User: data.User })
       .andWhere('ub.Badges = :Badges', { Badges: data.Badges })
@@ -45,12 +53,7 @@ export class BadgeService {
   }
 
   // 회원 탈퇴 시 뱃지 획득 내역 삭제
-  async deleteBadgeInfo(userId: number) {
-    return await this.userBadgeRepository
-      .createQueryBuilder('user_badges')
-      .delete()
-      .from('user_badges')
-      .where('User = :userId', { userId })
-      .execute();
+  async deleteBadgeInfo(userId: number, queryRunner: QueryRunner) {
+    await queryRunner.manager.delete(UserBadges, { user: userId });
   }
 }

@@ -8,7 +8,7 @@ import { KakaoStrategy } from './kakao/kakao.strategy';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { JwtRefreshStrategy } from './jwt/jwt-refresh.strategy';
 import { UserModule } from '../user/user.module';
-import { Users } from 'src/models/users';
+import { Users } from 'src/entity/users';
 
 @Module({
   imports: [

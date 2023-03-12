@@ -1,15 +1,7 @@
-import { IsNotEmpty, IsString } from 'class-validator';
-
-export class ModifyUserInfoDTO {
-  @IsString()
-  @IsNotEmpty()
-  readonly nickname: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly image: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly description: string;
-}
+import { PickType } from '@nestjs/swagger/dist';
+import { Users } from 'src/entity/users';
+export class ModifyUserInfoDTO extends PickType(Users, [
+  'nickname',
+  'image',
+  'description',
+]) {}

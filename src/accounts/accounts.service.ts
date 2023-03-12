@@ -1,18 +1,11 @@
 import { HttpService } from '@nestjs/axios';
-import { Body, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { AxiosError, AxiosResponse } from 'axios';
-import { Not } from 'typeorm';
-import {
-  catchError,
-  firstValueFrom,
-  lastValueFrom,
-  map,
-  Observable,
-} from 'rxjs';
-import { Accounts } from 'src/models/accounts';
-import { Balances } from 'src/models/balances';
-import { UserGoals } from 'src/models/usergoals';
+import { Not, QueryRunner } from 'typeorm';
+import { map } from 'rxjs';
+import { Accounts } from 'src/entity/accounts';
+import { Balances } from 'src/entity/balances';
+import { UserGoals } from 'src/entity/usergoals';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
@@ -56,16 +49,22 @@ export class AccountsService {
     return result;
   }
 
-  async updateAccountAssignment(accountId): Promise<Accounts> {
+  async updateAccountAssignment(
+    accountId,
+    queryRunner: QueryRunner,
+  ): Promise<Accounts> {
     const result = await this.accountsRepository.findOne({
       where: {
         accountId,
         active: true,
       },
     });
-
+    const updatedAccount = {
+      ...result,
+      assigned: true,
+    };
     result.assigned = true;
-    await this.accountsRepository.save(result);
+    await queryRunner.manager.getRepository(Accounts).save(updatedAccount);
     return result;
   }
 
@@ -187,19 +186,32 @@ export class AccountsService {
     return targetAccounts;
   }
 
-  async deleteAccount(targetAccountId: number) {
+  async deleteAccount(targetAccountId: number, queryRunner?: QueryRunner) {
     const result = await this.accountsRepository.findOne({
       where: {
         accountId: targetAccountId,
       },
     });
-
-    result.active = false; // delete/deactivate
-    result.bankUserId = null;
-    result.bankUserPw = null;
-    result.acctNo = null;
-    result.acctPw = null;
-    await this.accountsRepository.save(result);
-    return result;
+    if (queryRunner) {
+      const updatedAccount = {
+        ...result,
+        active: false,
+        bankUserId: null,
+        bankUserPw: null,
+        acctNo: null,
+        acctPw: null,
+      };
+      return await queryRunner.manager
+        .getRepository(Accounts)
+        .save(updatedAccount);
+    } else {
+      result.active = false; // delete/deactivate
+      result.bankUserId = null;
+      result.bankUserPw = null;
+      result.acctNo = null;
+      result.acctPw = null;
+      await this.accountsRepository.save(result);
+      return result;
+    }
   }
 }
